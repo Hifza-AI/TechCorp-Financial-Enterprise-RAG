@@ -42,6 +42,8 @@ def remove_report_headers(text):
 
     r"For the Fiscal Year Ended.*"
 
+    r"JPMorgan Chase\s*&\s*Co\./\d{4}\s*\d+",
+
 ]
 
     for p in patterns:
@@ -63,6 +65,13 @@ def remove_browser_artifacts(text):
         r"[A-Za-z0-9_-]+\.html",
 
         r"Document\d*",
+
+        r"nvda-\d+",
+
+        r"jpm-\d+",
+
+        r"\d+\s+JPMorgan Chase\s*&\s*Co\./\d{4}",
+        
 
     ]
 
@@ -175,7 +184,7 @@ def clean_text(text):
 # READ FILE
 # =====================================================
 
-input_file = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\data\extracted_text\Microsoft\Microsoft_2019_10K copy.txt"
+input_file = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\data\extracted_text\JPMorgan Chase\JPMorgan Chase_2024_10K copy.txt"
 
 with open(input_file, "r", encoding="utf-8") as f:
     text = f.read()
@@ -190,9 +199,9 @@ cleaned_text = clean_text(text)
 # SAVE FILE
 # =====================================================
 
-output_file = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\data\cleaned_text\Apple\Microsoft\Microsoft_2019_10K_CLEAN.txt"
+output_file = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\data\cleaned_text\Apple\JPMorgan\JPMorgan_2022_10K CLEAN.txt"
 
 with open(output_file, "w", encoding="utf-8") as f:
     f.write(cleaned_text)
 
-print("Microsoft Cleaning Completed Successfully!")
+print("JPMorgan Chase Cleaning Completed Successfully!")
