@@ -19,7 +19,14 @@ def remove_timestamps(text):
 # Example: 13/67
 # =====================================================
 def remove_page_numbers(text):
-    return re.sub(r"\b\d+\s*/\s*\d+\b", "", text)
+    patterns = [
+        r"-\s*\d+\s*-", 
+                r"\b\d+\s*/\s*\d+\b"
+                ]
+    for p in patterns:
+        text = re.sub(p, "", text)
+
+    return text
 
 # =====================================================
 # 4. Remove Checkboxes
@@ -40,9 +47,15 @@ def remove_report_headers(text):
 
     r"Form\s*10-K",
 
-    r"For the Fiscal Year Ended.*"
+    r"For the Fiscal Year Ended.*",
 
     r"JPMorgan Chase\s*&\s*Co\./\d{4}\s*\d+",
+
+    r"Bank of America\s+\d+",
+
+    r"\d+\s+Bank of America",
+
+    r"Pfizer Inc\.\s*\d{4}\s*\d+"
 
 ]
 
@@ -64,19 +77,32 @@ def remove_browser_artifacts(text):
 
         r"[A-Za-z0-9_-]+\.html",
 
-        r"Document\d*",
+        r"^\s*Document\d*\s*$",
 
         r"nvda-\d+",
 
         r"jpm-\d+",
 
         r"\d+\s+JPMorgan Chase\s*&\s*Co\./\d{4}",
+
+        r"bac-\d{8}",
+
+        r"adbe-\d{8}",
+
+        r"wmt-\d{8}",
+
+        r"amzn-\d{8}",
+
+        r"intc-\d{8}",
+
+        r"cvs-\d{8}"
+
         
 
     ]
 
     for p in patterns:
-        text = re.sub(p, "", text, flags=re.IGNORECASE)
+        text = re.sub(p, "", text, flags=re.MULTILINE | re.IGNORECASE)
 
     return text
 
@@ -184,7 +210,7 @@ def clean_text(text):
 # READ FILE
 # =====================================================
 
-input_file = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\data\extracted_text\JPMorgan Chase\JPMorgan Chase_2024_10K copy.txt"
+input_file = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\data\extracted_text\General Motors\General Motors_2021_10K.txt"
 
 with open(input_file, "r", encoding="utf-8") as f:
     text = f.read()
@@ -199,9 +225,9 @@ cleaned_text = clean_text(text)
 # SAVE FILE
 # =====================================================
 
-output_file = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\data\cleaned_text\Apple\JPMorgan\JPMorgan_2022_10K CLEAN.txt"
+output_file = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\data\cleaned_text\General motors\file.clean.txt"
 
 with open(output_file, "w", encoding="utf-8") as f:
     f.write(cleaned_text)
 
-print("JPMorgan Chase Cleaning Completed Successfully!")
+print("General Motors Cleaning Completed Successfully!")
