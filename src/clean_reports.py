@@ -20,7 +20,7 @@ def remove_timestamps(text):
 def remove_page_numbers(text):
 
     patterns = [
-        r"-\s*\d+\s*-",
+        r"^\s*\d+\.?\s*$",
         r"\b\d+\s*/\s*\d+\b"
     ]
 
@@ -33,7 +33,7 @@ def remove_page_numbers(text):
 # 4. Remove Checkboxes
 # =====================================================
 def remove_checkboxes(text):
-    return re.sub(r"[☐☑☒□✓✔]", "", text)
+    return re.sub(r"\[x\]|\[_\]|[☐☑☒□✓✔]", "", text, flags=re.IGNORECASE)
 
 # =====================================================
 # 5. Remove Report Headers
@@ -50,7 +50,22 @@ def remove_report_headers(text):
         r"Bank of America\s+\d+",
         r"\d+\s+Bank of America",
         r"^\s*10-K\s*$",
-        r"Pfizer Inc\.\s*\d{4}\s*\d+"
+        r"Pfizer Inc\.\s*\d{4}\s*\d+",
+        r"Goldman Sachs\s+\d{4}\s+\d+",
+        r"\d+\s+Goldman Sachs\s+\d{4}",
+        r"Alphabet Inc\.",
+        r"HP INC\. AND SUBSIDIARIES",
+        r"\d+\s+MASTERCARD\s+\d{4}",
+        r"MASTERCARD\s+\d{4}\s+\d+",
+        r"McDonald's Corporation\s+\d{4}\s+Annual Report\s+\d+",
+        r"Medtronic plc",
+        r"NVIDIA CORPORATION AND SUBSIDIARIES",
+        r"FY\s+\d{4}\s+\d+",
+        r"PayPal Holdings,\s*Inc\.",
+        r"\d{4}\s+Annual Report\s+\d+",
+        r"TARGET CORPORATION\s+\d{4}\s+\d+",
+        r"UNITED PARCEL SERVICE,\s*INC\.\s*AND\s*SUBSIDIARIES",
+        r"VISA INC\.",
 
     ]
 
@@ -72,6 +87,8 @@ def remove_browser_artifacts(text):
         r"\d+\s+JPMorgan Chase\s*&\s*Co\./\d{4}",
         r"\b[a-z]{1,6}-\d{8}\b",
         r"\d{8}\s*10K\s*FY_Taxonomy\d{4}",
+        r"(https?://)?sec\.gov/Archives/edgar/data/\S*",
+
 
     ]
 
@@ -96,7 +113,7 @@ def remove_table_of_contents(text):
 # 8. Normalize Spaces
 # =====================================================
 def normalize_spaces(text):
-    return re.sub(r"[ ]{2,}", " ", text)
+    return re.sub(r"[ \t]{2,}", " ", text)
 
 # =====================================================
 # 9. Normalize Blank Lines

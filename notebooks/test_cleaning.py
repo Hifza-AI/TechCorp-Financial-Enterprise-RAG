@@ -217,9 +217,15 @@ with open(output_file, "w", encoding="utf-8") as f:
 print("General Motors Cleaning Completed Successfully!")
 
  #Nw pattrens black rock last file
-r"^\s*10-K\s*$",
+r"^\s*10-K\s*$", microsoft ki bhi ha aur blackrok aur oracle ma bhi
 
 r"\d{8}\s*10K\s*FY_Taxonomy\d{4}" #cHIPotl mexicoll grill start reports
 
 r"\b[a-z]{1,6}-\d{8}\b" # Citi group last report and ford motor last report
-
+r"\d+\s+Goldman Sachs\s+\d{4}", aika ur pattren ha bas page no las ma ha last report ma
+r"Alphabet Inc\.",  ye google ma ha har report ma start aur end 
+r"sec\.gov/Archives/edgar/data/\S*" ye honey well ka ha startr report ma aur ibm ka bhi uski har report ma
+r"HP INC\. AND SUBSIDIARIES", HP ke har report ke damian ma aata ha 
+r"\d+\s+MASTERCARD\s+\d{4}", ye mstercard ka ha 202 2wali report ma
+r"Medtronic plc", medrionic har ppoery ma 
+r"NVIDIA CORPORATION AND SUBSIDIARIES", nvidia ma 
