@@ -233,9 +233,9 @@ def clean_all_reports(input_folder, output_folder):
     print("==============================")
     print(f"📄 Total Reports Cleaned : {total_files}")
 
-# =====================================================
+# ======================================================
 # MAIN
-# =====================================================
+# ======================================================
 if __name__ == "__main__":
 
     input_folder = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\data\extracted_text"
