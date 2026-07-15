@@ -115,9 +115,9 @@ def remove_table_of_contents(text):
 def normalize_spaces(text):
     return re.sub(r"[ \t]{2,}", " ", text)
 
-# =====================================================
+# ======================================================
 # 9. Normalize Blank Lines
-# =====================================================
+# ======================================================
 def normalize_blank_lines(text):
     return re.sub(r"\n\s*\n\s*\n+", "\n\n", text)
 
