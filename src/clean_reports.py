@@ -121,9 +121,9 @@ def normalize_spaces(text):
 def normalize_blank_lines(text):
     return re.sub(r"\n\s*\n\s*\n+", "\n\n", text)
 
-# =====================================================
+# ======================================================
 # 10. Normalize Unicode
-# =====================================================
+# ======================================================
 def normalize_unicode(text):
 
     replacements = {
