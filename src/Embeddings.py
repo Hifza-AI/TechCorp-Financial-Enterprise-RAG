@@ -29,4 +29,22 @@ sentences = [
 embeddings = model.encode(sentences)
 print(cosine_similarity(embeddings))
 
+# Comparing Financial Words
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+words = [
+         "Revenue" ,
+         "Sales"   ,
+         "Profit"  ,
+         "Net Income",
+         "Assests"   ,
+         "Liabilities",
+         "Cash"       ,
+         "Debt"       ,
+         "Balance"
+]
 
+embeddings = model.encode(words)
+similarity = cosine_similarity(embeddings)
+print(similarity)
