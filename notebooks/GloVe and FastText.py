@@ -1,3 +1,4 @@
+#  Manual training of FastText
 from gensim.models import FastText
 
 sentences = [
