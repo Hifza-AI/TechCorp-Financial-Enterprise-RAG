@@ -36,37 +36,50 @@ print("Metadata Loaded!")
 # -----------------------------
 # User Query
 # -----------------------------
-query = "What was Apple's total revenue in 2022?"
+queries = [
+    "What was Apple's total revenue in 2022?",
+    "What was Apple's net income in 2022?",
+    "How much revenue came from iPhone?",
+    "What are Apple's services?",
+    "What risks did Apple mention?",
+    "What was Apple's cash balance?",
+]
 
-print("\nUser Query:")
-print(query)
 
 # -----------------------------
 # Query Embedding
 # -----------------------------
-query_embedding = model.encode([query])
 
 # -----------------------------
 # Search
 # -----------------------------
+
+query_embeddings = model.encode(queries)
+
 k = 5
 
-distances, indices = index.search(query_embedding, k)
+for i, query in enumerate(queries):
 
-# -----------------------------
-# Show Results
-# -----------------------------
-print("\nTop Results:\n")
+    print("="*100)
+    print("User Query:")
+    print(query)
 
-for rank, idx in enumerate(indices[0]):
+    distances, indices = index.search(
+        query_embeddings[i].reshape(1,-1),
+        k
+    )
 
-    print("=" * 80)
-    print(f"Rank {rank+1}")
-    print(f"Chunk Index: {idx}")
-    print(f"Distance: {distances[0][rank]}")
+    print("\nTop Results:\n")
 
-    print("\nChunk Preview:\n")
+    for rank, idx in enumerate(indices[0]):
 
-    print(all_chunks[idx][:1200])
+        print("="*80)
+        print(f"Rank {rank+1}")
+        print(f"Chunk Index: {idx}")
+        print(f"Distance: {distances[0][rank]}")
 
-    print()
+        print("\nChunk Preview:\n")
+
+        print(all_chunks[idx][:1200])
+
+        print()
