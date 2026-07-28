@@ -5,4 +5,7 @@ __pycache__/
 .ipynb_checkpoints/
 # Large datasets
 data/
-apple_pipeline/
+apple_pipeline/chunks
+apple_pipeline/clean_text
+apple_pipeline/extracted_text
+apple_pipeline/headings
