@@ -4,9 +4,9 @@ import faiss
 
 from sentence_transformers import SentenceTransformer
 
-# ===========================================
-# PATHS
 # ============================================
+# PATHS
+# =============================================
 
 VECTOR_FOLDER = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\apple_pipeline\vector_store"
 
