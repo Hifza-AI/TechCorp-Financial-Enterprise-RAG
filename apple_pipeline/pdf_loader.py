@@ -1,85 +1,146 @@
 import os
 import re
-import pdfplumber
+import pickle
+import faiss
+import numpy as np
+from typing import List, Dict, Any
+import pypdf  # pip install pypdf
+from sentence_transformers import SentenceTransformer
 
-# ===========================
-# PATHS
-# ===========================
+# ============================================
+# CONFIGURATION & PATHS
+# ============================================
 
-PDF_FOLDER = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\data\pdfs\Apple"
+PDF_DIR = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\apple_pipeline\pdfs"
+VECTOR_FOLDER = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\apple_pipeline\vector_store"
+INDEX_PATH = os.path.join(VECTOR_FOLDER, "apple.index")
+METADATA_PATH = os.path.join(VECTOR_FOLDER, "metadata.pkl")
 
-OUTPUT_FOLDER = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\apple_pipeline\extracted_text"
+EMBEDDING_MODEL_NAME = "BAAI/bge-small-en-v1.5"
+CHUNK_SIZE = 800       # Words/Characters window
+CHUNK_OVERLAP = 150    # Overlap to prevent context loss
 
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+# Ensure directories exist
+os.makedirs(VECTOR_FOLDER, exist_ok=True)
 
+# ============================================
+# ENTERPRISE CHUNKER & PARSER
+# ============================================
 
-# ===========================
-# PDF EXTRACTION
-# ===========================
+class FinancialDocumentProcessor:
+    def __init__(self, model_name: str):
+        print("Loading embedding model for indexing...")
+        self.model = SentenceTransformer(model_name)
+        self.chunks_metadata = []
+        self.text_chunks = []
 
-def extract_pdf(pdf_path):
+    def extract_year_from_filename(self, filename: str) -> str:
+        match = re.search(r'\b(20\d{2})\b', filename)
+        return match.group(1) if match else "Unknown"
 
-    filename = os.path.basename(pdf_path)
+    def clean_text(self, text: str) -> str:
+        # Basic regex cleaning to keep table structures readable
+        text = re.sub(r'[ \t]+', ' ', text)
+        text = re.sub(r'\n+', '\n', text)
+        return text.strip()
 
-    # Extract Year
-    year_match = re.search(r"(20\d{2})", filename)
+    def process_pdf(self, pdf_path: str, company_name: str = "APPLE"):
+        filename = os.path.basename(pdf_path)
+        year = self.extract_year_from_filename(filename)
+        print(f"Processing: {filename} | Company: {company_name} | Year: {year}")
 
-    year = year_match.group(1) if year_match else "UNKNOWN"
-
-    company = "APPLE"
-
-    output = []
-
-    output.append(f"<<<COMPANY:{company}>>>")
-    output.append(f"<<<YEAR:{year}>>>")
-    output.append("")
-
-    with pdfplumber.open(pdf_path) as pdf:
-
-        for page_num, page in enumerate(pdf.pages, start=1):
-
-            output.append(f"<<<PAGE:{page_num}>>>")
-            output.append("")
-
+        reader = pypdf.PdfReader(pdf_path)
+        full_text = ""
+        
+        # Extract page by page
+        for page_num, page in enumerate(reader.pages, start=1):
             text = page.extract_text()
-
             if text:
-                output.append(text)
+                full_text += f"\n--- Page {page_num} ---\n" + text
 
-            output.append("")
+        cleaned_text = self.clean_text(full_text)
+        
+        # Financial Section Ingestion (Detecting main headings)
+        sections = re.split(r'(\nITEM\s+[0-9A-Z]+\.|\nCONSOLIDATED STATEMENTS OF [A-Z ]+)', cleaned_text, flags=re.IGNORECASE)
+        
+        current_section = "General Financial Information"
+        chunk_counter = len(self.chunks_metadata)
 
-    txt_name = filename.replace(".pdf", ".txt")
+        for i in range(0, len(sections)):
+            part = sections[i].strip()
+            if not part:
+                continue
 
-    save_path = os.path.join(OUTPUT_FOLDER, txt_name)
+            # Update section header if matched
+            if part.upper().startswith("ITEM") or part.upper().startswith("CONSOLIDATED"):
+                current_section = part.replace('\n', ' ')
+                continue
 
-    with open(save_path, "w", encoding="utf-8") as f:
+            # Slit section text into overlapping chunks
+            words = part.split()
+            for j in range(0, len(words), CHUNK_SIZE - CHUNK_OVERLAP):
+                chunk_words = words[j:j + CHUNK_SIZE]
+                if len(chunk_words) < 20: # Ignore tiny fragments
+                    continue
 
-        f.write("\n".join(output))
+                chunk_text = " ".join(chunk_words)
+                
+                # Context Enrichment Prefix (Injected before Embedding)
+                enriched_text = f"[Company: {company_name} | Year: {year} | Section: {current_section}] {chunk_text}"
 
-    print(f"✅ {txt_name} extracted")
+                metadata_entry = {
+                    "chunk_id": chunk_counter,
+                    "company": company_name,
+                    "year": year,
+                    "section": current_section,
+                    "parent_section": current_section,
+                    "text": enriched_text
+                }
 
+                self.text_chunks.append(enriched_text)
+                self.chunks_metadata.append(metadata_entry)
+                chunk_counter += 1
 
-# ===========================
-# MAIN
-# ===========================
+    def build_and_save_index(self, index_path: str, metadata_path: str):
+        print(f"\nTotal Chunks Created: {len(self.text_chunks)}")
+        print("Generating Dense Embeddings...")
+        
+        embeddings = self.model.encode(
+            self.text_chunks, 
+            normalize_embeddings=True, 
+            show_progress_bar=True
+        ).astype("float32")
 
-def main():
+        # Create FAISS L2/Cosine Index
+        dimension = embeddings.shape[1]
+        index = faiss.IndexFlatIP(dimension) # Inner Product for Normalized Vectors (Cosine Sim)
+        index.add(embeddings)
 
-    pdf_files = sorted(
-        [f for f in os.listdir(PDF_FOLDER) if f.lower().endswith(".pdf")]
-    )
+        print(f"Saving FAISS Index to: {index_path}")
+        faiss.write_index(index, index_path)
 
-    print(f"\nFound {len(pdf_files)} Apple reports\n")
+        print(f"Saving Metadata Pickle to: {metadata_path}")
+        with open(metadata_path, "wb") as f:
+            pickle.dump(self.chunks_metadata, f)
 
-    for pdf in pdf_files:
+        print("✅ Pipeline Extraction & Vector Indexing Completed Successfully!")
 
-        extract_pdf(os.path.join(PDF_FOLDER, pdf))
-
-    print("\n==============================")
-    print("APPLE PDF EXTRACTION COMPLETE")
-    print("==============================")
-
+# ============================================
+# EXECUTION PIPELINE
+# ============================================
 
 if __name__ == "__main__":
+    processor = FinancialDocumentProcessor(EMBEDDING_MODEL_NAME)
 
-    main()
+    if not os.path.exists(PDF_DIR):
+        print(f"Directory Error: '{PDF_DIR}' does not exist. Please place Apple PDFs in this folder.")
+    else:
+        pdf_files = [os.path.join(PDF_DIR, f) for f in os.listdir(PDF_DIR) if f.endswith('.pdf')]
+        
+        if not pdf_files:
+            print(f"No PDFs found in {PDF_DIR}. Please add Apple 10-K PDF files.")
+        else:
+            for pdf_path in pdf_files:
+                processor.process_pdf(pdf_path, company_name="APPLE")
+
+            processor.build_and_save_index(INDEX_PATH, METADATA_PATH)
