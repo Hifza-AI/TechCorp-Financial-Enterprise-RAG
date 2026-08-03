@@ -55,7 +55,7 @@ def is_heading(line):
         return True
 
     # ALL CAPS
-    if line.isupper() and len(line.split()) <= 8:
+    if line.isupper() and len(line.split()) <= 12:
         return True
 
     # Title Case
