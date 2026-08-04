@@ -1,72 +1,239 @@
 import re
+from dataclasses import dataclass
+from typing import List
 
-class FinancialTableAnalyzer:
 
-    def __init__(self, section_name, text):
-        self.section_name = section_name
-        self.text = text
+@dataclass
+class TableRegion:
 
-    def detect_table(self):
-        """
-        Enterprise table detector
-        """
+    table_id: int
+
+    page_number: int
+
+    top: float
+
+    bottom: float
+
+    left: float
+
+    right: float
+
+    lines: List[str]
+
+
+class TableAnalyzer:
+
+    def __init__(self):
+
+        self.table_counter = 0
+
+    # ---------------------------------------------------------
+
+    def analyze(
+        self,
+        pages,
+    ):
+
+        table_regions = []
+
+        for page in pages:
+
+            page_tables = self._detect_tables_on_page(
+                page
+            )
+
+            table_regions.extend(
+                page_tables
+            )
+
+        return table_regions
+
+    # ---------------------------------------------------------
+
+    def _detect_tables_on_page(
+        self,
+        page,
+    ):
+
+        table_regions = []
+
+        current_table = []
+
+        start_top = None
+
+        end_bottom = None
+
+        left = None
+
+        right = None
+
+        page_number = page.page_number
+
+        for block in page.blocks:
+
+            text = block.text.strip()
+
+            if not text:
+                continue
+
+            if self._is_table_line(text):
+
+                if not current_table:
+
+                    start_top = block.top
+
+                    left = block.left
+
+                    right = block.right
+
+                current_table.append(text)
+
+                end_bottom = block.bottom
+
+                left = min(left, block.left)
+
+                right = max(right, block.right)
+
+            else:
+
+                if current_table:
+
+                    table_regions.append(
+
+                        TableRegion(
+
+                            table_id=self.table_counter,
+
+                            page_number=page_number,
+
+                            top=start_top,
+
+                            bottom=end_bottom,
+
+                            left=left,
+
+                            right=right,
+
+                            lines=current_table,
+
+                        )
+
+                    )
+
+                    self.table_counter += 1
+
+                    current_table = []
+
+                    start_top = None
+
+                    end_bottom = None
+
+                    left = None
+
+                    right = None
+
+        # last table on page
+
+        if current_table:
+
+            table_regions.append(
+
+                TableRegion(
+
+                    table_id=self.table_counter,
+
+                    page_number=page_number,
+
+                    top=start_top,
+
+                    bottom=end_bottom,
+
+                    left=left,
+
+                    right=right,
+
+                    lines=current_table,
+
+                )
+
+            )
+
+            self.table_counter += 1
+
+        return table_regions
+
+    # ---------------------------------------------------------
+
+    def _is_table_line(
+        self,
+        text,
+    ):
+
+        text = text.strip()
+
+        if not text:
+            return False
+
+        # ---------------------------------
+        # Numbers
+        # ---------------------------------
+
+        numbers = re.findall(
+
+            r"\(?-?\$?[\d,]+(?:\.\d+)?%?\)?",
+
+            text
+
+        )
+
+        # ---------------------------------
+        # Multiple spaces
+        # ---------------------------------
+
+        multi_spaces = len(
+
+            re.findall(r"\s{2,}", text)
+
+        )
+
+        # ---------------------------------
+        # Tabs
+        # ---------------------------------
+
+        tabs = text.count("\t")
+
+        # ---------------------------------
+        # Accounting values
+        # ---------------------------------
+
+        accounting = len(
+
+            re.findall(
+
+                r"\([\d,]+\)",
+
+                text
+
+            )
+
+        )
+
+        # ---------------------------------
+        # Table score
+        # ---------------------------------
 
         score = 0
 
-        lines = [
-            l.strip()
-            for l in self.text.split("\n")
-            if l.strip()
-        ]
-
-        # ---------- Financial numbers ----------
-        number_lines = 0
-
-        for line in lines:
-
-            if len(re.findall(r"\d", line)) >= 3:
-                number_lines += 1
-
-        if number_lines >= 3:
-            score += 3
-
-        # ---------- Currency ----------
-        if "$" in self.text:
+        if len(numbers) >= 2:
             score += 2
 
-        # ---------- Multiple years ----------
-        years = re.findall(r"\b20\d{2}\b", self.text)
+        if multi_spaces >= 1:
+            score += 1
 
-        if len(set(years)) >= 2:
+        if tabs >= 1:
             score += 2
 
-        # ---------- Accounting formatting ----------
-        accounting = re.findall(r"\(?[\d,]+\)?", self.text)
-
-        if len(accounting) >= 5:
+        if accounting >= 1:
             score += 2
 
-        # ---------- Statement headings ----------
-        heading = self.section_name.upper()
-
-        statement_words = [
-            "BALANCE SHEET",
-            "STATEMENTS",
-            "STATEMENT",
-            "CASH FLOWS",
-            "OPERATIONS",
-            "EQUITY",
-            "REVENUE",
-            "DEBT",
-            "SEGMENT",
-            "INVENTORY",
-            "LEASE",
-            "FAIR VALUE",
-            "TAX",
-            "SHAREHOLDERS",
-        ]
-
-        if any(word in heading for word in statement_words):
-            score += 2
-
-        return score >= 5
+        return score >= 3
