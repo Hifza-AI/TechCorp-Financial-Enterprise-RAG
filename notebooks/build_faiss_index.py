@@ -3,9 +3,9 @@ import faiss
 import numpy as np
 import os
 
-# -----------------------------
+# ------------------------------
 # Load Model
-# -----------------------------
+# ------------------------------
 print("Loading Sentence Transformer...")
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
