@@ -6,3 +6,12 @@ __pycache__/
 # Large datasets
 data/
 apple_pipeline/
+# Stage 1 - Extracted, Cleaned & Debug Folders
+STAGE_1/extracted/
+STAGE_1/cleaned/
+STAGE_1/readable_raw/
+STAGE_1/readable_clean/
+
+# Ignore all JSON and TXT outputs in STAGE_1 subdirectories
+STAGE_1/**/*.json
+STAGE_1/**/*.txt
