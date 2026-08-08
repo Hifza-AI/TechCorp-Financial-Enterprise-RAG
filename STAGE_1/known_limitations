@@ -1,0 +1,9 @@
+Known Limitation: Sirf "Year" Headers Auto-Detect Honge
+Sahi Kaam Kaha Karega:
+Financial Statements jahan headers 2016, 2015, 2014 honge, wahan automatic header match perfect hoga.
+
+Limitation:
+In non-year tables (jaise "Q1/Q2/Q3", "Domestic vs International"), code _parse_without_header() wale fallback mechanism par jayega.
+
+Lead Strategy:
+Yeh baseline MVP ke liye bilkul acceptable hai, isko as a "Known Limitation" note kar lo.
