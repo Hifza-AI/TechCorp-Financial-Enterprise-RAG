@@ -15,3 +15,4 @@ STAGE_1/table_analysis/
 # Ignore all JSON and TXT outputs in STAGE_1 subdirectories
 STAGE_1/**/*.json
 STAGE_1/**/*.txt
+
