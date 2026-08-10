@@ -16,4 +16,4 @@ STAGE_1/vector_store/
 # Ignore all JSON and TXT outputs in STAGE_1 subdirectories
 STAGE_1/**/*.json
 STAGE_1/**/*.txt
-
+STAGE_1/chk_output

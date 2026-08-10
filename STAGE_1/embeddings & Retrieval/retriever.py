@@ -81,7 +81,7 @@ class Retriever:
                     key=lambda c: (
                         c["year"] == max_year,
                         c["score"],
-                    ),
+                     ),
                     reverse=True,
                 )
 
@@ -97,10 +97,41 @@ if __name__ == "__main__":
     retriever = Retriever()
 
     test_questions = [
-        "What were Apple's iPhone net sales in 2021?",
-        "What risks does Apple face related to foreign currency?",
-        "How much did Apple spend on research and development?",
-        "What is Apple's total net sales for the most recent fiscal year?",
+       # A) Simple factual/numeric lookup
+        "What was Apple's total net sales in 2020?",
+        "How much cash and cash equivalents did Apple have?",
+        "What was Apple's gross margin percentage?",
+
+        # B) Table-heavy financial statement queries
+        "What is Apple's total current assets?",
+        "What was Apple's diluted earnings per share?",
+        "What were Apple's total liabilities?",
+
+        # C) Conceptual/qualitative (risk factors, strategy)
+        "What are the main risks related to Apple's supply chain?",
+        "How does Apple describe competition in its industry?",
+        "What is Apple's business strategy for new products?",
+
+        # D) Segment/product specific
+        "What were Apple's Services net sales?",
+        "How did Wearables, Home and Accessories perform?",
+        "What are Apple's reportable segments?",
+
+        # E) Cross-year trend (tests if right years get retrieved together)
+        "How did Apple's iPhone sales change between 2019 and 2020?",
+        "Has Apple's R&D spending increased over the years?",
+
+        # F) Specific/detail-oriented (harder, potential weak spots)
+        "How many shares did Apple repurchase?",
+        "What dividend did Apple pay per share?",
+        "Who are Apple's executive officers?",
+
+        # G) Edge cases -- NOT in the corpus (checks noise/confidence behavior)
+        "What is Tesla's revenue in 2022?",
+        "What is the capital of France?",
+
+        # H) Complex/multi-factor query
+        "What factors contributed to Apple's revenue growth?",
     ]
 
     for question in test_questions:
