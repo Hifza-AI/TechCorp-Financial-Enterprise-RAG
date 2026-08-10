@@ -4,7 +4,7 @@ from collections import Counter
 from copy import deepcopy
 from pathlib import Path
 
-print(">>> RUNNING UPDATED HEADING DETECTOR - v2 <<<")
+
 class HeadingDetector:
     """
     Detects headings using font-based signals (size, bold, italic)
@@ -257,7 +257,7 @@ class HeadingDetector:
         is_heading = score >= self.heading_score_threshold
 
         level = (
-            self._estimate_level(relative_size, is_bold, is_italic)
+            self._estimate_level(text, relative_size, is_bold, is_italic)
             if is_heading
             else 0
         )
@@ -412,24 +412,60 @@ class HeadingDetector:
     # LEVEL ESTIMATION
     # =========================================================
 
-    def _estimate_level(self, relative_size, is_bold, is_italic):
+    def _estimate_level(self, text, relative_size, is_bold, is_italic):
         """
-        Level 1 = document/part title (e.g. "Apple Inc.", "FORM 10-K")
-        Level 2 = major section heading (e.g. "Products and Services
-                   Performance", "Item 7. Management's Discussion...")
-        Level 3 = sub-heading (e.g. italic "iPhone", "Mac" inside MD&A)
+        Level 1 = document/cover title (huge font, e.g. "Apple Inc.")
+        Level 2 = top-level outline markers ("PART I", "Item 1.",
+                   "Item 7A.") -- SEC 10-Ks are consistently numbered
+                   this way, so matching that pattern is a much more
+                   reliable depth signal than font size alone.
+        Level 3 = generic bold subsection heading (e.g. "Products and
+                   Services Performance", "CONSOLIDATED BALANCE SHEETS")
+        Level 4 = italic sub-heading (e.g. "iPhone", "Mac" inside MD&A)
+
+        Without the PART/Item pattern check, nearly every bold heading
+        scored as "level 2" regardless of its real depth, which
+        flattened the whole document tree (top-level Items and their
+        subsections all became siblings instead of parent/child).
         """
 
         if relative_size >= 1.5:
             return 1
 
-        if is_italic and relative_size < 1.15:
-            return 3
-
-        if is_bold:
+        if self._is_top_level_marker(text):
             return 2
 
-        return 3
+        if is_italic and relative_size < 1.15:
+            return 4
+
+        if is_bold:
+            return 3
+
+        return 4
+
+    # =========================================================
+    # TOP-LEVEL OUTLINE MARKER (PART / ITEM)
+    # =========================================================
+
+    def _is_top_level_marker(self, text):
+        """
+        Matches SEC 10-K style top-level outline headings:
+          "PART I", "PART II"
+          "Item 1.", "Item 1A.", "Item 7. Management's Discussion..."
+        This pattern is essentially universal across SEC filings
+        (it's mandated by the SEC's filing format), so it generalizes
+        across companies -- unlike matching specific section titles.
+        """
+
+        stripped = text.strip()
+
+        if re.match(r"^PART\s+[IVXLCDM]+\b", stripped, re.IGNORECASE):
+            return True
+
+        if re.match(r"^Item\s+\d+[A-Za-z]?\.", stripped, re.IGNORECASE):
+            return True
+
+        return False
 
 
 # =============================================================

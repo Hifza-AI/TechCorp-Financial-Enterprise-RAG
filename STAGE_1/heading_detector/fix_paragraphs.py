@@ -3,6 +3,18 @@ import re
 from pathlib import Path
 
 
+def _normalize_for_repeat_check(text):
+    """
+    Footers like "Apple Inc. | 2021 Form 10-K | 16" differ from page
+    to page ONLY in the trailing page number. Comparing exact text
+    means they never look "repeated" (each page has a different
+    number), so the frequency check silently never fires. Stripping
+    the trailing number before counting fixes this -- and works for
+    ANY company's footer format, not just Apple's.
+    """
+    return re.sub(r"\d+\s*$", "#", text.strip())
+
+
 def fix_paragraph_file(data):
 
     total_pages = len(data["pages"])
@@ -19,9 +31,12 @@ def fix_paragraph_file(data):
             if block["block_type"] != "paragraph":
                 continue
             text = block["text"].strip()
-            if text and text not in seen:
-                seen.add(text)
-                text_counts[text] = text_counts.get(text, 0) + 1
+            if not text:
+                continue
+            normalized = _normalize_for_repeat_check(text)
+            if normalized not in seen:
+                seen.add(normalized)
+                text_counts[normalized] = text_counts.get(normalized, 0) + 1
 
     threshold = max(5, total_pages * 0.3)
     boilerplate = {t for t, c in text_counts.items() if c >= threshold}
@@ -48,8 +63,10 @@ def fix_paragraph_file(data):
             text = block["text"].strip()
 
             # Drop repeated boilerplate paragraphs entirely
-            if block["block_type"] == "paragraph" and text in boilerplate:
-                continue
+            if block["block_type"] == "paragraph":
+                normalized = _normalize_for_repeat_check(text)
+                if normalized in boilerplate:
+                    continue
 
             # Downgrade dangling-fragment "headings" to plain paragraphs
             if block["block_type"] == "heading":

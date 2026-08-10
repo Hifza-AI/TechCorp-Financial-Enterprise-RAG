@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-print(">>> RUNNING UPDATED HEADING DETECTOR - v2 <<<")
+
 
 class ParagraphParser:
     """

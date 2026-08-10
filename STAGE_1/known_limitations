@@ -7,3 +7,9 @@ In non-year tables (jaise "Q1/Q2/Q3", "Domestic vs International"), code _parse_
 
 Lead Strategy:
 Yeh baseline MVP ke liye bilkul acceptable hai, isko as a "Known Limitation" note kar lo.
+
+Observation: Item 7. Management's Discussion... Missing Hai 2021 Mein
+
+2016 mein Item 7. (MD&A section) 25 children ke saath tha. 2021 mein wo heading khud nahi mila — lekin "Item 6. [Reserved]" (jo genuinely khaali hona chahiye, "Reserved" ka matlab hi khaali hai) mein 9 children hain. Ye suggest karta hai ke Item 7. ka MD&A content galti se Item 6.ke andar chala gaya — kyunki Item 7. wali heading line detect hi nahi hui us report mein (shayad line-wrap ya spacing thoda alag tha 2021 ke PDF mein).
+
+Ye important hai kyunki: jab hum Chunking mein "section_title" ko metadata banayenge, to us MD&A content (Products, Segments, iPhone sales waghera) ka metadata galti se "Item 6. [Reserved]" keh dega — jo confusing hoga agar koi query karega "Apple ka MD&A section kya kehta hai."
