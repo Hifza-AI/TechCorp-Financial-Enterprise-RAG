@@ -176,7 +176,7 @@ class TableParser:
             gap = current["y"] - previous["y"]
 
             # Large vertical gap = likely a new/different table
-            if gap <= 30:
+            if gap <= 95:
                 current_region.append(current)
             else:
                 if current_region:

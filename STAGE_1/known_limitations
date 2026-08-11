@@ -13,3 +13,8 @@ Observation: Item 7. Management's Discussion... Missing Hai 2021 Mein
 2016 mein Item 7. (MD&A section) 25 children ke saath tha. 2021 mein wo heading khud nahi mila — lekin "Item 6. [Reserved]" (jo genuinely khaali hona chahiye, "Reserved" ka matlab hi khaali hai) mein 9 children hain. Ye suggest karta hai ke Item 7. ka MD&A content galti se Item 6.ke andar chala gaya — kyunki Item 7. wali heading line detect hi nahi hui us report mein (shayad line-wrap ya spacing thoda alag tha 2021 ke PDF mein).
 
 Ye important hai kyunki: jab hum Chunking mein "section_title" ko metadata banayenge, to us MD&A content (Products, Segments, iPhone sales waghera) ka metadata galti se "Item 6. [Reserved]" keh dega — jo confusing hoga agar koi query karega "Apple ka MD&A section kya kehta hai."
+
+1. Tesla query — confirmed problem, aur bhi clear ho gaya
+Score 0.657-0.668 hai — ye legitimate Apple queries (jaise "dividend" 0.670, "executive officers" 0.609) ke range ke andar hai. Matlab sirf ek simple threshold (jaise "0.6 se neeche reject karo") kaam nahi karega, kyunki Tesla ka score legitimate low-confidence Apple answers se bhi zyada hai. Ye important finding hai — threshold akela solution nahi, isko note kar lo Stage 4 ke liye.
+
+Ye Stage 4 (LLM/threshold fix) ke waqt handle hoga — abhi ke liye bas note kar lo ke retriever kabhi-kabhi wrong-but-similar-sounding section pick kar leta hai. Koi urgent fix nahi chahiye abhi.
