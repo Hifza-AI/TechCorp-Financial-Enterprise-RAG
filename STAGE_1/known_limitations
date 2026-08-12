@@ -18,3 +18,9 @@ Ye important hai kyunki: jab hum Chunking mein "section_title" ko metadata banay
 Score 0.657-0.668 hai — ye legitimate Apple queries (jaise "dividend" 0.670, "executive officers" 0.609) ke range ke andar hai. Matlab sirf ek simple threshold (jaise "0.6 se neeche reject karo") kaam nahi karega, kyunki Tesla ka score legitimate low-confidence Apple answers se bhi zyada hai. Ye important finding hai — threshold akela solution nahi, isko note kar lo Stage 4 ke liye.
 
 Ye Stage 4 (LLM/threshold fix) ke waqt handle hoga — abhi ke liye bas note kar lo ke retriever kabhi-kabhi wrong-but-similar-sounding section pick kar leta hai. Koi urgent fix nahi chahiye abhi.
+
+Apple-only corpus → semantic similarity
+↓
+Multi-company corpus → entity filtering + retrieval
+↓
+Stage 2 mein exactly isi cheez ko validate karna hai.
