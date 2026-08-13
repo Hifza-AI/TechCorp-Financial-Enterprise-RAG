@@ -7,7 +7,6 @@ import faiss
 
 from build_embeddings import EmbeddingIndexBuilder
 
-
 class Retriever:
 
     # Words that signal the person wants the LATEST year specifically :
@@ -277,7 +276,7 @@ if __name__ == "__main__":
                 "results": results,
             })
 
-    with open("retriever_test_results.json", "w", encoding="utf-8") as f:P
-_json.dump(all_results_log, f, indent=2, ensure_ascii=False, default=str)
-
+    with open("retriever_test_results.json", "w", encoding="utf-8") as f:
+        _json.dump(all_results_log, f, indent=4, ensure_ascii=False)
+    
 print("\n\nFull results also saved to: retriever_test_results.json")
