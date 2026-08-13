@@ -10,7 +10,7 @@ from build_embeddings import EmbeddingIndexBuilder
 
 class Retriever:
 
-    # Words that signal the person wants the LATEST year specifically
+    # Words that signal the person wants the LATEST year specifically :
     RECENCY_KEYWORDS = re.compile(
         r"\b(most recent|latest|current|this year|last fiscal year|"
         r"newest|up[- ]to[- ]date)\b",
@@ -277,7 +277,7 @@ if __name__ == "__main__":
                 "results": results,
             })
 
-    with open("retriever_test_results.json", "w", encoding="utf-8") as f:
-        _json.dump(all_results_log, f, indent=2, ensure_ascii=False, default=str)
+    with open("retriever_test_results.json", "w", encoding="utf-8") as f:P
+_json.dump(all_results_log, f, indent=2, ensure_ascii=False, default=str)
 
-    print("\n\nFull results also saved to: retriever_test_results.json")
+print("\n\nFull results also saved to: retriever_test_results.json")
