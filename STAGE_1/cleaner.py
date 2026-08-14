@@ -10,7 +10,7 @@ class TextCleaner:
     def __init__(self):
         pass
 
-    # ---------------------------------------------------------
+    # ----------------------------------------------------------
     def clean(self, extracted_reports):
         cleaned_reports = []
 
