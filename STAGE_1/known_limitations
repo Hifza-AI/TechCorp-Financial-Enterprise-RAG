@@ -24,3 +24,13 @@ Apple-only corpus → semantic similarity
 Multi-company corpus → entity filtering + retrieval
 ↓
 Stage 2 mein exactly isi cheez ko validate karna hai.
+
+## 🔴 4 Genuine Issues Mile — Ye Note Karne Layak Hain
+
+1. **"Cash and cash equivalents 2022"** — Top-3 mein cash ka koi number nahi aaya, sirf "net sales" aur unrelated segment-tables aayi
+
+2. **"Net income 2019"** — Revenue-recognition aur highlights aaye, exact "net income" figure nahi
+
+3. **"Latest R&D spending"** — Bilkul galat (Product-announcements, Employee-Stock-Plan aaye — R&D nahi)
+
+4. **"Current stock price"** — 0.755 score ke saath **confidently galat** result (balance-sheet data) — ye wahi "no threshold" wala pehle-se-known issue hai

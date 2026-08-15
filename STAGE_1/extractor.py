@@ -11,6 +11,30 @@ class PDFExtractor:
 
     # ---------------------------------------------------------
 
+    def _strip_bytes(self, obj):
+        """
+        Recursively removes any bytes-type values from a nested dict/list
+        structure. PyMuPDF's dict-mode output can contain bytes in
+        different keys depending on the PDF's internal image/mask
+        encoding (not always just "image") -- this handles ALL cases,
+        not just the specific key we happened to see in Apple's PDFs.
+        """
+        if isinstance(obj, dict):
+            cleaned = {}
+            for key, value in obj.items():
+                if isinstance(value, bytes):
+                    continue  # drop this key entirely
+                cleaned[key] = self._strip_bytes(value)
+            return cleaned
+
+        elif isinstance(obj, list):
+            return [self._strip_bytes(item) for item in obj]
+
+        else:
+            return obj
+
+    # ---------------------------------------------------------
+
     def extract(
         self,
         data_folder,
@@ -85,14 +109,10 @@ class PDFExtractor:
                 page_dict = page.get_text("dict")
 
                 # ---------------------------------
-                # Remove image bytes
+                # Remove image bytes (Recursively)
                 # ---------------------------------
 
-                for block in page_dict["blocks"]:
-
-                    if "image" in block:
-
-                        del block["image"]
+                cleaned_blocks = self._strip_bytes(page_dict["blocks"])
 
                 pages.append(
 
@@ -104,7 +124,7 @@ class PDFExtractor:
 
                         "height": page.rect.height,
 
-                        "blocks": page_dict["blocks"],
+                        "blocks": cleaned_blocks,
 
                     }
 
