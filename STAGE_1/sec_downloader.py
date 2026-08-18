@@ -1,7 +1,7 @@
 import asyncio
 from playwright.async_api import async_playwright
 
-# Microsoft (MSFT) 2017 se 2026 tak ki filings
+# Microsoft (MSFT) 2017 se lekar 2026 tak ki filings
 TARGET_FILINGS = [
     {
         "company": "MSFT",
