@@ -4,70 +4,81 @@ from pathlib import Path
 import pymupdf as fitz
 
 
-def extract_printed_page_number(page, page_dict):
+def extract_printed_page_number(page_dict):
     """
-    Footer ko position (bottom-most y-coordinate) se dhoondta hai,
-    raw text line-order pe depend nahi karta -- isliye table ke
-    andar ka koi standalone number galti se match nahi hoga.
+    Page ki sabse neeche (bottom-most) short/simple text-line se
+    printed page number nikaalta hai. Y-position (bbox) use karta hai,
+    raw text ke line-order pe depend nahi karta -- isliye table ke
+    andar koi standalone number (jaise '252') galti se match nahi
+    hoga, chahe wo raw text stream mein footer se pehle aaye.
     """
-    height = page.rect.height
-    footer_zone_top = height - 60
 
     candidates = []
 
     for block in page_dict.get("blocks", []):
         for line in block.get("lines", []):
 
-            line_bbox = line.get("bbox")
-            if not line_bbox:
+            bbox = line.get("bbox")
+            if not bbox:
                 continue
 
-            y0 = line_bbox[1]
+            y1 = bbox[3]
 
-            if y0 < footer_zone_top:
+            spans = line.get("spans", [])
+            text = "".join(s.get("text", "") for s in spans).strip()
+
+            if not text:
                 continue
 
-            text = "".join(
-                span.get("text", "") for span in line.get("spans", [])
-            ).strip()
+            # Table rows/paragraphs lambi hoti hain -- footer chhota
+            # hota hai. Length-check margin-agnostic hai, har company
+            # ke layout pe kaam karega.
+            if len(text) > 60:
+                continue
 
-            if text:
-                candidates.append((y0, text))
+            candidates.append((y1, text))
+
+    if not candidates:
+        return None
 
     candidates.sort(key=lambda c: -c[0])
 
-    for y, text in candidates:
+    for y1, text in candidates[:6]:
 
         match = re.fullmatch(r"page\s+(\d{1,4})", text, re.IGNORECASE)
         if match:
-            return int(match.group(1))
+            num = int(match.group(1))
+            if num >= 1:
+                return num
 
         if "|" in text or "–" in text:
             match = re.search(r"(?:\||–)\s*(\d{1,4})\s*$", text)
             if match:
-                return int(match.group(1))
+                num = int(match.group(1))
+                if num >= 1:
+                    return num
 
         if re.fullmatch(r"\d{1,3}", text):
-            return int(text)
+            num = int(text)
+            if num >= 1:
+                return num
 
     return None
 
 
 def is_signatures_page(page_dict):
     """
-    Detect karta hai ke is page pe "SIGNATURES" heading hai ya nahi --
-    ye SEC 10-K body ka official end-marker hai. Iske baad jo bhi
-    aata hai (exhibits, certifications, attachments) unreliable
-    page-numbering wala hota hai aur retrieval ke liye low-value hai.
+    Detect karta hai ke is page pe "SIGNATURES" heading hai --
+    ye SEC 10-K body ka official end-marker hai. Iske baad exhibits/
+    attachments hote hain jinka page-numbering unreliable hota hai.
     """
     for block in page_dict.get("blocks", []):
         for line in block.get("lines", []):
 
             text = "".join(
-                span.get("text", "") for span in line.get("spans", [])
+                s.get("text", "") for s in line.get("spans", [])
             ).strip()
 
-            # Poori line "SIGNATURES" honi chahiye (case-insensitive)
             if re.fullmatch(r"signatures?", text, re.IGNORECASE):
                 return True
 
@@ -96,7 +107,6 @@ class PDFExtractor:
 
         extracted_reports = []
         failed_files = []
-
         data_folder = Path(data_folder)
 
         for company_folder in sorted(data_folder.iterdir()):
@@ -122,7 +132,7 @@ class PDFExtractor:
             document = fitz.open(pdf_path)
             pages = []
 
-            found_signatures = False  # ek baar True ho jaye to sab aage ke pages flag ho jayenge
+            found_signatures = False
 
             for page_index in range(len(document)):
 
@@ -131,19 +141,32 @@ class PDFExtractor:
                 page_dict = page.get_text("dict")
                 cleaned_blocks = self._strip_bytes(page_dict["blocks"])
 
-                # ---------------------------------------------
-                # Body-boundary check (SIGNATURES heading)
-                # ---------------------------------------------
                 if not found_signatures and is_signatures_page(page_dict):
                     found_signatures = True
 
-                printed_num = extract_printed_page_number(page, page_dict)
+                printed_num = extract_printed_page_number(page_dict)
 
                 pages.append({
-                    "physical_page_index": page_index + 1,
-                    "printed_page_number": printed_num,          # informational only — display/citation ke liye
-                    "page_number": page_index + 1,                # HAMESHA physical index — unique key, kabhi collide nahi hoga
-                    "is_post_signatures": found_signatures,      # True is page se aage sab exhibits/attachments hain
+                    # -----------------------------------------------
+                    # "page_index" = PHYSICAL position in the PDF
+                    # (1, 2, 3... N). Always unique, always sequential.
+                    # Use this for internal joining/matching between
+                    # pipeline stages.
+                    #
+                    # "page_number" = what's actually PRINTED in the
+                    # report's footer. Used for citations. Can be None
+                    # (unnumbered front-matter) or duplicate (if
+                    # numbering restarts, e.g. after exhibits).
+                    #
+                    # "is_post_signatures" = True once we've passed the
+                    # "SIGNATURES" heading -- everything after this is
+                    # exhibits/attachments, not the official 10-K body.
+                    # Downstream (chunk_builder) should skip these pages.
+                    # -----------------------------------------------
+                    "page_index": page_index + 1,
+                    "page_number": printed_num,
+                    "is_post_signatures": found_signatures,
+
                     "width": page.rect.width,
                     "height": page.rect.height,
                     "blocks": cleaned_blocks,
@@ -179,26 +202,25 @@ if __name__ == "__main__":
     DATA_FOLDER = "STAGE_1/data/pdfs"
 
     extractor = PDFExtractor()
-
     reports, failed_files = extractor.extract(DATA_FOLDER)
 
     print("\n====================================")
     print(" PDF Extraction Completed")
     print("====================================")
-
-    print(f"\nTotal Reports : {len(reports)}")
+    print(f"\nTotal Reports  : {len(reports)}")
     print(f"Failed Reports : {len(failed_files)}")
 
     total_pages = sum(report["total_pages"] for report in reports)
-    print(f"Total Pages   : {total_pages}")
+    print(f"Total Pages    : {total_pages}")
 
+    print("\nSaved JSON Files:")
     for report in reports:
-        post_sig_count = sum(1 for p in report["pages"] if p["is_post_signatures"])
-        print(f"{report['company']} -> {report['file_name']} (post-signatures pages: {post_sig_count})")
+        post_sig = sum(1 for p in report["pages"] if p["is_post_signatures"])
+        print(f"{report['company']} -> {report['file_name']} (post-signatures pages: {post_sig})")
 
     if failed_files:
         print("\nFailed Files:")
         for failed in failed_files:
-            print(f" - {failed}")
+            print(f"  - {failed}")
 
     print("\nDone.")

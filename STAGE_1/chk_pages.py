@@ -1,14 +1,14 @@
 import json
 from pathlib import Path
 
-# Un sub companies ke JSON check karein jo extracted folder mein hain
+# Extracted directory path
 extracted_dir = Path("STAGE_1/extracted")
 
 for company_dir in sorted(extracted_dir.iterdir()):
     if not company_dir.is_dir():
         continue
 
-    for json_file in company_dir.glob("*.json"):
+    for json_file in sorted(company_dir.glob("*.json")):
         print(f"\n====================================")
         print(f" Checking: {json_file.name}")
         print(f"====================================")
@@ -20,29 +20,40 @@ for company_dir in sorted(extracted_dir.iterdir()):
         last_printed = 0
         anomalies = []
 
-        for page in data["pages"]:
-            physical = page["physical_page_index"]
-            printed = page["printed_page_number"]
+        for page in data.get("pages", []):
+            # Updated keys according to extraction output
+            physical = page.get("page_index")
+            printed = page.get("page_number")
+            is_post_sig = page.get("is_post_signatures", False)
 
             if printed is None:
                 mismatches += 1
                 status = "MISSING"
             else:
                 status = "OK"
-                # Anomaly check: Agar page number previous se chhota ho jaye (e.g. 45 ke baad 7 aagaya)
+                # Anomaly check: Sequence drop verification
                 if printed <= last_printed and last_printed != 0:
                     anomalies.append((physical, printed, last_printed))
                 last_printed = printed
 
-            print(f"Physical: {physical:4} | Printed: {str(printed):6} | {status}")
+            post_sig_tag = " [EXHIBIT/POST-SIG]" if is_post_sig else ""
+            print(
+                f"Physical: {physical:4} | Printed: {str(printed):6} | {status}{post_sig_tag}"
+            )
 
         print(f"\nSummary for {json_file.name}:")
-        print(f"- Total pages: {len(data['pages'])}")
+        print(f"- Total pages: {len(data.get('pages', []))}")
         print(f"- Missing footers (None): {mismatches}")
-        
+
         if anomalies:
-            print(f"- ⚠️ WARNING! Anomalies (Sequence Breaking) detected at physical pages:")
+            print(
+                f"- ⚠️ WARNING! Anomalies (Sequence Breaking) detected at physical pages:"
+            )
             for phys, prnt, prev in anomalies:
-                print(f"  * Physical Page {phys}: Printed page dropped from {prev} to {prnt}!")
+                print(
+                    f"  * Physical Page {phys}: Printed page dropped from {prev} to {prnt}!"
+                )
         else:
-            print("- ✅ Sequence Check Passed: Printed page numbers flow smoothly/monotonically!")
+            print(
+                "- ✅ Sequence Check Passed: Printed page numbers flow smoothly/monotonically!"
+            )
