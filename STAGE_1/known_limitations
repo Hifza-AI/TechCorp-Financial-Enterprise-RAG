@@ -33,4 +33,20 @@ Stage 2 mein exactly isi cheez ko validate karna hai.
 
 3. **"Latest R&D spending"** — Bilkul galat (Product-announcements, Employee-Stock-Plan aaye — R&D nahi)
 
-4. **"Current stock price"** — 0.755 score ke saath **confidently galat** result (balance-sheet data) — ye wahi "no threshold" wala pehle-se-known issue hai
+4. **"Current stock price"** — 0.755 score ke saath **confidently galat** result (balance-sheet data) — ye wahi "no threshold" wala pehle-se-known 
+issue hai
+
+Key Reality: Printed Footers vs Physical PDF Pages
+Printed Footer Number ko Ignore Karna Hi Standard Hai:
+SEC EDGAR filings jab HTML se PDF banti hain, to unke footers (e.g., Apple Inc. | Page 43) printer margins ki waja se drift hotay rehte hain. Agar hum printed footers par rely karenge, to code har dusri file par crash karega. Is liye printed numbers ko zero weightage di jati hai.
+
+Ground Truth Is Your Trimmed PDF Page Index:
+RAG pipeline mein "Page 61" ka matlab hamesha aap ki Apple_2016_10K.pdf ka Physical Viewer Page Index 61 hoga.
+
+Extractor text Page 61 se uthayega.
+
+Metadata mein page: 61 likhega.
+
+Jab UI par "Source: Page 61" par click hoga, to Viewer Page 61 hi kholega.
+
+User ko wahi exact text wahan milega.
