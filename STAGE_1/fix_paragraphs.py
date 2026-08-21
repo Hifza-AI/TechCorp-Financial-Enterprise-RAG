@@ -3,6 +3,20 @@ import re
 from pathlib import Path
 
 
+def _is_page_progress_indicator(text):
+    """
+    Catches "N/M" style page-progress markers (e.g. "8/75", "9/75")
+    that some PDF viewers/print-tools embed. Unlike the repeated-
+    footer text ("Apple Inc. | 2020 Form 10-K | 5"), the NUMERATOR
+    here changes on every page while the denominator stays fixed --
+    so frequency-based repeat-detection never sees the exact same
+    string twice, and misses it. A page-progress indicator is never
+    real paragraph content regardless of how often it repeats, so we
+    drop it unconditionally on a simple pattern match instead.
+    """
+    return bool(re.fullmatch(r"\d{1,4}\s*/\s*\d{1,4}", text.strip()))
+
+
 def _normalize_for_repeat_check(text):
     """
     Footers like "Apple Inc. | 2021 Form 10-K | 16" differ from page
@@ -64,6 +78,13 @@ def fix_paragraph_file(data):
 
             # Drop repeated boilerplate paragraphs entirely
             if block["block_type"] == "paragraph":
+
+                # Page-progress markers ("8/75") never repeat as the
+                # exact same string, so the frequency-check above
+                # can't catch them -- drop these unconditionally.
+                if _is_page_progress_indicator(text):
+                    continue
+
                 normalized = _normalize_for_repeat_check(text)
                 if normalized in boilerplate:
                     continue

@@ -1,4 +1,5 @@
 import json
+import re
 from copy import deepcopy
 from pathlib import Path
 
@@ -119,6 +120,73 @@ class TableAnalyzer:
             if is_row_mate:
                 item["is_candidate"] = True
                 item["promoted_as_row_label"] = True
+
+        # -----------------------------------------------------
+        # PASS 3: header-zone rescue
+        #
+        # Multi-line WRAPPED text-column-headers (e.g. "Total
+        # Number" / "of Shares" / "Purchased" -- each its own line,
+        # stacked above the actual numeric data) sit at a DIFFERENT
+        # y than the data rows below them, so Pass 2's same-y
+        # row-mate rescue never catches them. Confirmed on real data
+        # (Apple 2016's "Share Repurchase" table): "Total Number",
+        # "of Shares", "Average", "Price", "Paid Per" all stayed
+        # is_candidate=False and never reached TableParser at all.
+        #
+        # Fix: for every non-candidate line, check if it's (a) SHORT
+        # (<=5 words -- header fragments are short; real paragraphs
+        # aren't), (b) positioned ABOVE a confirmed-candidate line
+        # within a reasonable vertical window (header zone sits
+        # just above the table body), AND (c) x-aligned with some
+        # confirmed candidate's column position (this is the key
+        # guard against false positives -- a random paragraph
+        # sitting above the table won't share the table's exact
+        # column x-positions, but genuine wrapped header fragments
+        # will).
+        # -----------------------------------------------------
+
+        confirmed_x_positions = []
+
+        for item in line_analysis:
+            if item["is_candidate"]:
+                confirmed_x_positions.extend(item.get("x_positions", []))
+
+        HEADER_ZONE_WINDOW = 150  # points above a confirmed row to search
+        HEADER_X_TOLERANCE = 20
+
+        for item in line_analysis:
+
+            if item["is_candidate"]:
+                continue
+
+            if item["_y"] is None:
+                continue
+
+            word_count = len(item["text"].split())
+
+            if word_count == 0 or word_count > 5:
+                continue
+
+            if item["text"].strip().endswith("."):
+                continue  # looks like end of a sentence, not a header fragment
+
+            is_above_a_table = any(
+                0 < (y - item["_y"]) <= HEADER_ZONE_WINDOW
+                for y in confirmed_ys
+            )
+
+            if not is_above_a_table:
+                continue
+
+            is_column_aligned = any(
+                abs(x - cx) <= HEADER_X_TOLERANCE
+                for x in item.get("x_positions", [])
+                for cx in confirmed_x_positions
+            )
+
+            if is_column_aligned:
+                item["is_candidate"] = True
+                item["promoted_as_header_fragment"] = True
 
         # Drop the internal-only helper key before saving
         for item in line_analysis:
@@ -272,36 +340,32 @@ class TableAnalyzer:
         # so this special case wasn't actually needed for real tables,
         # only harmful for bullet lists.
 
-        # Remove common accounting wrappers/symbols
+        # Remove common accounting wrappers/symbols AND whitespace.
+        #
+        # We used to try float(cleaned) on the WHOLE remaining string,
+        # which only works for a SINGLE clean number. But a single
+        # PDF span can sometimes contain a RANGE like
+        # "$116.18 - $91.50" (two numbers, one dash, one space) as
+        # one continuous text-run -- float() on that fails entirely
+        # (ValueError), so the whole line scored numeric_ratio=0.0
+        # and a real financial table (quarterly stock price ranges)
+        # was silently dropped as "not a table" -- confirmed on
+        # Apple 2016's "Price Range of Common Stock" table.
+        #
+        # Fix: instead of requiring the WHOLE token to parse as one
+        # float, strip every character that's normal in financial
+        # formatting ($, comma, period, dash, plus, parens, percent,
+        # whitespace) and check if what's LEFT is purely digits. This
+        # correctly recognizes both single numbers ("252") AND
+        # compound numeric content like ranges ("$116.18 - $91.50")
+        # as numeric, without needing them to be one valid float.
 
-        cleaned = cleaned.replace(",", "")
-
-        cleaned = cleaned.replace("$", "")
-
-        cleaned = cleaned.replace("%", "")
-
-        cleaned = cleaned.replace("(", "")
-
-        cleaned = cleaned.replace(")", "")
-
-        cleaned = cleaned.replace("-", "")
-
-        cleaned = cleaned.replace("+", "")
+        cleaned = re.sub(r"[\$,\.\-\+\(\)%\s]", "", cleaned)
 
         if not cleaned:
             return False
 
-        # Decimal
-
-        try:
-
-            float(cleaned)
-
-            return True
-
-        except ValueError:
-
-            return False
+        return cleaned.isdigit()
 
     # =========================================================
     # NEARBY NUMERIC LINES

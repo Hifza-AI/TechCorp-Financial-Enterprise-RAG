@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 
@@ -12,7 +13,15 @@ class TableParser:
     def __init__(
         self,
         y_tolerance=6.0,
-        x_tolerance=15.0,
+        # x_tolerance was 15.0 -- but real observed data (Apple 2016's
+        # stock-performance table) showed a CONSISTENT header-to-data
+        # x-offset of ~16.1-16.3 across every column, just outside
+        # the old tolerance. That caused EVERY value in that table to
+        # come back null (no column matched). Bumped to 20.0 to give
+        # a safety margin above the largest observed real offset,
+        # without being so loose it starts matching the wrong
+        # adjacent column on tightly-packed tables.
+        x_tolerance=20.0,
     ):
         self.y_tolerance = y_tolerance
         self.x_tolerance = x_tolerance
@@ -175,8 +184,14 @@ class TableParser:
 
             gap = current["y"] - previous["y"]
 
-            # Large vertical gap = likely a new/different table
-            if gap <= 95:
+            # Large vertical gap = likely a new/different table.
+            #
+            # This threshold was 30 -- but real data (Apple 2016's
+            # Share Repurchase table, with multiple period
+            # sub-sections separated by a blank line) showed gaps of
+            # ~34.7 between sections that should stay ONE table.
+            # Bumped to 45 for headroom above that observed gap.
+            if gap <= 45:
                 current_region.append(current)
             else:
                 if current_region:
@@ -186,7 +201,65 @@ class TableParser:
         if current_region:
             regions.append(current_region)
 
-        return regions
+        # -----------------------------------------------------
+        # Refinement pass: a wider gap-threshold alone isn't
+        # reliable -- confirmed on Apple 2022 page 45, where THREE
+        # genuinely-separate small tables (Property Plant &
+        # Equipment, Other Non-Current Liabilities, Other Income/
+        # Expense -- each with a DIFFERENT number of year-columns!)
+        # sat close enough together (~35-40pt gaps) to get merged
+        # into one region by the gap-check alone. Once merged, the
+        # FIRST sub-table's header/column-count got locked in and
+        # applied to ALL rows -- corrupting the later sub-tables'
+        # values (a 3-column table's data got jammed into a
+        # 2-column structure, numbers landing in the wrong slots).
+        #
+        # Fix: within each gap-based region, also look for a
+        # REPEATED header-like row (another row, not the first,
+        # that itself has >=2 bold year-cells) -- that's a reliable
+        # signal a NEW table's header appears here, regardless of
+        # how small the y-gap before it was. Split there too.
+        # -----------------------------------------------------
+
+        refined_regions = []
+
+        for region in regions:
+            refined_regions.extend(self._resplit_on_repeated_headers(region))
+
+        return refined_regions
+
+    def _resplit_on_repeated_headers(self, region):
+
+        if len(region) <= 1:
+            return [region]
+
+        split_points = []
+
+        for index, row in enumerate(region):
+
+            if index == 0:
+                continue  # the region's own first row is expected to be a header
+
+            cells = self._extract_cells(row)
+
+            year_cells = [c for c in cells if self._is_year(c["text"])]
+
+            if len(year_cells) >= 2:
+                split_points.append(index)
+
+        if not split_points:
+            return [region]
+
+        sub_regions = []
+        start = 0
+
+        for point in split_points:
+            sub_regions.append(region[start:point])
+            start = point
+
+        sub_regions.append(region[start:])
+
+        return [sub for sub in sub_regions if sub]
 
     # =========================================================
     # PARSE TABLE REGION
@@ -228,15 +301,201 @@ class TableParser:
                         "header": [column["name"] for column in columns],
                         "rows": data_rows,
                         "header_detected": True,
+                        "column_type": "year",
                         "row_count": len(data_rows),
                         "column_count": len(columns),
                     }
 
         # -----------------------------------------------------
-        # No reliable header -> raw fallback
+        # No YEAR header -> try TEXT-LABEL header instead.
+        #
+        # Many financial tables (Share Repurchase Program, stock
+        # option/RSU activity, etc.) use wrapped text-label column
+        # headers like "Total Number of Shares Purchased" instead of
+        # years. These wrap across MULTIPLE physical lines per
+        # column (e.g. "Total" / "Number" / "of Shares" / "Purchased"
+        # each on their own line, all near the same x-position). This
+        # pattern recurs across most 10-K filings, so it's worth
+        # detecting properly rather than always falling back to raw.
+        # -----------------------------------------------------
+
+        text_header_rows, text_columns = self._find_text_header(rows)
+
+        if text_columns and len(text_columns) >= 2:
+
+            data_rows = []
+
+            for index, row in enumerate(rows):
+
+                if index in text_header_rows:
+                    continue
+
+                parsed_row = self._parse_data_row(row, text_columns, value_tolerance=45.0)
+
+                if parsed_row is not None:
+                    data_rows.append(parsed_row)
+
+            if data_rows:
+
+                return {
+                    "page_number": page.get("page_number"),
+                    "bbox": self._get_table_bbox(rows),
+                    "header": [column["name"] for column in text_columns],
+                    "rows": data_rows,
+                    "header_detected": True,
+                    "column_type": "text_label",
+                    "row_count": len(data_rows),
+                    "column_count": len(text_columns),
+                }
+
+        # -----------------------------------------------------
+        # No reliable header of either kind -> raw fallback
         # -----------------------------------------------------
 
         return self._parse_without_header(page, rows)
+
+    # =========================================================
+    # TEXT-LABEL HEADER DETECTION (fallback when no years found)
+    # =========================================================
+
+    def _row_numeric_fraction(self, row):
+        """
+        What fraction of this row's cells look like real numbers
+        (not header-labels). A row is treated as DATA once this is
+        high -- everything above it, in the region, is candidate
+        header material.
+        """
+
+        cells = self._extract_cells(row)
+
+        if not cells:
+            return 0.0
+
+        numeric_count = sum(
+            1 for cell in cells
+            if self._looks_numeric_cell(cell["text"])
+        )
+
+        return numeric_count / len(cells)
+
+    def _looks_numeric_cell(self, text):
+
+        cleaned = text.strip()
+
+        if cleaned in ("$", "-", "--", "—", "%", "(", ")"):
+            return False
+
+        cleaned = re.sub(r"[\$,\.\-\+\(\)%\s]", "", cleaned)
+
+        return bool(cleaned) and cleaned.isdigit()
+
+    def _find_text_header(self, rows, max_header_rows=14, x_cluster_tolerance=None):
+        """
+        Detects wrapped, multi-line TEXT-LABEL column headers (e.g.
+        "Total Number of Shares Purchased" spread across 3-4 stacked
+        short lines), as an alternative to the year-based header.
+
+        Approach:
+          1. Find where real DATA starts -- the first row whose cells
+             are mostly numeric. Everything above that (up to
+             max_header_rows) is the "header zone".
+          2. Within the header zone, cluster cells by x-position --
+             cells stacked at roughly the same x across multiple
+             header-zone rows belong to the SAME column, and their
+             text (in top-to-bottom order) concatenates into one
+             combined column label.
+          3. Return these as {"name": ..., "x": ...} columns, in the
+             exact same shape _extract_columns() produces for years --
+             so all the existing row-matching logic downstream just
+             works, unchanged, regardless of which detector found the
+             columns.
+
+        Returns (header_row_indices, columns). columns is an empty
+        list if nothing confident was found (caller falls back to
+        the raw/unstructured parser in that case).
+        """
+
+        if x_cluster_tolerance is None:
+            x_cluster_tolerance = self.x_tolerance
+
+        # Step 1: find where data starts
+        data_start_index = None
+
+        for index, row in enumerate(rows[:max_header_rows + 1]):
+
+            if self._row_numeric_fraction(row) >= 0.5:
+                data_start_index = index
+                break
+
+        if data_start_index is None or data_start_index == 0:
+            # No clear header zone (table starts with data immediately,
+            # or nothing looked numeric within our search window).
+            return set(), []
+
+        header_row_indices = set(range(data_start_index))
+
+        # Step 2: collect all header-zone cells, in row (top-to-bottom)
+        # order, and cluster by x-position.
+        clusters = []  # each: {"x": representative_x, "parts": [text, ...]}
+
+        for row_index in sorted(header_row_indices):
+
+            for cell in self._extract_cells(rows[row_index]):
+
+                text = cell["text"].strip()
+
+                if not text or text in ("$", "-", "--", "—"):
+                    continue
+
+                placed = False
+
+                for cluster in clusters:
+
+                    if abs(cell["x"] - cluster["x"]) <= x_cluster_tolerance:
+                        cluster["parts"].append(text)
+                        placed = True
+                        break
+
+                if not placed:
+                    clusters.append({"x": cell["x"], "parts": [text]})
+
+        if len(clusters) < 2:
+            return header_row_indices, []
+
+        columns = [
+            {
+                "name": " ".join(cluster["parts"]).strip(),
+                "x": cluster["x"],
+            }
+            for cluster in clusters
+            if " ".join(cluster["parts"]).strip()
+        ]
+
+        # Drop spurious "columns" that are just a footnote marker
+        # (e.g. "(1)") that happened to sit far enough from every
+        # real column to form its own isolated cluster. Confirmed on
+        # Apple 2016's Share Repurchase table -- a stray "(1)" at the
+        # far-right edge became a fake 6th column otherwise.
+        columns = [
+            column for column in columns
+            if not re.fullmatch(r"\(\d+\)", column["name"].strip())
+        ]
+
+        columns.sort(key=lambda item: item["x"])
+
+        # The LEFTMOST cluster in these tables is consistently the
+        # row-LABEL column's own header (e.g. "Periods"), not a real
+        # value-column -- exactly like year-header tables, where the
+        # row label ("Net sales") is never itself one of the
+        # `columns`. If we kept it, _parse_data_row's label-boundary
+        # check (x < first_column_x) would wrongly swallow real row
+        # labels ("purchases", "Open market...") as if they were
+        # this column's VALUE, since their x sits to the right of
+        # this narrow label-header, not to the left of it.
+        if len(columns) > 2 and columns[0]["x"] < 100:
+            columns = columns[1:]
+
+        return header_row_indices, columns
 
     # =========================================================
     # HEADER DETECTION
@@ -247,8 +506,24 @@ class TableParser:
         best_index = None
         best_score = 0
 
-        # Table header is usually near the beginning of the region
-        for index, row in enumerate(rows[:4]):
+        # NOTE: this used to only search rows[:4] -- but the header-
+        # zone-rescue pass added to TableAnalyzer (which pulls in
+        # short text lines ABOVE a table's numeric data, to catch
+        # wrapped text-column-headers) can now legitimately add MORE
+        # rows before the real header on dense pages (e.g. a page
+        # with a title + multi-line intro paragraph before a
+        # 5-year financial summary table). That pushed the real
+        # year-header past index 3, causing detection to fail
+        # entirely on tables that used to parse correctly (confirmed:
+        # Apple 2016's "Selected Financial Data" 5-year table).
+        #
+        # Fix: search a much wider window. This is safe -- the
+        # scoring itself (multiple 4-digit years, bold) is specific
+        # enough that a genuine data-row won't accidentally win; we
+        # were just artificially limiting WHERE we looked.
+        search_window = min(len(rows), 15)
+
+        for index, row in enumerate(rows[:search_window]):
 
             cells = self._extract_cells(row)
 
@@ -308,7 +583,10 @@ class TableParser:
     # PARSE DATA ROW
     # =========================================================
 
-    def _parse_data_row(self, row, columns):
+    def _parse_data_row(self, row, columns, value_tolerance=None):
+
+        if value_tolerance is None:
+            value_tolerance = self.x_tolerance
 
         cells = self._extract_cells(row)
 
@@ -334,13 +612,26 @@ class TableParser:
             if text in self.NON_LABEL_TOKENS:
                 continue
 
-            if cell["x"] < (first_column_x - self.x_tolerance):
+            if cell["x"] < (first_column_x - value_tolerance):
                 label_parts.append(text)
 
         label = " ".join(label_parts).strip()
 
         # -----------------------------------------------------
         # Map values to columns by nearest x-position
+        #
+        # value_tolerance is wider than the default x_tolerance when
+        # matching TEXT-LABEL columns (see caller). Those columns
+        # can be visually wide (e.g. "Total Number of Shares
+        # Purchased as Part of Publicly Announced Plans or
+        # Programs"), and the column's x-anchor is based on where
+        # its LEFTMOST header-word starts -- but the actual numeric
+        # data underneath is often right-aligned within that wide
+        # column, sitting well to the right of that anchor. A tight
+        # tolerance (fine for narrow year-columns) left most values
+        # unmatched (null) for these wider text-label columns.
+        # Confirmed on real data: Apple 2016's Share Repurchase
+        # table had genuine offsets up to ~37 points.
         # -----------------------------------------------------
 
         values = {}
@@ -361,7 +652,7 @@ class TableParser:
 
                 distance = abs(cell["x"] - target_x)
 
-                if distance <= self.x_tolerance:
+                if distance <= value_tolerance:
                     matching_cells.append((distance, cell))
 
             if matching_cells:

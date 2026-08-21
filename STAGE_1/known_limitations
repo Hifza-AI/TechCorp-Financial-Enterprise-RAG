@@ -50,3 +50,14 @@ Metadata mein page: 61 likhega.
 Jab UI par "Source: Page 61" par click hoga, to Viewer Page 61 hi kholega.
 
 User ko wahi exact text wahan milega.
+
+
+Actually no urls last ma nos ehote hen cleaner unko remove kar raha sath hi agr urls paragraph ma aa jayen to wo bhi remove ho rahe hen lekin ye risk bohat kam ha user bohat kam inke bare ma sawal karta ha Apple ki investor-relations URL kya hai?
+
+Limitations at Stage 2 on the Table Analysis and Table PArsing stage
+1. Segment-tables: explicit % change-columns not extracted 
+   (derivable from year-over-year raw values already present)
+2. Some rows with parenthesized-values ("(228)") may show missing 
+   values instead of extracted numbers (isolated cases, not systemic)
+3. Wide text-label headers occasionally split into 2 redundant 
+   columns instead of merging into 1 (cosmetic, data itself correct)

@@ -242,21 +242,28 @@ class CleaningRules:
 
         lines = list(page.get("lines", []))
 
-        # Step 1: 5-line browser-export block hatao (agar hai)
+        # Step 1 (KEPT -- this is safe): remove the 5-line browser-
+        # export block, but ONLY when all 5 specific signals appear
+        # together in order (company-byline + timestamp + "Document"
+        # + URL + page-fraction). That much context can't coincide
+        # with real table data by accident, so this stays here in
+        # the cleaning stage.
         lines = CleaningRules._remove_browser_export_block(lines)
 
-        # Step 2: aakhri line agar standalone digit/"Page N" hai to hatao
-        if lines:
-
-            last_line = lines[-1]
-            text = (last_line.get("text") or "").strip()
-
-            is_footer_pattern = bool(
-                re.fullmatch(r"(?:page\s*)?\d{1,4}", text, re.IGNORECASE)
-            )
-
-            if is_footer_pattern:
-                lines = lines[:-1]
+        # Step 2 (REMOVED -- this was the actual bug): a standalone
+        # "last line of the page is a short number -> assume it's a
+        # footer" fallback used to run here with NO surrounding
+        # context. On Apple's pages, a genuine financial-table value
+        # (e.g. "75") occasionally landed as the literal last
+        # extracted line and got silently deleted as if it were a
+        # footer -- real data loss. Since this fallback has no way
+        # to tell "isolated real number" from "isolated footer
+        # number" apart, it isn't safe to keep at this per-line,
+        # no-context stage. Any footer that Step 1 doesn't catch
+        # (a rarer case) is still caught downstream, safely, by
+        # paragraph_parser.py's frequency-based repeat-detection --
+        # which only removes text confirmed to repeat as boilerplate
+        # across the document, never a one-off real value.
 
         cleaned_page = {}
 
