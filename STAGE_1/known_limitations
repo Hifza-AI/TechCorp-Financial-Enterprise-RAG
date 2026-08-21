@@ -43,7 +43,7 @@ SEC EDGAR filings jab HTML se PDF banti hain, to unke footers (e.g., Apple Inc. 
 Ground Truth Is Your Trimmed PDF Page Index:
 RAG pipeline mein "Page 61" ka matlab hamesha aap ki Apple_2016_10K.pdf ka Physical Viewer Page Index 61 hoga.
 
-Extractor text Page 61 se uthayega.
+Extractor text Page 61 se uthayega
 
 Metadata mein page: 61 likhega.
 
