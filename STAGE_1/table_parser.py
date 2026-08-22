@@ -100,6 +100,13 @@ class TableParser:
             return []
 
         # -----------------------------------------------------
+        # Merge wrapped-continuation row-labels (see method
+        # docstring) BEFORE splitting into table regions.
+        # -----------------------------------------------------
+
+        rows = self._merge_wrapped_continuation_labels(rows)
+
+        # -----------------------------------------------------
         # Detect table regions
         # -----------------------------------------------------
 
@@ -167,6 +174,158 @@ class TableParser:
 
         return rows
 
+    def _merge_wrapped_continuation_labels(self, rows):
+        """
+        Fixes: a row-label that wraps across MULTIPLE physical lines
+        (2, 3, or more -- e.g. "Adjustment for net (gains)/losses
+        realized and included in net" / "income, net of tax expense/
+        (benefit) of $(104), $475 and $131," / "respectively") where
+        the actual numeric values sit at the same y as only the LAST
+        line. Without this, every preceding line forms its own
+        numeric-free "row" that no rescue-pass catches, and is
+        silently lost -- confirmed on Apple 2018's Comprehensive
+        Income statement (a 3-line wrap lost its first TWO lines,
+        not just one).
+
+        Distinguishing signal: genuine standalone section-headers in
+        these tables ("Current assets:", "Shareholders' equity:")
+        consistently END WITH A COLON. A wrapped label-continuation
+        does not. So: collect a RUN of consecutive numeric-free,
+        non-colon-ending rows, and merge the WHOLE run into the next
+        row that actually has numeric values (however many lines
+        that run spans), instead of only looking one row back.
+        """
+
+        merged_rows = []
+
+        index = 0
+
+        while index < len(rows):
+
+            run_rows = []
+            run_index = index
+
+            while run_index < len(rows):
+
+                row = rows[run_index]
+
+                cells = self._extract_cells(row)
+
+                row_text = " ".join(cell["text"] for cell in cells).strip()
+
+                has_numeric = any(
+                    self._looks_numeric_cell(cell["text"]) for cell in cells
+                )
+
+                if has_numeric:
+                    break
+
+                if not row_text or row_text.endswith(":"):
+                    break  # genuine section-header or blank -- stop the run
+
+                # Bold needs nuance: Costco bolds BOTH its section-
+                # titles ("REVENUE") AND individual line-items whose
+                # label wraps across 2 bold lines ("EFFECT OF
+                # EXCHANGE RATE CHANGES ON CASH AND CASH" /
+                # "EQUIVALENTS", where "EQUIVALENTS" itself carries
+                # the real values) -- so "is this row bold" alone
+                # can't tell them apart. The real signal: a genuine
+                # standalone title is followed by DIFFERENTLY-styled
+                # data (bold title -> non-bold data-row, like
+                # "REVENUE" -> "Net sales"). A wrapped bold label
+                # continues into ANOTHER bold row. So only treat a
+                # bold row as a hard stop if the row right after it
+                # is NOT also bold.
+                is_bold_row = any(cell.get("bold") for cell in cells)
+
+                if is_bold_row:
+
+                    peek_index = run_index + 1
+
+                    if peek_index >= len(rows):
+                        break
+
+                    peek_cells = self._extract_cells(rows[peek_index])
+
+                    peek_is_bold = any(
+                        cell.get("bold") for cell in peek_cells
+                    )
+
+                    if not peek_is_bold:
+                        break  # bold title -> non-bold data: genuine standalone header
+
+                run_rows.append(row)
+                run_index += 1
+
+            if run_rows and run_index < len(rows):
+
+                next_row = rows[run_index]
+
+                next_cells = self._extract_cells(next_row)
+
+                next_has_numeric = any(
+                    self._looks_numeric_cell(cell["text"]) for cell in next_cells
+                )
+
+                # -------------------------------------------------
+                # Bold-status must MATCH between the collected run
+                # and the row carrying the values, not just "is the
+                # run bold" in isolation. Two genuinely different
+                # situations look structurally identical (bold,
+                # numeric-free row followed by a numeric row) but
+                # need OPPOSITE handling:
+                #   - "REVENUE" (bold) -> "Net sales" (NORMAL weight,
+                #     163,220...) -- a real section-divider directly
+                #     above an unrelated line-item. Bold-status
+                #     CHANGES here -- do NOT merge.
+                #   - "EFFECT OF EXCHANGE RATE CHANGES ON CASH AND
+                #     CASH" (bold) -> "EQUIVALENTS" (ALSO bold, 70/
+                #     (15)/(37)) -- the same bold title simply wraps
+                #     across 2 lines, with its value on the last
+                #     line. Bold-status STAYS THE SAME -- DO merge.
+                # Confirmed on Costco 2020's Cash Flow Statement,
+                # where Costco bolds entire major line-items (not
+                # just top-level section dividers), unlike Apple.
+                # -------------------------------------------------
+
+                run_is_bold = any(
+                    cell.get("bold")
+                    for r in run_rows
+                    for cell in self._extract_cells(r)
+                )
+
+                next_is_bold = any(cell.get("bold") for cell in next_cells)
+
+                if next_has_numeric and run_is_bold == next_is_bold:
+
+                    combined_lines = []
+
+                    for run_row in run_rows:
+                        combined_lines.extend(run_row["lines"])
+
+                    combined_lines.extend(next_row["lines"])
+
+                    combined_lines.sort(key=lambda line: self._get_x(line))
+
+                    merged_rows.append({
+                        "y": next_row["y"],
+                        "lines": combined_lines,
+                    })
+
+                    index = run_index + 1
+                    continue
+
+            # No valid merge target found -- emit the collected run
+            # (if any) and the current row as-is, and move on.
+            if run_rows:
+                merged_rows.extend(run_rows)
+                index = run_index
+            else:
+                merged_rows.append(rows[index])
+                index += 1
+
+        return merged_rows
+
     # =========================================================
     # SPLIT TABLE REGIONS
     # =========================================================
@@ -186,12 +345,27 @@ class TableParser:
 
             # Large vertical gap = likely a new/different table.
             #
-            # This threshold was 30 -- but real data (Apple 2016's
-            # Share Repurchase table, with multiple period
-            # sub-sections separated by a blank line) showed gaps of
-            # ~34.7 between sections that should stay ONE table.
-            # Bumped to 45 for headroom above that observed gap.
-            if gap <= 45:
+            # This threshold keeps growing because a single fixed
+            # number can't serve two opposite failure-modes at once:
+            #   - Too TIGHT: genuinely-one table with long, wrapped,
+            #     footnote-heavy row-labels (confirmed: Apple 2017's
+            #     Comprehensive Income statement, where labels like
+            #     "net of tax benefit/(expense) of $(478), $(7) and
+            #     $(441), respectively" create large gaps) gets
+            #     fractured into multiple headerless orphan-regions.
+            #   - Too LOOSE: genuinely-different tables stacked close
+            #     together (confirmed: Apple 2022's PP&E / Other
+            #     Non-Current Liabilities / Other Income, each with a
+            #     DIFFERENT column-count) get wrongly merged.
+            #
+            # Resolution: lean on the GAP only to avoid one giant
+            # region spanning unrelated content far apart on a page
+            # (very generous threshold now), and rely on
+            # _resplit_on_repeated_headers() -- which looks for an
+            # actual repeated year-header, real evidence rather than
+            # a distance-guess -- as the PRECISE splitter for
+            # genuinely-different tables sitting close together.
+            if gap <= 100:
                 current_region.append(current)
             else:
                 if current_region:
@@ -635,6 +809,7 @@ class TableParser:
         # -----------------------------------------------------
 
         values = {}
+        claimed_cell_ids = set()
 
         for column in columns:
 
@@ -646,8 +821,14 @@ class TableParser:
 
                 text = cell["text"].strip()
 
-                # Symbols alone should never "win" a column match
-                if text in self.NON_LABEL_TOKENS:
+                # Symbols alone should never "win" a column match --
+                # EXCEPT dash/em-dash, which in financial tables
+                # represents an explicit zero/not-applicable VALUE
+                # (e.g. "Cumulative effect of change in accounting
+                # principle: — — (136)"). Treating it the same as a
+                # stray "$" caused genuine zero-values to disappear
+                # as null instead of being recorded as "—".
+                if text in self.NON_LABEL_TOKENS and text not in ("-", "--", "—"):
                     continue
 
                 distance = abs(cell["x"] - target_x)
@@ -662,10 +843,58 @@ class TableParser:
                 best_cell = matching_cells[0][1]
 
                 values[column["name"]] = best_cell["text"]
+                claimed_cell_ids.add(id(best_cell))
 
             else:
 
                 values[column["name"]] = None
+
+        # -----------------------------------------------------
+        # Positional fallback for still-unmatched columns.
+        #
+        # Recurring pattern (seen 3 times now: the "September"
+        # date-header table, the Share Repurchase table, and now
+        # Apple's EPS row): a row can have NARROW values (e.g. EPS
+        # "6.11") sitting far from a column-anchor calibrated
+        # against WIDE values (e.g. revenue "316,199") elsewhere in
+        # the SAME table, because right-aligned numbers of very
+        # different lengths land at different x-positions even
+        # within "the same visual column". Strict x-tolerance
+        # matching alone can't bridge that reliably.
+        #
+        # Fix: if some columns are still unmatched, and there are
+        # exactly as many UNCLAIMED value-like cells left in this
+        # row as there are unmatched columns, assume they correspond
+        # in left-to-right order (both sorted by x) and assign them
+        # positionally. This only fires when the counts match
+        # exactly, which keeps it safe -- it won't guess when the
+        # row's shape doesn't cleanly line up with the columns.
+        # -----------------------------------------------------
+
+        unmatched_columns = [
+            column for column in columns
+            if values[column["name"]] is None
+        ]
+
+        if unmatched_columns:
+
+            unclaimed_cells = [
+                cell for cell in cells
+                if (
+                    cell["text"].strip() not in self.NON_LABEL_TOKENS
+                    or cell["text"].strip() in ("-", "--", "—")
+                )
+                and id(cell) not in claimed_cell_ids
+                and cell["x"] >= (first_column_x - value_tolerance)
+            ]
+
+            if len(unclaimed_cells) == len(unmatched_columns):
+
+                sorted_columns = sorted(unmatched_columns, key=lambda c: c["x"])
+                sorted_cells = sorted(unclaimed_cells, key=lambda c: c["x"])
+
+                for column, cell in zip(sorted_columns, sorted_cells):
+                    values[column["name"]] = cell["text"]
 
         # Ignore completely empty rows
         if not label and not any(v is not None for v in values.values()):

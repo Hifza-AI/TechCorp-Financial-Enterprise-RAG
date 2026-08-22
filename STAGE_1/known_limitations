@@ -61,3 +61,8 @@ Limitations at Stage 2 on the Table Analysis and Table PArsing stage
    values instead of extracted numbers (isolated cases, not systemic)
 3. Wide text-label headers occasionally split into 2 redundant 
    columns instead of merging into 1 (cosmetic, data itself correct)
+
+   Multi-line date-header fragments occasionally form a separate, content-less table-object; harmless, safe to ignore
+
+
+   Adjacent non-numeric descriptive lines (e.g. share-class details) may occasionally merge into one combined label when neither carries its own value; all underlying text/information remains intact and retrievable

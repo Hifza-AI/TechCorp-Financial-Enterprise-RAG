@@ -188,6 +188,74 @@ class TableAnalyzer:
                 item["is_candidate"] = True
                 item["promoted_as_header_fragment"] = True
 
+        # -----------------------------------------------------
+        # PASS 4: adjacent-predecessor rescue (wrapped row-labels
+        # INSIDE a table body)
+        #
+        # Confirmed on Apple 2022's Comprehensive Income table: a
+        # row-label wrapping across 2 physical lines (e.g.
+        # "Adjustment for net (gains)/losses realized and included
+        # in net" / "income" -- where the SECOND line sits on the
+        # same y as the row's actual numeric values) has ZERO
+        # numeric content on its FIRST line. Pass 2 (same-y rescue)
+        # doesn't help since the two lines are at DIFFERENT y's.
+        # Pass 3 (header-zone) doesn't help either -- it only
+        # rescues lines ABOVE where a table's data starts, not
+        # continuation-lines INSIDE an already-running table body.
+        # Result: the first line never became a candidate at all,
+        # and only the last word/line of the wrapped label survived.
+        #
+        # Fix: if a non-candidate line is the IMMEDIATE predecessor
+        # (by line-index, not y) of a CONFIRMED candidate line, is
+        # reasonably short (not a stray full paragraph), and sits
+        # close in y to the surrounding table (tighter window than
+        # Pass 3, since this is specifically about adjacency, not
+        # "somewhere above the table"), promote it too.
+        # -----------------------------------------------------
+
+        ADJACENT_Y_WINDOW = 40
+        MAX_LABEL_WORDS = 15
+
+        # Processing in REVERSE order (last line first) lets a
+        # multi-line chain (3+ wrapped lines, not just 2) cascade-
+        # rescue correctly in a SINGLE pass. Forward-order would only
+        # catch the line immediately before an ALREADY-confirmed
+        # candidate -- so a 3-line wrap ("Adjustment for net
+        # (gains)/losses..." / "income, net of tax expense..." /
+        # "respectively") only rescued the middle line, since the
+        # first line's own next-line (the middle one) hadn't been
+        # promoted YET at the point forward-order reached it.
+        # Reverse-order guarantees each line's next-line has already
+        # been evaluated (and possibly promoted) before we check it.
+        for index in range(len(line_analysis) - 1, -1, -1):
+
+            item = line_analysis[index]
+
+            if item["is_candidate"]:
+                continue
+
+            if index + 1 >= len(line_analysis):
+                continue
+
+            next_item = line_analysis[index + 1]
+
+            if not next_item["is_candidate"]:
+                continue
+
+            word_count = len(item["text"].split())
+
+            if word_count == 0 or word_count > MAX_LABEL_WORDS:
+                continue
+
+            if item["_y"] is None or next_item.get("_y") is None:
+                continue
+
+            y_gap = abs(next_item["_y"] - item["_y"])
+
+            if y_gap <= ADJACENT_Y_WINDOW:
+                item["is_candidate"] = True
+                item["promoted_as_label_continuation"] = True
+
         # Drop the internal-only helper key before saving
         for item in line_analysis:
             item.pop("_y", None)
