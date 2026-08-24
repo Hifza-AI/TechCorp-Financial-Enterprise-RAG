@@ -23,9 +23,11 @@ class ChunkBuilder:
         self,
         max_chunk_chars=1200,
         chunk_overlap_chars=150,
+        min_chunk_chars=250,
     ):
         self.max_chunk_chars = max_chunk_chars
         self.chunk_overlap_chars = chunk_overlap_chars
+        self.min_chunk_chars = min_chunk_chars
 
     # =========================================================
     # MAIN
@@ -44,7 +46,91 @@ class ChunkBuilder:
             chunks=chunks,
         )
 
+        # -----------------------------------------------------
+        # Coalesce small chunks.
+        #
+        # Chunks are built PER-SECTION as the tree is walked -- if a
+        # heading's own paragraphs are short (common in financial
+        # reports: brief risk-factor items, short note-disclosures),
+        # that section becomes its own tiny chunk on its own, even
+        # though max_chunk_chars allows much more. Tiny chunks hurt
+        # embedding quality (too little text for a distinguishing
+        # signal) and fragment related context across more pieces
+        # than necessary. This pass merges consecutive small TEXT
+        # chunks (same company/year, adjacent in document order)
+        # up to max_chunk_chars, tracking a combined section_path so
+        # citations still show where each piece came from. Table
+        # chunks are never touched -- they stay whole and separate.
+        # -----------------------------------------------------
+
+        chunks = self._merge_small_chunks(chunks)
+
         return chunks
+
+    def _merge_small_chunks(self, chunks):
+
+        merged = []
+
+        buffer = None
+
+        for chunk in chunks:
+
+            if chunk["chunk_type"] != "text":
+
+                if buffer is not None:
+                    merged.append(buffer)
+                    buffer = None
+
+                merged.append(chunk)
+                continue
+
+            if buffer is None:
+                buffer = dict(chunk)
+                buffer["page_numbers"] = list(chunk.get("page_numbers", []))
+                buffer["section_path"] = [chunk["section_path"]]
+                continue
+
+            same_context = (
+                buffer["company"] == chunk["company"]
+                and buffer["year"] == chunk["year"]
+            )
+
+            current_len = len(buffer["text"])
+
+            combined_len = current_len + len(chunk["text"]) + 1
+
+            if (
+                same_context
+                and current_len < self.min_chunk_chars
+                and combined_len <= self.max_chunk_chars
+            ):
+
+                buffer["text"] = buffer["text"] + " " + chunk["text"]
+
+                if chunk["section_path"] not in buffer["section_path"]:
+                    buffer["section_path"].append(chunk["section_path"])
+
+                for page in chunk.get("page_numbers", []):
+                    if page not in buffer["page_numbers"]:
+                        buffer["page_numbers"].append(page)
+
+            else:
+
+                buffer["section_path"] = " | ".join(buffer["section_path"])
+                buffer["page_numbers"] = sorted(buffer["page_numbers"])
+
+                merged.append(buffer)
+
+                buffer = dict(chunk)
+                buffer["page_numbers"] = list(chunk.get("page_numbers", []))
+                buffer["section_path"] = [chunk["section_path"]]
+
+        if buffer is not None:
+            buffer["section_path"] = " | ".join(buffer["section_path"])
+            buffer["page_numbers"] = sorted(buffer["page_numbers"])
+            merged.append(buffer)
+
+        return merged
 
     # =========================================================
     # RECURSIVE WALK

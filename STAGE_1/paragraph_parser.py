@@ -8,20 +8,12 @@ class ParagraphParser:
     Merges cleaned lines + heading_analysis + table_analysis into
     ordered heading/paragraph blocks per page.
 
-    IMPORTANT: All cross-referencing between the three pipeline
-    outputs (cleaned, heading_detection, table_analysis) is done by
-    "page_index" -- the PHYSICAL page position -- NOT "page_number"
-    (the printed footer number). Printed numbers can restart at "1"
-    after an unnumbered cover/TOC section (seen in CVS, JPM, Costco,
-    Microsoft), which means two DIFFERENT physical pages can end up
-    with the same printed page_number. Joining by page_number in that
-    case silently attaches one page's headings/tables to the wrong
-    physical page -- this was the root cause of the CVS table
-    mismatch. page_index is always unique and sequential, so it's
-    the only safe join-key.
-
-    page_number (printed) is still carried through untouched on every
-    block, for citation/display purposes downstream.
+    All cross-referencing between the three pipeline outputs
+    (cleaned, heading_detection, table_analysis) is done by
+    "page_number" -- the current extractor.py produces a single,
+    simple, sequential page_number (over KEPT/non-blank pages only),
+    which is guaranteed unique per report, so it's safe to use
+    directly as the join-key here.
     """
 
     def __init__(
@@ -61,8 +53,7 @@ class ParagraphParser:
             blocks = self._parse_page(page)
 
             parsed_pages.append({
-                "page_index": page["page_index"],
-                "page_number": page.get("page_number"),
+                "page_number": page["page_number"],
                 "blocks": blocks,
             })
 
@@ -147,7 +138,7 @@ class ParagraphParser:
 
         lines = page["lines"]
 
-        page_number = page.get("page_number")  # printed number, carried through
+        page_number = page["page_number"]
 
         heading_flags = {
             c["line_index"]: c
@@ -187,7 +178,6 @@ class ParagraphParser:
                 self._flush_paragraph(
                     pending_paragraph_lines,
                     blocks,
-                    page["page_index"],
                     page_number,
                 )
                 pending_paragraph_lines = []
@@ -203,7 +193,6 @@ class ParagraphParser:
                 self._flush_paragraph(
                     pending_paragraph_lines,
                     blocks,
-                    page["page_index"],
                     page_number,
                 )
                 pending_paragraph_lines = []
@@ -214,7 +203,6 @@ class ParagraphParser:
                     "block_type": "heading",
                     "text": text,
                     "level": heading_info.get("level", 0),
-                    "page_index": page["page_index"],
                     "page_number": page_number,
                     "bbox": line.get("bbox"),
                 })
@@ -235,7 +223,6 @@ class ParagraphParser:
                     self._flush_paragraph(
                         pending_paragraph_lines,
                         blocks,
-                        page["page_index"],
                         page_number,
                     )
                     pending_paragraph_lines = []
@@ -245,7 +232,6 @@ class ParagraphParser:
         self._flush_paragraph(
             pending_paragraph_lines,
             blocks,
-            page["page_index"],
             page_number,
         )
 
@@ -285,7 +271,7 @@ class ParagraphParser:
     # FLUSH PARAGRAPH BUFFER INTO A BLOCK
     # =========================================================
 
-    def _flush_paragraph(self, pending_lines, blocks, page_index, page_number):
+    def _flush_paragraph(self, pending_lines, blocks, page_number):
 
         if not pending_lines:
             return
@@ -307,7 +293,6 @@ class ParagraphParser:
         blocks.append({
             "block_type": "paragraph",
             "text": text,
-            "page_index": page_index,
             "page_number": page_number,
             "bbox": merged_bbox,
             "line_count": len(pending_lines),
@@ -338,31 +323,29 @@ def merge_report_sources(cleaned_report, heading_report, table_report):
     """
     Cleaned, Heading Detection, and Table Analysis were produced by
     THREE separate scripts. We zip them back together here by
-    "page_index" (physical position) -- NEVER by "page_number"
-    (printed), since printed numbers can collide across different
-    physical pages (see module docstring above). page_index is
-    guaranteed unique/sequential for every company, regardless of
-    how that company numbers its cover/TOC pages.
+    "page_number" -- which the current extractor.py already makes
+    unique and sequential for every company (blank pages already
+    filtered out at extraction time).
     """
 
     heading_pages = {
-        p["page_index"]: p for p in heading_report["pages"]
+        p["page_number"]: p for p in heading_report["pages"]
     }
 
     table_pages = {
-        p["page_index"]: p for p in table_report["pages"]
+        p["page_number"]: p for p in table_report["pages"]
     }
 
     merged_pages = []
 
     for page in cleaned_report["pages"]:
 
-        page_index = page["page_index"]
+        page_number = page["page_number"]
 
         merged_page = dict(page)  # shallow copy is enough here
 
-        heading_page = heading_pages.get(page_index, {})
-        table_page = table_pages.get(page_index, {})
+        heading_page = heading_pages.get(page_number, {})
+        table_page = table_pages.get(page_number, {})
 
         merged_page["heading_analysis"] = heading_page.get(
             "heading_analysis", {"candidates": []}

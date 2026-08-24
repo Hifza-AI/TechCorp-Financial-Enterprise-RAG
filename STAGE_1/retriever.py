@@ -182,44 +182,50 @@ if __name__ == "__main__":
     retriever = Retriever()
 
     test_questions = {
-        "Simple Numeric (single year)": [
+        "Simple Numeric (single year) -- ALL 4 COMPANIES": [
             "What was Apple's total net sales in 2020?",
-            "What was Apple's net income in 2019?",
-            "What was Apple's gross margin in 2021?",
-            "How much cash and cash equivalents did Apple have in 2022?",
+            "What was Microsoft's total revenue in 2022?",
+            "What was CVS's net income?",
+            "What was Costco's total revenue?",
         ],
-        "Table-Based Lookup": [
+        "Table-Based Lookup -- ALL 4 COMPANIES": [
             "What was Apple's total assets on the balance sheet?",
-            "What was Apple's total liabilities?",
-            "How much did Apple spend on selling, general and administrative expenses?",
-            "What was Apple's earnings per share (EPS)?",
+            "What was Microsoft's total liabilities?",
+            "What was CVS's earnings per share (EPS)?",
+            "What was Costco's operating income?",
         ],
         "Trend / Comparison (multi-year)": [
             "How did Apple's iPhone sales change between 2019 and 2020?",
-            "How has Apple's Services revenue grown over the years?",
-            "Compare Apple's R&D spending in 2018 and 2021.",
+            "How has Microsoft's cloud revenue grown over the years?",
         ],
-        "Conceptual / Risk Factors": [
+        "Conceptual / Risk Factors -- ALL 4 COMPANIES": [
             "What risks does Apple face from supply chain disruptions?",
-            "What litigation risks does Apple disclose?",
-            "How does Apple describe competition risk in its business?",
-            "What data privacy risks does Apple mention?",
+            "What risks does Microsoft disclose related to cybersecurity?",
+            "What litigation risks does CVS disclose?",
+            "What competitive risks does Costco mention?",
         ],
-        "Geographic / Segment": [
+        "Geographic / Segment -- ALL 4 COMPANIES": [
             "How much revenue did Apple generate in Greater China?",
-            "What were Apple's net sales in Europe?",
+            "What were Microsoft's segment revenues?",
+            "What were Costco's operating income by geographic region?",
         ],
-        "Business Description": [
+        "Business Description -- ALL 4 COMPANIES": [
             "What products and services does Apple sell?",
-            "What is Apple's business strategy?",
+            "What is Microsoft's business strategy?",
+            "What business segments does CVS operate?",
+            "What is Costco's membership warehouse business model?",
         ],
         "Recency-Aware": [
             "What is Apple's most recent total net sales?",
-            "What is the latest R&D spending reported by Apple?",
+            "What is Microsoft's latest reported revenue?",
+        ],
+        "Cross-Company Differentiation (company-filter sanity check)": [
+            "What was Microsoft's revenue?",  # should NOT return Apple data
+            "What was CVS's net income?",     # should NOT return Costco data
         ],
         "Out-of-Scope (should NOT confidently match)": [
             "What is Apple's current stock price today?",
-            "Who is the CEO of Microsoft?",
+            "Who is the CEO of Tesla?",
             "What is the weather in Cupertino?",
         ],
     }

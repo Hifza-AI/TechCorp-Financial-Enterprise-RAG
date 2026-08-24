@@ -1,7 +1,7 @@
 import json
 import re
 from pathlib import Path
-
+print(">>> RUNNING FIXED-TABLE-PARSER-V3-COSTCO-YEAR-BOUNDARY-FIX <<<")
 
 class TableParser:
 
@@ -596,6 +596,24 @@ class TableParser:
         data_start_index = None
 
         for index, row in enumerate(rows[:max_header_rows + 1]):
+
+            # A standalone bold YEAR row ("2020") marks a hard
+            # boundary -- it's a year-sub-section label, not part of
+            # the column-header text, and NOT a data-row itself
+            # either. Confirmed on Costco's geographic-segment table
+            # (US/Canadian/Other-International Operations): without
+            # this check, the header-zone scan kept going past the
+            # "2020" row and even absorbed the FIRST real data-row's
+            # numbers into the column names themselves (e.g. "United
+            # States Operations 122,142" as one garbled "column").
+            row_cells = self._extract_cells(row)
+
+            if (
+                len(row_cells) == 1
+                and self._is_year(row_cells[0]["text"])
+            ):
+                data_start_index = index
+                break
 
             if self._row_numeric_fraction(row) >= 0.5:
                 data_start_index = index
