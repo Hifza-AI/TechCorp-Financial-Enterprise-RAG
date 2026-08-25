@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer
 
 
 # ============================================================
-# PATHS
+# PATHS Here
 # ============================================================
 
 VECTOR_STORE = Path("STAGE_1/vector_store")
