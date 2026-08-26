@@ -1,288 +1,277 @@
-import json as _json
-import pickle
-import re
+import json
 from pathlib import Path
 
-import faiss
 
-from build_embeddings import EmbeddingIndexBuilder
+class HierarchyBuilder:
+    """
+    Takes the flat, ordered sequence of blocks from ParagraphParser
+    (heading/paragraph blocks, in document order) PLUS the parsed
+    tables from TableParser (matched by page_number), and builds a
+    nested tree: each heading becomes a node containing its own
+    paragraphs, its own tables, and any sub-heading children.
 
-class Retriever:
+    Uses a level-based stack (level 1 = top, level 3 = deepest) --
+    the same standard technique used for turning a flat outline into
+    a nested tree, generalized so it works for ANY heading depth
+    without hardcoding section names.
+    """
 
-    # Words that signal the person wants the LATEST year specifically :
-    RECENCY_KEYWORDS = re.compile(
-        r"\b(most recent|latest|current|this year|last fiscal year|"
-        r"newest|up[- ]to[- ]date)\b",
-        re.IGNORECASE,
-    )
+    def build(self, paragraph_report, table_report):
 
-    # FIX 1 (Requested): Non-capturing group used for exact 4-digit year match
-    YEAR_PATTERN = re.compile(r"\b(?:19|20)\d{2}\b")
-
-    # Minimum cosine similarity threshold
-    MIN_CONFIDENCE_SCORE = 0.58
-
-    def __init__(self, store_dir="STAGE_1/vector_store"):
-
-        store_dir = Path(store_dir)
-
-        print("Loading FAISS index and metadata...")
-
-        self.index = faiss.read_index(str(store_dir / "index.faiss"))
-
-        with open(store_dir / "metadata.pkl", "rb") as f:
-            self.metadata = pickle.load(f)
-
-        self.embedder = EmbeddingIndexBuilder()
-
-        # Unique set of indexed companies
-        self.known_companies = sorted({
-            chunk.get("company") for chunk in self.metadata
-            if chunk.get("company")
-        })
-
-        # Resolve recency against the FULL corpus metadata
-        self.latest_year_by_company = {}
-        for chunk in self.metadata:
-            company = chunk.get("company")
-            year = chunk.get("year")
-            if company and year:
-                current = self.latest_year_by_company.get(company, 0)
-                self.latest_year_by_company[company] = max(current, year)
-
-        self.global_latest_year = (
-            max(self.latest_year_by_company.values())
-            if self.latest_year_by_company else None
-        )
-
-    def _detect_company(self, query):
-
-        query_lower = query.lower()
-
-        for company in self.known_companies:
-            if company.lower() in query_lower:
-                return company
-
-        return None
-
-    def _mentions_unknown_company(self, query):
-
-        WELL_KNOWN_COMPANIES = [
-            "tesla", "amazon", "google", "microsoft", "meta", "nvidia",
-            "netflix", "walmart", "jpmorgan", "citigroup", "pfizer",
-        ]
-
-        query_lower = query.lower()
-
-        for name in WELL_KNOWN_COMPANIES:
-            if name in query_lower:
-                if not any(name in c.lower() for c in self.known_companies):
-                    return name
-
-        return None
-
-    def search(self, query, top_k=5):
-
-        # Company check for unindexed target entity
-        unknown_company = self._mentions_unknown_company(query)
-
-        if unknown_company:
-            return {
-                "matched": False,
-                "reason": f"No indexed data for '{unknown_company}'.",
-                "results": [],
-            }
-
-        wanted_company = self._detect_company(query)
-        wants_recent = bool(self.RECENCY_KEYWORDS.search(query))
-
-        year_match = self.YEAR_PATTERN.search(query)
-        wanted_year = int(year_match.group()) if year_match else None
-
-        # Anchor recency intent directly to full corpus actual latest year
-        # FIX 2 (Requested): Explicit None check for wanted_year
-        if wants_recent and wanted_year is None:
-            if wanted_company and wanted_company in self.latest_year_by_company:
-                wanted_year = self.latest_year_by_company[wanted_company]
-            else:
-                wanted_year = self.global_latest_year
-
-        # FIX 2 (Requested): Explicit None check for wanted_year
-        needs_hard_filter = bool(wanted_company or (wanted_year is not None))
-
-        # Search whole index for metadata constraints to avoid recall truncation
-        if needs_hard_filter:
-            pool_size = self.index.ntotal
-        else:
-            pool_size = top_k
-
-        query_vector = self.embedder.embed_query(query)
-
-        scores, indices = self.index.search(query_vector, pool_size)
-
-        candidates = []
-
-        for score, idx in zip(scores[0], indices[0]):
-
-            if idx == -1:
-                continue
-
-            chunk = self.metadata[idx]
-
-            candidates.append({
-                "score": float(score),
-                "company": chunk.get("company"),
-                "year": chunk.get("year"),
-                "section_path": chunk.get("section_path"),
-                "page_numbers": chunk.get("page_numbers"),
-                "chunk_type": chunk.get("chunk_type"),
-                "text": chunk.get("text"),
-            })
-
-        # Hard filter without silent fallbacks
-        if wanted_company:
-            candidates = [c for c in candidates if c["company"] == wanted_company]
-            if not candidates:
-                return {
-                    "matched": False,
-                    "reason": f"No data found for company '{wanted_company}'.",
-                    "results": [],
-                }
-
-        # FIX 2 (Requested): Explicit None check for wanted_year
-        if wanted_year is not None:
-            candidates = [c for c in candidates if c["year"] == wanted_year]
-            if not candidates:
-                return {
-                    "matched": False,
-                    "reason": f"No data found for year {wanted_year}.",
-                    "results": [],
-                }
-
-        candidates.sort(key=lambda c: c["score"], reverse=True)
-
-        results = candidates[:top_k]
-
-        if not results or results[0]["score"] < self.MIN_CONFIDENCE_SCORE:
-            return {
-                "matched": False,
-                "reason": "No sufficiently relevant data found for this query.",
-                "results": [],
-            }
-
-        return {
-            "matched": True,
-            "reason": None,
-            "results": results,
+        root = {
+            "title": "ROOT",
+            "level": 0,
+            "paragraphs": [],
+            "tables": [],
+            "children": [],
         }
 
+        stack = [root]
+
+        # Index tables by page number so we can attach them to
+        # whichever heading is "open" (current top of stack) when
+        # we reach that page in the paragraph sequence.
+        tables_by_page = self._index_tables_by_page(table_report)
+
+        attached_table_ids = set()
+
+        for page in paragraph_report["pages"]:
+
+            page_number = page["page_number"]
+
+            for block in page["blocks"]:
+
+                if block["block_type"] == "heading":
+
+                    level = block.get("level", 2)
+
+                    # A level of 0 can occasionally slip through if a
+                    # block was downgraded (e.g. by fix_paragraphs.py).
+                    # Treat it as a normal paragraph instead of trying
+                    # to open a heading node with an invalid level.
+                    if level <= 0:
+                        stack[-1]["paragraphs"].append({
+                            "text": block["text"],
+                            "page_number": page_number,
+                            "bbox": block.get("bbox"),
+                        })
+                        continue
+
+                    node = {
+                        "title": block["text"],
+                        "level": level,
+                        "page_start": page_number,
+                        "page_end": page_number,
+                        "paragraphs": [],
+                        "tables": [],
+                        "children": [],
+                    }
+
+                    # Pop back to the correct parent: anything on the
+                    # stack with a level >= this heading's level is
+                    # NOT an ancestor of this heading, so close it out.
+                    while len(stack) > 1 and stack[-1]["level"] >= level:
+                        stack.pop()
+
+                    stack[-1]["children"].append(node)
+                    stack.append(node)
+
+                else:  # paragraph
+
+                    stack[-1]["paragraphs"].append({
+                        "text": block["text"],
+                        "page_number": page_number,
+                        "bbox": block.get("bbox"),
+                    })
+
+                stack[-1]["page_end"] = page_number
+
+            # -------------------------------------------------
+            # Attach this page's tables AFTER processing this
+            # page's own blocks (not before).
+            #
+            # BUG (confirmed on real data -- Microsoft 2022's
+            # segment-revenue table appeared 4 separate times,
+            # each attached to a different WRONG heading: "Credit",
+            # "Uncertain Tax Positions", "More Personal Computing"
+            # -- none of which are genuinely related): SEC filings
+            # very commonly put a heading and its table on the SAME
+            # page ("The following table shows segment revenue:"
+            # immediately followed by the table). Attaching tables
+            # BEFORE processing this page's blocks meant the table
+            # always attached to whatever heading was left open from
+            # a PREVIOUS page, never to a heading that opens on this
+            # SAME page -- which is the common case. Attaching AFTER
+            # this page's own headings have had a chance to open
+            # fixes the common (heading-then-table-on-one-page) case.
+            # -------------------------------------------------
+
+            for table in tables_by_page.get(page_number, []):
+
+                table_id = id(table)
+
+                if table_id in attached_table_ids:
+                    continue
+
+                stack[-1]["tables"].append(table)
+                attached_table_ids.add(table_id)
+
+        return root["children"]
+
+    # =========================================================
+    # INDEX TABLES BY PAGE
+    # =========================================================
+
+    def _index_tables_by_page(self, table_report):
+
+        index = {}
+
+        for table in table_report.get("tables", []):
+
+            page_number = table.get("page_number")
+
+            if page_number is None:
+                continue
+
+            index.setdefault(page_number, []).append(table)
+
+        return index
+
+
+# =============================================================
+# LOADERS
+# =============================================================
+
+def load_paragraph_report(company, stem, base_dir="STAGE_1/paragraphs_fixed"):
+
+    path = Path(base_dir) / company / f"{stem}_paragraphs.json"
+
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def load_table_report(company, stem, base_dir="STAGE_1/parsed_tables"):
+
+    path = Path(base_dir) / company / f"{stem}_parsed_tables.json"
+
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def discover_stems(paragraphs_dir="STAGE_1/paragraphs_fixed"):
+
+    paragraphs_dir = Path(paragraphs_dir)
+
+    stems = []
+
+    for company_dir in sorted(paragraphs_dir.iterdir()):
+
+        if not company_dir.is_dir():
+            continue
+
+        for json_file in sorted(company_dir.glob("*_paragraphs.json")):
+
+            stem = json_file.stem.replace("_paragraphs", "")
+
+            stems.append((company_dir.name, stem))
+
+    return stems
+
+
+# =============================================================
+# SAVE
+# =============================================================
+
+def save_hierarchy(company, stem, tree, output_dir="STAGE_1/hierarchy"):
+
+    company_dir = Path(output_dir) / company
+
+    company_dir.mkdir(parents=True, exist_ok=True)
+
+    output_file = company_dir / f"{stem}_hierarchy.json"
+
+    with open(output_file, "w", encoding="utf-8") as f:
+
+        json.dump(
+            {"company": company, "file_name": stem, "sections": tree},
+            f,
+            indent=4,
+            ensure_ascii=False,
+            default=str,
+        )
+
+    print(f"Saved Hierarchy: {output_file}")
+
+
+# =============================================================
+# STATS (for a quick sanity check after building)
+# =============================================================
+
+def count_tree(nodes):
+
+    section_count = 0
+    paragraph_count = 0
+    table_count = 0
+
+    for node in nodes:
+
+        section_count += 1
+        paragraph_count += len(node["paragraphs"])
+        table_count += len(node["tables"])
+
+        child_sections, child_paragraphs, child_tables = count_tree(
+            node["children"]
+        )
+
+        section_count += child_sections
+        paragraph_count += child_paragraphs
+        table_count += child_tables
+
+    return section_count, paragraph_count, table_count
+
+
+# =============================================================
+# MAIN
+# =============================================================
 
 if __name__ == "__main__":
 
-    retriever = Retriever()
+    print("\n====================================")
+    print(" Hierarchy Builder Started")
+    print("====================================\n")
 
-    test_questions = {
-        "Simple Numeric (single year) -- ALL 4 COMPANIES": [
-            "What was Apple's total net sales in 2020?",
-            "What was Microsoft's total revenue in 2022?",
-            "What was CVS's net income?",
-            "What was Costco's total revenue?",
-        ],
-        "Table-Based Lookup -- ALL 4 COMPANIES": [
-            "What was Apple's total assets on the balance sheet?",
-            "What was Microsoft's total liabilities?",
-            "What was CVS's earnings per share (EPS)?",
-            "What was Costco's operating income?",
-        ],
-        "Trend / Comparison (multi-year)": [
-            "How did Apple's iPhone sales change between 2019 and 2020?",
-            "How has Microsoft's cloud revenue grown over the years?",
-        ],
-        "Conceptual / Risk Factors -- ALL 4 COMPANIES": [
-            "What risks does Apple face from supply chain disruptions?",
-            "What risks does Microsoft disclose related to cybersecurity?",
-            "What litigation risks does CVS disclose?",
-            "What competitive risks does Costco mention?",
-        ],
-        "Geographic / Segment -- ALL 4 COMPANIES": [
-            "How much revenue did Apple generate in Greater China?",
-            "What were Microsoft's segment revenues?",
-            "What were Costco's operating income by geographic region?",
-        ],
-        "Business Description -- ALL 4 COMPANIES": [
-            "What products and services does Apple sell?",
-            "What is Microsoft's business strategy?",
-            "What business segments does CVS operate?",
-            "What is Costco's membership warehouse business model?",
-        ],
-        "Recency-Aware": [
-            "What is Apple's most recent total net sales?",
-            "What is Microsoft's latest reported revenue?",
-        ],
-        "Cross-Company Differentiation (company-filter sanity check)": [
-            "What was Microsoft's revenue?",  # should NOT return Apple data
-            "What was CVS's net income?",     # should NOT return Costco data
-        ],
-        "Out-of-Scope (should NOT confidently match)": [
-            "What is Apple's current stock price today?",
-            "Who is the CEO of Tesla?",
-            "What is the weather in Cupertino?",
-        ],
-    }
+    stems = discover_stems()
 
-    all_results_log = []
+    if not stems:
 
-    for category, questions in test_questions.items():
+        print("No fixed paragraph files found.")
+        print("Run fix_paragraphs.py first.")
 
-        print("\n" + "#" * 70)
-        print(f"# CATEGORY: {category}")
-        print("#" * 70)
+    else:
 
-        for question in questions:
+        builder = HierarchyBuilder()
 
-            print("\n" + "=" * 70)
-            print("Q:", question)
-            print("=" * 70)
+        for company, stem in stems:
 
-            response = retriever.search(question, top_k=3)
+            print(f"Building: {company}/{stem}")
 
-            if not response["matched"]:
+            paragraph_report = load_paragraph_report(company, stem)
+            table_report = load_table_report(company, stem)
 
-                print(f"    ⚠️  {response['reason']}")
+            tree = builder.build(paragraph_report, table_report)
 
-                all_results_log.append({
-                    "category": category,
-                    "question": question,
-                    "matched": False,
-                    "reason": response["reason"],
-                    "results": [],
-                })
+            save_hierarchy(company, stem, tree)
 
-                continue
+            sections, paragraphs, tables = count_tree(tree)
 
-            results = response["results"]
+            print(
+                f"   Sections: {sections} | "
+                f"Paragraphs: {paragraphs} | "
+                f"Tables: {tables}"
+            )
 
-            for i, r in enumerate(results, 1):
-
-                print(
-                    f"\n[{i}] score={r['score']:.3f} | "
-                    f"{r['company']} {r['year']} | "
-                    f"{r['chunk_type']} | {r['section_path']}"
-                )
-
-                preview = r["text"][:200].replace("\n", " ")
-
-                print(f"    {preview}...")
-
-            all_results_log.append({
-                "category": category,
-                "question": question,
-                "matched": True,
-                "reason": None,
-                "results": results,
-            })
-
-    with open("retriever_test_results.json", "w", encoding="utf-8") as f:
-        _json.dump(all_results_log, f, indent=4, ensure_ascii=False)
-    
-print("\n\nFull results also saved to: retriever_test_results.json")
+        print("\n====================================")
+        print(" Hierarchy Building Completed")
+        print("====================================")
+        print("\nOutput:")
+        print("STAGE_1/hierarchy")

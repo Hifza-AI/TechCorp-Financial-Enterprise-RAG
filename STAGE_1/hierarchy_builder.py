@@ -39,21 +39,6 @@ class HierarchyBuilder:
 
             page_number = page["page_number"]
 
-            # Attach any tables belonging to this page to whatever
-            # heading is currently open BEFORE processing this page's
-            # blocks (tables render before/after text depending on
-            # layout, but page-level attachment is precise enough
-            # for retrieval purposes).
-            for table in tables_by_page.get(page_number, []):
-
-                table_id = id(table)
-
-                if table_id in attached_table_ids:
-                    continue
-
-                stack[-1]["tables"].append(table)
-                attached_table_ids.add(table_id)
-
             for block in page["blocks"]:
 
                 if block["block_type"] == "heading":
@@ -100,6 +85,36 @@ class HierarchyBuilder:
                     })
 
                 stack[-1]["page_end"] = page_number
+
+            # -------------------------------------------------
+            # Attach this page's tables AFTER processing this
+            # page's own blocks (not before).
+            #
+            # BUG (confirmed on real data -- Microsoft 2022's
+            # segment-revenue table appeared 4 separate times,
+            # each attached to a different WRONG heading: "Credit",
+            # "Uncertain Tax Positions", "More Personal Computing"
+            # -- none of which are genuinely related): SEC filings
+            # very commonly put a heading and its table on the SAME
+            # page ("The following table shows segment revenue:"
+            # immediately followed by the table). Attaching tables
+            # BEFORE processing this page's blocks meant the table
+            # always attached to whatever heading was left open from
+            # a PREVIOUS page, never to a heading that opens on this
+            # SAME page -- which is the common case. Attaching AFTER
+            # this page's own headings have had a chance to open
+            # fixes the common (heading-then-table-on-one-page) case.
+            # -------------------------------------------------
+
+            for table in tables_by_page.get(page_number, []):
+
+                table_id = id(table)
+
+                if table_id in attached_table_ids:
+                    continue
+
+                stack[-1]["tables"].append(table)
+                attached_table_ids.add(table_id)
 
         return root["children"]
 
