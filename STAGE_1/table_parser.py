@@ -1,7 +1,7 @@
 import json
 import re
 from pathlib import Path
-print(">>> RUNNING FIXED-TABLE-PARSER-V3-COSTCO-YEAR-BOUNDARY-FIX <<<")
+print(">>> RUNNING FIXED-TABLE-PARSER-V4-SEGMENT-TITLE-FIX <<<")
 
 class TableParser:
 
@@ -124,7 +124,86 @@ class TableParser:
             if table is not None:
                 parsed_tables.append(table)
 
+        # -----------------------------------------------------
+        # NEW (CVS-style business-segment title fix):
+        #
+        # Apple's geographic segments have their title sitting just
+        # 1 line above the actual data table (close enough that the
+        # WITHIN-region rescue in _resplit_on_repeated_headers, added
+        # earlier, catches it). CVS's business-line segments
+        # ("Health Care Benefits Segment", "Health Services Segment",
+        # "Pharmacy & Consumer Wellness Segment", "Corporate/Other
+        # Segment" -- confirmed on CVS 2025 10-K pages 75/77/79/81)
+        # are different: the title is followed by a full intro
+        # sentence ("The following table summarizes the ... segment's
+        # performance for the respective periods:"), and together
+        # these sit far enough (>100pt gap) above the real table that
+        # they already form their OWN separate header-less region by
+        # the time _split_table_regions is done -- so the
+        # within-region rescue never even sees them.
+        #
+        # Fix: a lightweight, separate cross-table pass at the page
+        # level -- see _attach_orphaned_segment_titles() -- that
+        # forwards a title sitting in one header-less table onto the
+        # very next header-detected table on the same page. This
+        # does NOT touch any existing region/table logic above; it
+        # only adds a "section_title" field afterward.
+        # -----------------------------------------------------
+
+        self._attach_orphaned_segment_titles(parsed_tables)
+
         return parsed_tables
+
+    def _attach_orphaned_segment_titles(self, parsed_tables):
+        """
+        See the NEW fix note in _parse_page() above for the full
+        rationale. Walks consecutive parsed tables on the same page;
+        if a header-less table's first row is a short, numeric-free
+        title line (e.g. "Health Care Benefits Segment") and it is
+        immediately followed by a header-detected table with no
+        section_title yet, that title is forwarded onto the
+        following table. The header-less table itself is left
+        completely untouched.
+        """
+
+        for index in range(len(parsed_tables) - 1):
+
+            current_table = parsed_tables[index]
+            next_table = parsed_tables[index + 1]
+
+            if current_table.get("header_detected"):
+                continue
+
+            if not next_table.get("header_detected"):
+                continue
+
+            if next_table.get("section_title"):
+                continue
+
+            current_rows = current_table.get("rows", [])
+
+            if not current_rows:
+                continue
+
+            first_row_cells = current_rows[0].get("cells", [])
+
+            title_text = " ".join(
+                cell["text"] for cell in first_row_cells
+            ).strip()
+
+            if not title_text:
+                continue
+
+            if any(char.isdigit() for char in title_text):
+                continue  # a numeric-bearing line isn't a title
+
+            if title_text.endswith(":") or title_text.endswith("."):
+                continue  # an intro sentence, not the title itself
+
+            if len(title_text.split()) > 6:
+                continue  # titles are short; sentences aren't
+
+            next_table["section_title"] = title_text
 
     # =========================================================
     # GROUP LINES INTO ROWS
@@ -174,6 +253,95 @@ class TableParser:
 
         return rows
 
+    def _row_has_real_numeric(self, row):
+        """
+        NEW (page-72 header-order bug fix): like checking whether
+        any cell in a row looks numeric, but ignores a standalone
+        footnote/superscript marker -- "(1)", "(2)", etc. -- when it
+        is rendered in a visibly SMALLER font than the rest of its
+        row. See _is_undersized_footnote_marker() for why that
+        distinction matters. Used only by the wrapped-continuation-
+        label merge below; every other numeric check in this file
+        (value-matching, table-candidate scoring, etc.) is completely
+        untouched.
+
+        Root cause this fixes: on CVS 2025 10-K page 72, the
+        "Health Services⁽¹⁾" / "Intersegment Eliminations⁽²⁾"
+        column headers each wrap across 2 lines, with a footnote
+        marker sitting between them. `_looks_numeric_cell("(1)")`
+        correctly strips the parens and sees a digit, so it reads as
+        "numeric" -- which made this WHOLE header row look like a
+        data row to the merge logic below, and it fused THREE
+        separate header rows (330pt / 339pt / 348pt) into ONE.
+        Once merged, column order was no longer top-to-bottom by
+        line -- it became a left-to-right x-sort across all the
+        combined cells, which silently swaps the reported order of
+        any two stacked header words whose bottom line happens to
+        start slightly further LEFT than its own top line (confirmed:
+        "Services" sits at x=242 under "Health" at x=250) -- producing
+        "Services Health" / "Eliminations Intersegment" instead of
+        the correct "Health Services" / "Intersegment Eliminations".
+        """
+
+        span_heights = []
+
+        for line in row["lines"]:
+            spans = line.get("spans") or [line]
+            for span in spans:
+                bbox = span.get("bbox")
+                if bbox and len(bbox) >= 4:
+                    span_heights.append(bbox[3] - bbox[1])
+
+        typical_height = (
+            sorted(span_heights)[len(span_heights) // 2]
+            if span_heights else None
+        )
+
+        for line in row["lines"]:
+
+            spans = line.get("spans") or [line]
+
+            for span in spans:
+
+                text = span.get("text", "").strip()
+
+                if not text:
+                    continue
+
+                if self._is_undersized_footnote_marker(span, text, typical_height):
+                    continue
+
+                if self._looks_numeric_cell(text):
+                    return True
+
+        return False
+
+    def _is_undersized_footnote_marker(self, span, text, typical_height):
+        """
+        True for a standalone "(N)" or "(NN)" token whose own font
+        is meaningfully smaller (<80%) than the typical text height
+        in its row -- the signature of a footnote/superscript
+        reference, not a real value. A genuine negative dollar
+        figure like "(1,687)" or "(5)" is NEVER rendered smaller
+        than the rest of its row, so this check cannot mistake a
+        real value for a footnote marker.
+        """
+
+        if not re.fullmatch(r"\(\d{1,2}\)", text):
+            return False
+
+        if typical_height is None:
+            return False
+
+        bbox = span.get("bbox")
+
+        if not bbox or len(bbox) < 4:
+            return False
+
+        height = bbox[3] - bbox[1]
+
+        return height < typical_height * 0.8
+
     def _merge_wrapped_continuation_labels(self, rows):
         """
         Fixes: a row-label that wraps across MULTIPLE physical lines
@@ -197,7 +365,6 @@ class TableParser:
         """
 
         merged_rows = []
-
         index = 0
 
         while index < len(rows):
@@ -213,9 +380,7 @@ class TableParser:
 
                 row_text = " ".join(cell["text"] for cell in cells).strip()
 
-                has_numeric = any(
-                    self._looks_numeric_cell(cell["text"]) for cell in cells
-                )
+                has_numeric = self._row_has_real_numeric(row)
 
                 if has_numeric:
                     break
@@ -263,8 +428,25 @@ class TableParser:
 
                 next_cells = self._extract_cells(next_row)
 
-                next_has_numeric = any(
-                    self._looks_numeric_cell(cell["text"]) for cell in next_cells
+                next_has_numeric = self._row_has_real_numeric(next_row)
+
+                # A standalone single-cell YEAR row (e.g. "2025"
+                # marking a year-sub-section, same pattern already
+                # treated as a hard boundary elsewhere in this file
+                # for text-header detection) is a SECTION MARKER,
+                # not a wrapped label's data row -- it must never be
+                # used as a merge target here, even though it does
+                # have real numeric content and often matches the
+                # run's bold-ness. Without this guard, once the
+                # footnote-marker fix above (correctly) stops a bold
+                # header row from looking "numeric", the run just
+                # keeps extending and swallows the NEXT real row
+                # instead -- confirmed on CVS 2025 10-K page 72,
+                # where the header rows were merging straight through
+                # into the "2025" row that follows them.
+                next_is_standalone_year = (
+                    len(next_cells) == 1
+                    and self._is_year(next_cells[0]["text"].strip())
                 )
 
                 # -------------------------------------------------
@@ -296,7 +478,11 @@ class TableParser:
 
                 next_is_bold = any(cell.get("bold") for cell in next_cells)
 
-                if next_has_numeric and run_is_bold == next_is_bold:
+                if (
+                    next_has_numeric
+                    and not next_is_standalone_year
+                    and run_is_bold == next_is_bold
+                ):
 
                     combined_lines = []
 
@@ -424,10 +610,57 @@ class TableParser:
         if not split_points:
             return [region]
 
+        # -----------------------------------------------------
+        # NEW (segment-title fix): a short, numeric-free "title"
+        # row (e.g. "Europe", "Japan", "Greater China", "Rest of
+        # Asia Pacific", "Americas") sitting DIRECTLY ABOVE a
+        # repeated year-header is that NEXT segment's own section
+        # title -- not a trailing row of the table above it.
+        #
+        # Confirmed on Apple 2016's "Segment Operating Performance"
+        # section: each segment is laid out as
+        #     <segment name>              <- short italic title
+        #     "The following table presents ... (dollars in millions):"
+        #     [2016 | Change | 2015 | Change | 2014]   <- year header
+        #     Net sales ...
+        #     Percentage of total net sales ...
+        #
+        # Without this adjustment, the split point lands exactly AT
+        # the year-header row, so the title row one line above it
+        # stays trapped in the PREVIOUS region and comes out as a
+        # garbage row with all-null values in the WRONG table
+        # (e.g. "Europe" showing up as a null row inside the
+        # Americas table, while the Europe table itself has no name
+        # at all). Pulling the split point back by one row moves the
+        # title into the region it actually introduces, where
+        # _parse_table_region() below turns it into a proper
+        # "section_title" field instead of a fake data row.
+        # -----------------------------------------------------
+
+        adjusted_points = []
+        previous_point = 0
+
+        for point in split_points:
+
+            candidate_point = point
+
+            if (
+                point - 1 >= previous_point
+                and self._looks_like_title_row(region[point - 1])
+            ):
+                candidate_point = point - 1
+
+            adjusted_points.append(candidate_point)
+            previous_point = candidate_point
+
+        split_points = adjusted_points
+
         sub_regions = []
         start = 0
 
         for point in split_points:
+            if point <= start:
+                continue
             sub_regions.append(region[start:point])
             start = point
 
@@ -435,13 +668,232 @@ class TableParser:
 
         return [sub for sub in sub_regions if sub]
 
+    def _looks_like_title_row(self, row):
+        """
+        True for a short, purely-textual row with NO numeric content
+        at all -- the signature of a segment/section title like
+        "Europe" or "Americas" sitting just above its own mini-table.
+
+        Guards against false positives:
+          - any numeric cell at all -> not a title (real data rows,
+            like "Net sales" or "Percentage of total net sales",
+            always carry numbers)
+          - ends with ":" -> a genuine section-header inside a
+            financial statement ("Current assets:"), handled by the
+            wrapped-continuation-label logic elsewhere, not this one
+          - ends with "." -> a narrative sentence fragment
+            ("...partially offset by a decline..."), not a title
+          - more than 6 words -> titles are short; sentences aren't
+        """
+
+        cells = self._extract_cells(row)
+
+        if not cells:
+            return False
+
+        text = " ".join(cell["text"] for cell in cells).strip()
+
+        if not text:
+            return False
+
+        if any(self._looks_numeric_cell(cell["text"]) for cell in cells):
+            return False
+
+        if text.endswith(":") or text.endswith("."):
+            return False
+
+        word_count = len(text.split())
+
+        return 1 <= word_count <= 6
+
+    # =========================================================
+    # GROUPED (2-LEVEL) YEAR HEADER
+    #
+    # NEW: some tables use a genuinely 2-LEVEL header -- a row of
+    # YEAR cells that are actually GROUP headers, each spanning
+    # several real data sub-columns declared on the very next row
+    # (e.g. "Insured | ASC | Total", repeated once per year).
+    # Confirmed on CVS 2025 10-K page 76's Medical Membership table:
+    #
+    #                    2025                       2024
+    #   In thousands  Insured  ASC  Total   Insured  ASC  Total
+    #   Commercial      3,447  15,350 18,797   4,691  14,160 18,851
+    #
+    # Without this, the plain single-level year-header path (below)
+    # treats "2025"/"2024" as if each were ONE data column -- since
+    # it still finds >=2 year cells and successfully extracts 2
+    # columns, it "succeeds" and returns before ever noticing the
+    # real structure is wrong. Symptoms confirmed on real output:
+    #   - the row's first real value ("Insured") gets merged into
+    #     the row LABEL instead of a value (e.g. "Commercial 3,447")
+    #   - the "Total" sub-column is dropped completely (silent data
+    #     loss, not just a labeling problem)
+    #
+    # This check runs BEFORE the plain year-header path and only
+    # fires when the specific repeating-subheader pattern is
+    # actually present; otherwise it returns nothing and every
+    # existing code path below is completely unaffected.
+    # =========================================================
+
+    def _find_grouped_year_header(self, rows):
+
+        search_window = min(len(rows) - 1, 10)
+
+        for index in range(max(search_window, 0)):
+
+            year_cells = [
+                cell for cell in self._extract_cells(rows[index])
+                if self._is_year(cell["text"])
+            ]
+
+            year_count = len(year_cells)
+
+            if year_count < 2:
+                continue
+
+            sub_row_index = index + 1
+
+            if sub_row_index >= len(rows):
+                continue
+
+            sub_cells_all = self._extract_cells(rows[sub_row_index])
+
+            # The sub-header row may have a leading row-label-column
+            # header of its own (e.g. "In thousands") before the
+            # real repeating sub-columns start -- try dropping 0, 1,
+            # then 2 leading cells until the remainder cleanly
+            # divides into `year_count` equal, REPEATING groups.
+            for drop_leading in (0, 1, 2):
+
+                sub_cells = sub_cells_all[drop_leading:]
+
+                if len(sub_cells) < year_count * 2:
+                    continue
+
+                if len(sub_cells) % year_count != 0:
+                    continue
+
+                group_size = len(sub_cells) // year_count
+
+                sub_texts = [cell["text"].strip() for cell in sub_cells]
+
+                first_group = sub_texts[:group_size]
+
+                is_repeating = all(
+                    sub_texts[g * group_size:(g + 1) * group_size] == first_group
+                    for g in range(year_count)
+                )
+
+                if not is_repeating:
+                    continue
+
+                # Real sub-headers are short text labels ("Insured",
+                # "ASC", "Total") -- if what repeated is numeric or
+                # year-like, this row is a DATA row, not a header,
+                # and we've matched by coincidence.
+                if any(
+                    self._looks_numeric_cell(t) or self._is_year(t)
+                    for t in first_group
+                ):
+                    continue
+
+                year_cells_sorted = sorted(year_cells, key=lambda c: c["x"])
+
+                columns = []
+
+                for group_index, year_cell in enumerate(year_cells_sorted):
+
+                    group_cells = sub_cells[
+                        group_index * group_size:(group_index + 1) * group_size
+                    ]
+
+                    for sub_cell in group_cells:
+
+                        columns.append({
+                            "name": f"{year_cell['text']} {sub_cell['text']}".strip(),
+                            "x": sub_cell["x"],
+                        })
+
+                columns.sort(key=lambda item: item["x"])
+
+                return {index, sub_row_index}, columns
+
+        return set(), []
+
     # =========================================================
     # PARSE TABLE REGION
     # =========================================================
 
     def _parse_table_region(self, page, rows):
 
+        # -----------------------------------------------------
+        # Try the 2-level grouped year header FIRST (see method
+        # above). Only returns non-empty when the specific
+        # repeating-subheader pattern is genuinely present -- if
+        # not, falls straight through to the existing single-level
+        # logic below, completely unchanged.
+        # -----------------------------------------------------
+
+        grouped_header_rows, grouped_columns = self._find_grouped_year_header(rows)
+
+        if grouped_columns:
+
+            data_rows = []
+
+            for index, row in enumerate(rows):
+
+                if index in grouped_header_rows:
+                    continue
+
+                parsed_row = self._parse_data_row(row, grouped_columns)
+
+                if parsed_row is not None:
+                    data_rows.append(parsed_row)
+
+            if data_rows:
+
+                return {
+                    "page_number": page.get("page_number"),
+                    "bbox": self._get_table_bbox(rows),
+                    "header": [column["name"] for column in grouped_columns],
+                    "rows": data_rows,
+                    "header_detected": True,
+                    "column_type": "year_grouped",
+                    "row_count": len(data_rows),
+                    "column_count": len(grouped_columns),
+                }
+
         header_index = self._find_header(rows)
+
+        # -----------------------------------------------------
+        # Segment-title extraction (see _looks_like_title_row /
+        # _resplit_on_repeated_headers above): if the row directly
+        # above the detected year-header is a short, numeric-free
+        # title, pull it out as this table's own "section_title"
+        # instead of letting it become a garbage null-value data
+        # row. Only fires when the title sits IMMEDIATELY above the
+        # header (header_index == 1) -- if there's anything else in
+        # between, it's not the clean single-title pattern we've
+        # confirmed on real data, so leave it alone rather than
+        # guess.
+        # -----------------------------------------------------
+
+        section_title = None
+
+        if (
+            header_index is not None
+            and header_index == 1
+            and self._looks_like_title_row(rows[0])
+        ):
+
+            title_cells = self._extract_cells(rows[0])
+
+            section_title = " ".join(
+                cell["text"] for cell in title_cells
+            ).strip()
+
+            rows = rows[1:]
+            header_index = 0
 
         # -----------------------------------------------------
         # Header found -> structured column mapping
@@ -469,7 +921,7 @@ class TableParser:
 
                 if data_rows:
 
-                    return {
+                    table = {
                         "page_number": page.get("page_number"),
                         "bbox": self._get_table_bbox(rows),
                         "header": [column["name"] for column in columns],
@@ -479,6 +931,11 @@ class TableParser:
                         "row_count": len(data_rows),
                         "column_count": len(columns),
                     }
+
+                    if section_title:
+                        table["section_title"] = section_title
+
+                    return table
 
         # -----------------------------------------------------
         # No YEAR header -> try TEXT-LABEL header instead.
@@ -511,7 +968,7 @@ class TableParser:
 
             if data_rows:
 
-                return {
+                table = {
                     "page_number": page.get("page_number"),
                     "bbox": self._get_table_bbox(rows),
                     "header": [column["name"] for column in text_columns],
@@ -521,6 +978,11 @@ class TableParser:
                     "row_count": len(data_rows),
                     "column_count": len(text_columns),
                 }
+
+                if section_title:
+                    table["section_title"] = section_title
+
+                return table
 
         # -----------------------------------------------------
         # No reliable header of either kind -> raw fallback
@@ -1202,12 +1664,20 @@ if __name__ == "__main__":
             if table.get("header_detected")
         )
 
+        with_section_title = sum(
+            1
+            for report in parsed_reports
+            for table in report["tables"]
+            if table.get("section_title")
+        )
+
         print("\n====================================")
         print(" Table Parsing Completed")
         print("====================================")
-        print(f"Reports Parsed        : {len(parsed_reports)}")
-        print(f"Tables Parsed          : {total_tables}")
-        print(f"Tables With Header     : {with_header}")
-        print(f"Tables Without Header  : {total_tables - with_header}")
+        print(f"Reports Parsed         : {len(parsed_reports)}")
+        print(f"Tables Parsed           : {total_tables}")
+        print(f"Tables With Header      : {with_header}")
+        print(f"Tables Without Header   : {total_tables - with_header}")
+        print(f"Tables With Section Title: {with_section_title}")
         print("\nOutput:")
         print(OUTPUT_DIR)

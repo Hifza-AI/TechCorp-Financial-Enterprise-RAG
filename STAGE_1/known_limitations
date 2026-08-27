@@ -66,3 +66,6 @@ Limitations at Stage 2 on the Table Analysis and Table PArsing stage
 
 
    Adjacent non-numeric descriptive lines (e.g. share-class details) may occasionally merge into one combined label when neither carries its own value; all underlying text/information remains intact and retrievable
+
+
+   "Batch 2 selected for structural comparability (standard single-level year-header segment tables); companies with non-standard multi-level headers or embedded-narrative tables (e.g. insurance-style Insured/ASC/Total breakdowns) deferred to documented future work — see Section X."
