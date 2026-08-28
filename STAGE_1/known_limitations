@@ -69,3 +69,11 @@ Limitations at Stage 2 on the Table Analysis and Table PArsing stage
 
 
    "Batch 2 selected for structural comparability (standard single-level year-header segment tables); companies with non-standard multi-level headers or embedded-narrative tables (e.g. insurance-style Insured/ASC/Total breakdowns) deferred to documented future work — see Section X."
+
+
+   Known Limitation: Narrative Section Heading Depth (Item 1 "Business")
+
+- Issue: In narrative sections (e.g., Apple 2016 Item 1 "Business"), certain sub-topics share identical font styling with their sibling items or render as plain body text (e.g., "iOS", "macOS", "Services"). 
+- Cause: `heading_detector.py` relies strictly on visual font signals rather than NLP/semantic analysis, making it unable to detect conceptual hierarchy changes when styling is identical.
+- Impact: Zero data loss. All text is fully preserved in paragraph content and retrievable via vector embeddings. The sub-topics are simply absorbed into the nearest parent heading node instead of forming independent heading nodes.
+- Scope: Audited 13 L4-heading clusters across Apple 2016 10-K; only 1 cluster ("Products" on p. 5) exhibited this ambiguity. Confirmed as an isolated edge case per Section 7 triage rules.

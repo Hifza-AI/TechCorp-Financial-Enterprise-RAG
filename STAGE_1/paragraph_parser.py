@@ -165,9 +165,42 @@ class ParagraphParser:
                 "is_candidate", False
             )
 
-            is_heading_line = heading_flags.get(index, {}).get(
-                "is_heading", False
-            )
+            heading_info = heading_flags.get(index, {})
+
+            is_heading_line = heading_info.get("is_heading", False)
+
+            # -------------------------------------------------
+            # BOLD-SENTENCE-RUN FRAGMENT -> skip entirely.
+            #
+            # NEW: heading_detector.py can now recognize a heading
+            # that wraps across MULTIPLE physical PDF lines (common
+            # in SEC Risk-Factors sections) and merge it into ONE
+            # complete heading, attached to the line where the
+            # sentence actually ends. The earlier fragment line(s)
+            # are tagged "in_bold_run": True to say "this content is
+            # already fully captured in that later merged heading --
+            # don't treat it as anything else."
+            #
+            # Without this check, those earlier fragments (which are
+            # NOT marked as headings themselves) would fall through
+            # to the normal paragraph-accumulation logic below and
+            # get glued onto whatever paragraph happened to precede
+            # them -- producing a grammatically broken paragraph
+            # (ending mid-sentence) AND, since the fragment's words
+            # are ALSO inside the later merged heading, the same
+            # text would effectively be duplicated across two blocks.
+            # -------------------------------------------------
+
+            if heading_info.get("in_bold_run", False):
+
+                self._flush_paragraph(
+                    pending_paragraph_lines,
+                    blocks,
+                    page_number,
+                )
+                pending_paragraph_lines = []
+
+                continue
 
             # -------------------------------------------------
             # TABLE LINE -> skip entirely (handled by TableParser)
@@ -197,11 +230,23 @@ class ParagraphParser:
                 )
                 pending_paragraph_lines = []
 
-                heading_info = heading_flags[index]
+                # NEW: use the heading's OWN recorded text, not the
+                # raw text of this single physical line. For a
+                # heading that heading_detector.py merged from
+                # multiple wrapped lines, `heading_info["text"]` holds
+                # the FULL combined sentence -- the local `text`
+                # variable here would only be this one closing line's
+                # own fragment (e.g. "and the Company may be unable
+                # to compete effectively in these markets." instead
+                # of the complete "Global markets for the Company's
+                # products and services are highly competitive...").
+                # Falling back to `text` keeps single-line headings
+                # (the majority case) working exactly as before.
+                heading_text = heading_info.get("text", text)
 
                 blocks.append({
                     "block_type": "heading",
-                    "text": text,
+                    "text": heading_text,
                     "level": heading_info.get("level", 0),
                     "page_number": page_number,
                     "bbox": line.get("bbox"),
@@ -456,6 +501,11 @@ if __name__ == "__main__":
     print("====================================\n")
 
     stems = discover_report_stems()
+
+    # TEMP: only process Apple for now (other companies' table_analysis
+    # files were removed while table_parser.py fixes were being
+    # verified). Remove this filter once ready to process everyone.
+    stems = [(company, stem) for company, stem in stems if company == "Apple"]
 
     if not stems:
 

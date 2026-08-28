@@ -150,6 +150,25 @@ class HeadingDetector:
         # even though it's just the tail end of body text.
         bold_run_open = False
 
+        # NEW: buffers (index, analysis, text) for every line inside
+        # the current run, so the FULL sentence can be reconstructed
+        # once it closes, AND so we can decide -- only once we know
+        # the outcome -- whether the earlier fragment lines should be
+        # marked for downstream skipping. Confirmed on Apple 2016's
+        # Item 1A: the vast majority of individual risk-factor headers
+        # actually wrap across 2 (sometimes 3) physical PDF lines --
+        # e.g. "Global markets for the Company's products and services
+        # are highly competitive and subject to rapid technological
+        # change," / "and the Company may be unable to compete
+        # effectively in these markets." Buffering (instead of eagerly
+        # tagging each line as we go) means: if the combined run does
+        # NOT end up qualifying as a heading, every buffered line is
+        # left completely untouched -- it falls back to being read as
+        # normal paragraph text by downstream consumers, so nothing is
+        # ever silently lost even in an edge case the merge logic
+        # doesn't recognize.
+        bold_run_buffer = []
+
         for index, line in enumerate(lines):
 
             analysis = self._analyze_line(
@@ -159,8 +178,19 @@ class HeadingDetector:
 
             analysis["line_index"] = index
 
+            # NEW: always present (default False) so downstream
+            # consumers (e.g. paragraph_parser.py) can reliably check
+            # this on EVERY candidate without a .get() fallback. Only
+            # ever set True on the EARLIER fragment lines of a run
+            # that successfully merged into a heading on its closing
+            # line -- meaning "this line's content is already fully
+            # captured in a later heading; skip it, don't treat it as
+            # paragraph text."
+            analysis["in_bold_run"] = False
+
             text = analysis["text"]
             is_bold = analysis["is_bold"]
+            word_count = len(text.split())
 
             if bold_run_open:
 
@@ -170,6 +200,8 @@ class HeadingDetector:
                 # own score.
                 if is_bold:
 
+                    bold_run_buffer.append((index, analysis, text))
+
                     if analysis["is_heading"]:
                         analysis["is_heading"] = False
                         analysis["level"] = 0
@@ -178,25 +210,96 @@ class HeadingDetector:
                         )
 
                     # The run closes once the sentence actually ends.
+                    # Re-score the FULL merged sentence and, if it
+                    # earns heading status, attach it here (on the
+                    # closing line) with the complete combined text --
+                    # and mark every EARLIER buffered line as safe to
+                    # skip downstream, since its content now lives
+                    # entirely in this closing line's merged text.
                     if text.endswith("."):
+
+                        combined_text = " ".join(
+                            t for _, _, t in bold_run_buffer
+                        )
+
+                        combined_score, combined_reasons = self._score_line(
+                            text=combined_text,
+                            size=analysis["size"],
+                            relative_size=analysis["relative_size"],
+                            is_bold=True,
+                            is_italic=analysis["is_italic"],
+                        )
+
+                        if combined_score >= self.heading_score_threshold:
+
+                            for _, earlier_analysis, _ in bold_run_buffer[:-1]:
+                                earlier_analysis["in_bold_run"] = True
+
+                            analysis["is_heading"] = True
+                            analysis["text"] = combined_text
+                            analysis["score"] = combined_score
+                            analysis["reasons"] = combined_reasons + [
+                                "merged_wrapped_bold_sentence"
+                            ]
+                            analysis["level"] = self._estimate_level(
+                                combined_text,
+                                analysis["relative_size"],
+                                True,
+                                False,
+                            )
+
+                        # If combined_score didn't qualify, we
+                        # deliberately do NOT touch any buffered
+                        # line's in_bold_run/is_heading -- they stay
+                        # exactly as their own individual analysis
+                        # produced, so their text still surfaces
+                        # normally as paragraph content.
+
                         bold_run_open = False
+                        bold_run_buffer = []
 
                 else:
-                    # Bold styling stopped -> the run is over.
+                    # Bold styling stopped -> the run is abandoned
+                    # (no combined heading is created from a partial,
+                    # never-closed run; buffered lines are left
+                    # untouched, same safety fallback as above).
                     bold_run_open = False
+                    bold_run_buffer = []
 
             else:
 
                 # Open a new bold-run if this line is bold, long
-                # enough to have been rejected purely for length
-                # ("too_long"), and doesn't already end the sentence.
+                # enough that it's clearly a WRAPPED sentence (not a
+                # short standalone label/heading), and doesn't
+                # already end the sentence.
+                #
+                # FIX: this used to check `"too_long" in reasons`,
+                # but the length-scoring below has a MIDDLE "neutral"
+                # bucket (word_count between max_heading_words and
+                # 2x that) which never appends any reason string at
+                # all. A bold sentence-opener landing in that neutral
+                # zone (confirmed on Apple 2016 page 12: "To remain
+                # competitive and stimulate customer demand, the
+                # Company must successfully manage frequent product"
+                # -- 14 words, `reasons=['bold','body_size_but_styled']`,
+                # no "too_long" tag) silently failed to open the run,
+                # so its trailing fragment on the next line
+                # ("introductions and transitions.") was scored as
+                # its own standalone heading instead of being
+                # recognized as a continuation.
+                #
+                # Checking word_count directly (instead of depending
+                # on a specific reason string existing) catches both
+                # the "too_long" bucket AND this in-between "neutral"
+                # bucket, since both exceed max_heading_words.
                 if (
                     is_bold
                     and not analysis["is_heading"]
-                    and "too_long" in analysis["reasons"]
+                    and word_count > self.max_heading_words
                     and not text.endswith(".")
                 ):
                     bold_run_open = True
+                    bold_run_buffer = [(index, analysis, text)]
 
             heading_candidates.append(analysis)
 
@@ -379,17 +482,71 @@ class HeadingDetector:
         if word_count <= self.max_heading_words:
             score += 2
             reasons.append("short")
+        elif is_bold and text.strip().endswith(".") and word_count <= self.max_heading_words * 4:
+            # NEW: the bonus above only applies when the sentence is
+            # actually COMPLETE (ends in a period) -- a bold line
+            # that's still mid-sentence (e.g. ends in a comma because
+            # it wraps onto the next physical PDF line, like "Global
+            # markets for the Company's products and services are
+            # highly competitive and subject to rapid technological
+            # change,") must NOT get this bonus. Without the period
+            # check, that incomplete first fragment could score high
+            # enough to become a heading BY ITSELF, which blocks the
+            # bold-run-continuation-tracking below from ever opening
+            # (it only opens when the line does NOT already qualify
+            # as its own heading) -- so the sentence's second half
+            # ("and the Company may be unable to compete effectively
+            # in these markets.") would then ALSO score as its own
+            # separate heading, splitting one sentence into two false
+            # headings instead of one correct one.
+            #
+            # The length cap is wider here (4x, not 2x) than the
+            # ordinary "short" bucket above: this branch only ever
+            # fires for a COMPLETE bold sentence, and once bold-run
+            # merging reconstructs a full multi-line risk-factor
+            # header, its combined length can genuinely run to
+            # 30-40+ words (confirmed on Apple 2016's Item 1A, e.g.
+            # "There may be breaches of the Company's information
+            # technology systems that materially damage business
+            # partner and customer relationships..." -- 41 words).
+            # Real 10-K risk-factor topic sentences don't run much
+            # beyond that, so this still guards against a genuinely
+            # mistaken full BODY PARAGRAPH picking up stray bold
+            # styling.
+            score += 2
+            reasons.append("short_bold_sentence")
         elif word_count <= self.max_heading_words * 2:
             score += 0  # neutral, borderline
+            reasons.append("medium_length")
         else:
             score -= 3
             reasons.append("too_long")
 
         # ---------------------------------------------------
         # Sentence-ending punctuation (headings rarely end in '.')
+        #
+        # FIX: this penalty used to apply unconditionally, which
+        # worked against a very common, legitimate SEC 10-K
+        # convention -- Risk Factors items, where EVERY item's
+        # heading is one complete BOLD sentence ending in a period
+        # (e.g. "The Company depends on the performance of
+        # distributors, carriers and other resellers."). Confirmed
+        # on Apple 2016 page 12: this exact line scored 4 (just under
+        # the threshold of 5) purely because of this -2 penalty, and
+        # was rejected as a heading even though it's a genuine,
+        # correctly-formatted risk-factor header.
+        #
+        # A bold, complete, reasonably short sentence ending in a
+        # period is far more likely to be this SEC heading
+        # convention than an accidental stray bold sentence sitting
+        # mid-paragraph (bold in 10-Ks is reserved for structural
+        # elements -- titles, table headers, risk-factor headers --
+        # not incidental emphasis). So we only apply this penalty to
+        # NON-bold lines; a bold sentence never loses points just for
+        # ending in a period.
         # ---------------------------------------------------
 
-        if text.endswith(".") and word_count > 3:
+        if text.endswith(".") and word_count > 3 and not is_bold:
             score -= 2
             reasons.append("ends_like_sentence")
 
@@ -439,6 +596,29 @@ class HeadingDetector:
             return 4
 
         if is_bold:
+
+            # NEW: a bold heading that's a COMPLETE SENTENCE (ends in
+            # a period, reasonably long) is far more likely to be a
+            # specific topic-sentence sub-item -- e.g. individual SEC
+            # Risk-Factor headers like "The Company depends on the
+            # performance of distributors, carriers and other
+            # resellers." -- than a section-umbrella title.
+            #
+            # Genuine section titles ("Risk Factors", "Segment
+            # Operating Performance", "CONSOLIDATED BALANCE SHEETS")
+            # are consistently short NOUN PHRASES that never end in a
+            # period. Demoting only the sentence-shaped headings to
+            # level 4 lets them nest as CHILDREN of their section's
+            # real title instead of becoming false siblings of it.
+            #
+            # Confirmed on Apple 2016's Item 1A "Risk Factors": before
+            # this, every individual risk-factor sentence was
+            # flattened to the SAME level as "Risk Factors" itself,
+            # turning "Risk Factors" into an empty pass-through node
+            # instead of the parent of all the actual risk items.
+            if text.strip().endswith(".") and len(text.split()) > 3:
+                return 4
+
             return 3
 
         return 4
