@@ -961,7 +961,7 @@ class TableParser:
                 if index in text_header_rows:
                     continue
 
-                parsed_row = self._parse_data_row(row, text_columns, value_tolerance=45.0)
+                parsed_row = self._parse_data_row(row, text_columns, value_tolerance=65.0)
 
                 if parsed_row is not None:
                     data_rows.append(parsed_row)
@@ -1088,11 +1088,75 @@ class TableParser:
 
         header_row_indices = set(range(data_start_index))
 
+        # -----------------------------------------------------
+        # NEW: identify and exclude TABLE TITLE/CAPTION lines
+        # sitting inside the header zone (e.g. "CONSOLIDATED
+        # STATEMENTS OF SHAREHOLDERS' EQUITY" / "(In millions,
+        # except number of shares which are reflected in
+        # thousands)") before clustering.
+        #
+        # Confirmed on Apple 2016's Shareholders' Equity statement:
+        # these two centered caption lines were being read as their
+        # own column-header fragment, adding a 6th BOGUS column
+        # whose "name" was the literal caption text (always null,
+        # since no real value ever sits at that x) -- and because
+        # the real column count/x-calibration was thrown off by
+        # this extra phantom column, a real value (e.g. "Accumulated
+        # Other Comprehensive Income/(Loss)") went unmatched while
+        # its neighbour's value ("Retained Earnings") got duplicated
+        # into both columns for every row.
+        #
+        # Distinguishing signal: a genuine per-column header
+        # fragment (even a wide one spanning 2 sub-columns, like
+        # "Common Stock and Additional Paid-In Capital") is still
+        # meaningfully narrower than the FULL table -- a title/
+        # caption line spans nearly the entire table width instead.
+        # We use the first real DATA row (right after the header
+        # zone, which always spans the true full column range) as
+        # the width reference, and drop any single-cell header-zone
+        # row whose own line is almost as wide as that.
+        # -----------------------------------------------------
+
+        reference_cells = self._extract_cells(rows[data_start_index])
+
+        table_width = None
+
+        if len(reference_cells) >= 2:
+            table_width = (
+                max(c["x"] for c in reference_cells)
+                - min(c["x"] for c in reference_cells)
+            )
+
+        title_row_indices = set()
+
+        if table_width and table_width > 0:
+
+            for row_index in header_row_indices:
+
+                row_cells = self._extract_cells(rows[row_index])
+
+                if len(row_cells) != 1:
+                    continue  # a real grouped header fragment can share
+
+                line = rows[row_index]["lines"][0]
+                bbox = line.get("bbox")
+
+                if not bbox or len(bbox) < 4:
+                    continue
+
+                cell_width = bbox[2] - bbox[0]
+
+                if cell_width >= table_width * 0.4:
+                    title_row_indices.add(row_index)
+
         # Step 2: collect all header-zone cells, in row (top-to-bottom)
         # order, and cluster by x-position.
         clusters = []  # each: {"x": representative_x, "parts": [text, ...]}
 
         for row_index in sorted(header_row_indices):
+
+            if row_index in title_row_indices:
+                continue  # table title/caption line -- not a real column
 
             for cell in self._extract_cells(rows[row_index]):
 
@@ -1309,6 +1373,23 @@ class TableParser:
                 # stray "$" caused genuine zero-values to disappear
                 # as null instead of being recorded as "—".
                 if text in self.NON_LABEL_TOKENS and text not in ("-", "--", "—"):
+                    continue
+
+                # NEW: a cell already assigned to an earlier (closer)
+                # column can never be reused by a later column. Each
+                # column used to search ALL cells independently, so
+                # two columns whose target x's both fell within
+                # tolerance of the SAME cell would both claim it --
+                # confirmed on Apple 2016's Shareholders' Equity
+                # statement, where "Accumulated Other Comprehensive
+                # Income/(Loss)" and "Retained Earnings" both matched
+                # Retained Earnings' own value cell, silently
+                # duplicating "39,510" into both columns for the
+                # "Net income" row instead of AOCI correctly getting
+                # "-". Columns are processed left-to-right (sorted by
+                # x), so the closer/earlier column keeps first claim,
+                # which is always the geometrically correct one.
+                if id(cell) in claimed_cell_ids:
                     continue
 
                 distance = abs(cell["x"] - target_x)
