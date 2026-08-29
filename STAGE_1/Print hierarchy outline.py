@@ -67,34 +67,67 @@ def build_outline(hierarchy_json_path, max_paragraph_chars=300):
                 f"\n{indent}[SECTION L{level}] {node.get('title', '')}  ({page_range})"
             )
 
+            # NEW: tables and paragraphs are stored in two SEPARATE
+            # lists on each node, so simply printing "all tables,
+            # then all paragraphs" doesn't reflect the TRUE reading
+            # order (confirmed: a table could visually sit AFTER its
+            # own intro paragraph in the PDF, but showed up first in
+            # this outline because it lived in a different list).
+            # Both paragraphs and tables already carry their own
+            # page_number + bbox, so we can reconstruct the real
+            # top-to-bottom order here at display time -- without
+            # needing to change hierarchy_builder.py's stored schema
+            # at all.
+            content_items = []
+
             for table in node.get("tables", []):
-
-                stats["tables"] += 1
-
-                header = table.get("header", [])
-                row_count = table.get("row_count", len(table.get("rows", [])))
-                col_type = table.get("column_type", "raw" if not table.get("header_detected") else "?")
-                section_title = table.get("section_title")
-
-                title_note = f" [section_title={section_title!r}]" if section_title else ""
-
-                lines_out.append(
-                    f"{indent}    TABLE ({col_type}, {row_count} rows){title_note}: {header}"
-                )
+                page_number = table.get("page_number", 0)
+                bbox = table.get("bbox")
+                y = bbox[1] if bbox else float("inf")
+                content_items.append((page_number, y, "table", table))
 
             for para in node.get("paragraphs", []):
+                page_number = para.get("page_number", 0)
+                bbox = para.get("bbox")
+                y = bbox[1] if bbox else float("inf")
+                content_items.append((page_number, y, "paragraph", para))
 
-                stats["paragraphs"] += 1
+            content_items.sort(key=lambda entry: (entry[0], entry[1]))
 
-                text = (para.get("text") or "").strip()
+            for page_number, y, kind, item in content_items:
 
-                if not text:
-                    continue
+                if kind == "table":
 
-                if len(text) > max_paragraph_chars:
-                    text = text[:max_paragraph_chars] + " [...]"
+                    stats["tables"] += 1
 
-                lines_out.append(f"{indent}    - {text}")
+                    table = item
+
+                    header = table.get("header", [])
+                    row_count = table.get("row_count", len(table.get("rows", [])))
+                    col_type = table.get("column_type", "raw" if not table.get("header_detected") else "?")
+                    section_title = table.get("section_title")
+
+                    title_note = f" [section_title={section_title!r}]" if section_title else ""
+
+                    lines_out.append(
+                        f"{indent}    TABLE ({col_type}, {row_count} rows){title_note}: {header}"
+                    )
+
+                else:
+
+                    stats["paragraphs"] += 1
+
+                    para = item
+
+                    text = (para.get("text") or "").strip()
+
+                    if not text:
+                        continue
+
+                    if len(text) > max_paragraph_chars:
+                        text = text[:max_paragraph_chars] + " [...]"
+
+                    lines_out.append(f"{indent}    - {text}")
 
             walk(node.get("children", []), depth + 1)
 

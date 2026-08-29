@@ -337,6 +337,42 @@ class TableAnalyzer:
                 "_y": y,
             }
 
+        # NEW: some of these PDFs were exported via a browser's own
+        # "Print to PDF" (not the original SEC-filed PDF) -- every
+        # page carries a browser-injected print header: a timestamp
+        # like "5/16/26, 9:56 AM" and the literal word "Document"
+        # (the browser tab's generic title), both sitting at the very
+        # TOP of the page, above any real content.
+        #
+        # Confirmed on Apple 2016 page 46: the isolated word
+        # "Document" got promoted via Pass 3 (short, doesn't end in
+        # a period, happened to x-align with one of the Cash Flow
+        # table's columns) and then swept into that table's own
+        # header-row grouping by table_parser.py's wrapped-label
+        # merge -- which corrupted the table's overall bbox (pulling
+        # its recorded top all the way up to y=15, far above where
+        # the table visually starts). That corrupted bbox then made
+        # hierarchy_builder.py think the table appeared BEFORE its
+        # own "CONSOLIDATED STATEMENTS OF CASH FLOWS" heading, so it
+        # attached the table to the PREVIOUS section instead.
+        #
+        # This is never genuine 10-K content, so it's excluded here
+        # unconditionally -- it can never become a table candidate
+        # through any pass, in any table, on any page.
+        if self._is_browser_print_artifact(text):
+
+            return {
+                "line_index": index,
+                "text": text,
+                "is_candidate": False,
+                "numeric_ratio": 0.0,
+                "numeric_count": 0,
+                "token_count": 0,
+                "x_positions": [],
+                "y_positions": [],
+                "_y": y,
+            }
+
         numeric_count = 0
         token_count = 0
 
@@ -421,6 +457,31 @@ class TableAnalyzer:
             "_y": y,
 
         }
+
+    def _is_browser_print_artifact(self, text):
+        """
+        True for the browser-injected "Print to PDF" header seen at
+        the top of every page in some of these files -- a timestamp
+        ("5/16/26, 9:56 AM") and/or the literal word "Document". See
+        the caller for the full rationale (Apple 2016 page 46's Cash
+        Flow table bbox corruption).
+        """
+
+        import re
+
+        stripped = text.strip()
+
+        if stripped == "Document":
+            return True
+
+        if re.fullmatch(
+            r"\d{1,2}/\d{1,2}/\d{2,4},?\s+\d{1,2}:\d{2}\s*[AP]M",
+            stripped,
+            re.IGNORECASE,
+        ):
+            return True
+
+        return False
 
     def _is_numeric_token(self, text):
 
