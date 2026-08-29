@@ -4,38 +4,16 @@ from pathlib import Path
 
 
 def _is_page_progress_indicator(text):
-    """
-    Catches "N/M" style page-progress markers (e.g. "8/75", "9/75")
-    that some PDF viewers/print-tools embed. Unlike the repeated-
-    footer text ("Apple Inc. | 2020 Form 10-K | 5"), the NUMERATOR
-    here changes on every page while the denominator stays fixed --
-    so frequency-based repeat-detection never sees the exact same
-    string twice, and misses it. A page-progress indicator is never
-    real paragraph content regardless of how often it repeats, so we
-    drop it unconditionally on a simple pattern match instead.
-    """
     return bool(re.fullmatch(r"\d{1,4}\s*/\s*\d{1,4}", text.strip()))
 
 
 def _normalize_for_repeat_check(text):
-    """
-    Footers like "Apple Inc. | 2021 Form 10-K | 16" differ from page
-    to page ONLY in the trailing page number. Comparing exact text
-    means they never look "repeated" (each page has a different
-    number), so the frequency check silently never fires. Stripping
-    the trailing number before counting fixes this -- and works for
-    ANY company's footer format, not just Apple's.
-    """
     return re.sub(r"\d+\s*$", "#", text.strip())
 
 
 def fix_paragraph_file(data):
 
     total_pages = len(data["pages"])
-
-    # ---------------------------------------------------
-    # Fix 1: repeated footer/header removal (any company)
-    # ---------------------------------------------------
 
     text_counts = {}
 
@@ -55,14 +33,8 @@ def fix_paragraph_file(data):
     threshold = max(5, total_pages * 0.3)
     boilerplate = {t for t, c in text_counts.items() if c >= threshold}
 
-    # ---------------------------------------------------
-    # Fix 2: dangling sentence-fragment headings
-    # (short, ends in period, not a real numbered heading
-    # like "Item 1." or "1.")
-    # ---------------------------------------------------
-
     numbering_pattern = re.compile(
-        r"^(Item\s+\d+[A-Za-z]?\.?|[IVXLCDM]+\.|[A-Za-z]?\d+\.)$",
+        r"^(Item\s+\d+[A-Za-z]?\.?|PART\s+[IVXLCDM]+\.?|[IVXLCDM]+\.|[A-Za-z]?\d+\.)$",
         re.IGNORECASE,
     )
 
@@ -76,12 +48,8 @@ def fix_paragraph_file(data):
 
             text = block["text"].strip()
 
-            # Drop repeated boilerplate paragraphs entirely
             if block["block_type"] == "paragraph":
 
-                # Page-progress markers ("8/75") never repeat as the
-                # exact same string, so the frequency-check above
-                # can't catch them -- drop these unconditionally.
                 if _is_page_progress_indicator(text):
                     continue
 
@@ -89,7 +57,6 @@ def fix_paragraph_file(data):
                 if normalized in boilerplate:
                     continue
 
-            # Downgrade dangling-fragment "headings" to plain paragraphs
             if block["block_type"] == "heading":
 
                 words = text.split()

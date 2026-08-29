@@ -39,7 +39,79 @@ class HierarchyBuilder:
 
             page_number = page["page_number"]
 
+            # -------------------------------------------------
+            # Interleave this page's blocks AND tables into ONE
+            # Y-sorted (top-to-bottom) sequence before processing,
+            # instead of processing all blocks first and only
+            # attaching tables afterward.
+            #
+            # BUG (confirmed on Apple 2016 page 21): that page has
+            # THREE headings in sequence -- "Price Range of Common
+            # Stock" -> "Holders" -> "Dividends" -- but only ONE
+            # table (the price-range table), which visually sits
+            # right after the FIRST heading. Attaching tables only
+            # after finishing all of a page's blocks meant the table
+            # always landed under whichever heading was open LAST on
+            # that page ("Dividends") -- completely unrelated to what
+            # the table is actually about. This is the same root
+            # problem as the earlier documented Microsoft bug (table
+            # landing under the wrong heading), just showing up from
+            # the other direction: previously tables jumped to a
+            # PREVIOUS page's leftover heading; now, without this
+            # fix, they'd jump to the LAST heading on their own page
+            # instead of the one they actually sit under.
+            #
+            # Sorting by each item's own bbox y-position (top of the
+            # page = smallest y) and processing everything in that
+            # true visual order means a table attaches to whichever
+            # heading was open AT THE MOMENT it appears, matching how
+            # a human reading the page top-to-bottom would naturally
+            # associate it. Verified: "Price Range of Common Stock"
+            # now correctly gets its own table; "Segment Operating
+            # Performance"'s 5 child headings (Americas, Europe,
+            # Greater China, Japan, Rest of Asia Pacific) each get
+            # their own correct table, not a mix-up.
+            # -------------------------------------------------
+
+            sequenced_items = []
+
             for block in page["blocks"]:
+
+                bbox = block.get("bbox")
+
+                y = bbox[1] if bbox else float("inf")
+
+                sequenced_items.append((y, "block", block))
+
+            for table in tables_by_page.get(page_number, []):
+
+                table_id = id(table)
+
+                if table_id in attached_table_ids:
+                    continue
+
+                bbox = table.get("bbox")
+
+                y = bbox[1] if bbox else float("inf")
+
+                sequenced_items.append((y, "table", table))
+
+            # Stable sort: ties (identical y, or both missing bbox)
+            # keep their original relative order -- blocks were
+            # appended before tables above, so a genuine tie falls
+            # back to "heading/paragraph first", a reasonable default.
+            sequenced_items.sort(key=lambda entry: entry[0])
+
+            for y, kind, item in sequenced_items:
+
+                if kind == "table":
+
+                    stack[-1]["tables"].append(item)
+                    attached_table_ids.add(id(item))
+
+                    continue
+
+                block = item
 
                 if block["block_type"] == "heading":
 
@@ -55,6 +127,7 @@ class HierarchyBuilder:
                             "page_number": page_number,
                             "bbox": block.get("bbox"),
                         })
+                        stack[-1]["page_end"] = page_number
                         continue
 
                     node = {
@@ -85,36 +158,6 @@ class HierarchyBuilder:
                     })
 
                 stack[-1]["page_end"] = page_number
-
-            # -------------------------------------------------
-            # Attach this page's tables AFTER processing this
-            # page's own blocks (not before).
-            #
-            # BUG (confirmed on real data -- Microsoft 2022's
-            # segment-revenue table appeared 4 separate times,
-            # each attached to a different WRONG heading: "Credit",
-            # "Uncertain Tax Positions", "More Personal Computing"
-            # -- none of which are genuinely related): SEC filings
-            # very commonly put a heading and its table on the SAME
-            # page ("The following table shows segment revenue:"
-            # immediately followed by the table). Attaching tables
-            # BEFORE processing this page's blocks meant the table
-            # always attached to whatever heading was left open from
-            # a PREVIOUS page, never to a heading that opens on this
-            # SAME page -- which is the common case. Attaching AFTER
-            # this page's own headings have had a chance to open
-            # fixes the common (heading-then-table-on-one-page) case.
-            # -------------------------------------------------
-
-            for table in tables_by_page.get(page_number, []):
-
-                table_id = id(table)
-
-                if table_id in attached_table_ids:
-                    continue
-
-                stack[-1]["tables"].append(table)
-                attached_table_ids.add(table_id)
 
         return root["children"]
 

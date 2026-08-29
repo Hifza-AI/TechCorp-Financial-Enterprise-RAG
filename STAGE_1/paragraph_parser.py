@@ -203,22 +203,33 @@ class ParagraphParser:
                 continue
 
             # -------------------------------------------------
-            # TABLE LINE -> skip entirely (handled by TableParser)
-            # -------------------------------------------------
-
-            if is_table_line:
-
-                self._flush_paragraph(
-                    pending_paragraph_lines,
-                    blocks,
-                    page_number,
-                )
-                pending_paragraph_lines = []
-
-                continue
-
-            # -------------------------------------------------
             # HEADING LINE -> flush pending paragraph, emit heading
+            #
+            # NEW (checked BEFORE the table-line check below): a line
+            # that heading_detector.py has already confirmed as a
+            # genuine heading (bold/italic + size + scoring signals)
+            # must never be silently dropped just because
+            # table_analyzer.py's speculative rescue-passes ALSO
+            # flagged it as a table candidate. Confirmed on Apple
+            # 2016: short section titles that sit directly above a
+            # table -- "iPhone", "Mac", "Services", "Price Range of
+            # Common Stock", "Selected Financial Data" -- happen to
+            # sit at the exact same left-margin x-position as the
+            # table's own row-labels below them (e.g. "Net sales"),
+            # so table_analyzer's Pass 3 (header-zone rescue) was
+            # matching them as if they were wrapped column-header
+            # fragments. Since the OLD check order tested is_table_line
+            # first, every one of these genuine headings was being
+            # skipped entirely -- never shown as a heading, and never
+            # recovered anywhere else either (TableParser has no real
+            # row/column structure to place a single stray heading
+            # line into, so it silently vanished).
+            #
+            # heading_detector.py's signals are independently strong
+            # and don't rely on table-adjacent x-alignment guesswork,
+            # so giving heading-status priority here is safe: a line
+            # that's genuinely a heading is essentially never also
+            # genuinely a piece of real table data.
             # -------------------------------------------------
 
             if is_heading_line:
@@ -230,18 +241,18 @@ class ParagraphParser:
                 )
                 pending_paragraph_lines = []
 
-                # NEW: use the heading's OWN recorded text, not the
-                # raw text of this single physical line. For a
-                # heading that heading_detector.py merged from
-                # multiple wrapped lines, `heading_info["text"]` holds
-                # the FULL combined sentence -- the local `text`
-                # variable here would only be this one closing line's
-                # own fragment (e.g. "and the Company may be unable
-                # to compete effectively in these markets." instead
-                # of the complete "Global markets for the Company's
-                # products and services are highly competitive...").
-                # Falling back to `text` keeps single-line headings
-                # (the majority case) working exactly as before.
+                # Use the heading's OWN recorded text, not the raw
+                # text of this single physical line. For a heading
+                # that heading_detector.py merged from multiple
+                # wrapped lines, `heading_info["text"]` holds the FULL
+                # combined sentence -- the local `text` variable here
+                # would only be this one closing line's own fragment
+                # (e.g. "and the Company may be unable to compete
+                # effectively in these markets." instead of the
+                # complete "Global markets for the Company's products
+                # and services are highly competitive..."). Falling
+                # back to `text` keeps single-line headings (the
+                # majority case) working exactly as before.
                 heading_text = heading_info.get("text", text)
 
                 blocks.append({
@@ -251,6 +262,21 @@ class ParagraphParser:
                     "page_number": page_number,
                     "bbox": line.get("bbox"),
                 })
+
+                continue
+
+            # -------------------------------------------------
+            # TABLE LINE -> skip entirely (handled by TableParser)
+            # -------------------------------------------------
+
+            if is_table_line:
+
+                self._flush_paragraph(
+                    pending_paragraph_lines,
+                    blocks,
+                    page_number,
+                )
+                pending_paragraph_lines = []
 
                 continue
 
@@ -287,6 +313,23 @@ class ParagraphParser:
     # =========================================================
 
     def _is_new_paragraph(self, previous_line, current_line):
+
+        # NEW: a line that IS a standalone footnote marker (e.g.
+        # "(1)", "(2)") always starts a fresh, separate footnote
+        # item -- even when the gap/indent from the previous line
+        # is small. Confirmed on Apple 2016 page 22: three distinct
+        # footnotes explaining share-repurchase details were being
+        # merged into ONE 1500+ character paragraph, because
+        # consecutive footnote items are typeset with the same
+        # tight line-spacing and left margin as normal body text --
+        # neither the vertical-gap nor indent-shift checks below
+        # ever fire between them. A lone "(N)" marker is a reliable,
+        # company-agnostic signal that a new, unrelated item is
+        # starting right here, regardless of layout spacing.
+        current_text = (current_line.get("text") or "").strip()
+
+        if re.fullmatch(r"\(\d{1,2}\)", current_text):
+            return True
 
         prev_bbox = previous_line.get("bbox")
         curr_bbox = current_line.get("bbox")

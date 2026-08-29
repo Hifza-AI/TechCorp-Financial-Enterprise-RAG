@@ -18,35 +18,77 @@ class TableAnalyzer:
         self.x_alignment_tolerance = x_alignment_tolerance
         self.y_alignment_tolerance = y_alignment_tolerance
 
-    # =========================================================
-    # MAIN
-    # =========================================================
+    def analyze(self, cleaned_reports, heading_reports=None):
+        """
+        heading_reports (optional): a list of already-computed
+        heading_detector.py outputs, one per report, in the SAME
+        order as cleaned_reports. When provided, any line that
+        heading_detector has already confirmed as a genuine heading
+        is excluded from ALL rescue-passes below (Pass 2, 3, 4) --
+        both as something that can itself be promoted, AND as an
+        anchor that a NEARBY line can be rescued against.
+        Confirmed on Apple 2016: short bold/italic section titles
+        ("iPhone", "Mac", "Services", "Debt", "Price Range of Common
+        Stock") sit at the exact same left-margin x as the row-labels
+        of the table just below them, so Pass 3's column-alignment
+        heuristic was matching them as if they were wrapped
+        column-header fragments -- and because Pass 4 cascades
+        backward from any confirmed candidate, that single false
+        promotion then swallowed the TAIL of whatever genuine
+        paragraph happened to sit right before the heading too.
 
-    def analyze(self, cleaned_reports):
+        This parameter is entirely optional and backward-compatible:
+        if omitted (or a report has no matching heading data), this
+        behaves exactly as before.
+        """
 
         analyzed_reports = []
 
-        for report in cleaned_reports:
+        for index, report in enumerate(cleaned_reports):
 
-            analyzed_report = self._analyze_report(report)
+            heading_report = (
+                heading_reports[index]
+                if heading_reports and index < len(heading_reports)
+                else None
+            )
+
+            analyzed_report = self._analyze_report(report, heading_report)
 
             analyzed_reports.append(analyzed_report)
 
         return analyzed_reports
 
-    # =========================================================
-    # REPORT
-    # =========================================================
-
-    def _analyze_report(self, report):
+    def _analyze_report(self, report, heading_report=None):
 
         analyzed_report = deepcopy(report)
+
+        heading_pages = {}
+
+        if heading_report:
+
+            for heading_page in heading_report.get("pages", []):
+
+                page_number = heading_page.get("page_number")
+
+                candidates = heading_page.get(
+                    "heading_analysis", {}
+                ).get("candidates", [])
+
+                heading_pages[page_number] = {
+                    c["line_index"]
+                    for c in candidates
+                    if c.get("is_heading")
+                }
 
         analyzed_pages = []
 
         for page in report.get("pages", []):
 
-            analyzed_page = self._analyze_page(page)
+            heading_line_indices = heading_pages.get(
+                page.get("page_number"), set()
+            )
+
+            analyzed_page = self._analyze_page(page, heading_line_indices)
 
             analyzed_pages.append(analyzed_page)
 
@@ -54,20 +96,13 @@ class TableAnalyzer:
 
         return analyzed_report
 
-    # =========================================================
-    # PAGE
-    # =========================================================
+    def _analyze_page(self, page, heading_line_indices=None):
 
-    def _analyze_page(self, page):
+        heading_line_indices = heading_line_indices or set()
 
         analyzed_page = deepcopy(page)
 
         lines = page.get("lines", [])
-
-        # -----------------------------------------------------
-        # PASS 1: numeric-based candidate detection
-        # (same as before)
-        # -----------------------------------------------------
 
         line_analysis = []
 
@@ -81,35 +116,47 @@ class TableAnalyzer:
 
             line_analysis.append(analysis)
 
-        # -----------------------------------------------------
-        # PASS 2: row-mate rescue
-        #
-        # A line with ZERO numeric content (e.g. "iPhone") is
-        # never picked up by Pass 1, because its own numeric_ratio
-        # is 0.0 -- even when it sits on the exact same visual row
-        # as a confirmed table row (same y-position, just a
-        # different column/x). Without this pass, row LABELS are
-        # silently dropped and the table becomes unusable
-        # ("iPhone $137,781" loses its "iPhone").
-        #
-        # Fix: for every non-candidate line, check whether any
-        # CONFIRMED candidate line shares its y-position within
-        # y_alignment_tolerance. If so, promote it to candidate
-        # too -- it's a row-mate (almost certainly the row label).
-        # -----------------------------------------------------
-
         confirmed_ys = [
             item["_y"]
             for item in line_analysis
             if item["is_candidate"] and item["_y"] is not None
+            and item["line_index"] not in heading_line_indices
         ]
+
+        # NEW: genuine row-labels are always short ("iPhone", "Net
+        # sales", "Adjustment for net (gains)/losses..."). A full,
+        # multi-sentence PARAGRAPH is never a real row-label, even if
+        # it happens to sit at the same y-position as a confirmed
+        # numeric candidate. Confirmed on Apple 2016 page 22: a
+        # footnote reference marker "(1)" (a lone digit in
+        # parentheses, itself numeric-looking enough to become its
+        # own Pass-1 candidate) sits INLINE with the start of its
+        # full footnote paragraph -- "In April 2016, the Company's
+        # Board of Directors increased the Company's share
+        # repurchase program authorization..." (19 words). Without
+        # this guard, that entire footnote sentence gets promoted as
+        # if it were "(1)"'s row-label, silently removing it from
+        # paragraph output (TableParser has no real row/column
+        # structure to put it in either, so it's lost completely).
+        # Reused from the same MAX_LABEL_WORDS convention already
+        # established in table_parser.py for the same "is this
+        # actually a label" judgment call.
+        MAX_ROW_LABEL_WORDS = 15
 
         for item in line_analysis:
 
             if item["is_candidate"]:
                 continue
 
+            if item["line_index"] in heading_line_indices:
+                continue
+
             if item["_y"] is None:
+                continue
+
+            word_count = len(item["text"].split())
+
+            if word_count > MAX_ROW_LABEL_WORDS:
                 continue
 
             is_row_mate = any(
@@ -121,42 +168,21 @@ class TableAnalyzer:
                 item["is_candidate"] = True
                 item["promoted_as_row_label"] = True
 
-        # -----------------------------------------------------
-        # PASS 3: header-zone rescue
-        #
-        # Multi-line WRAPPED text-column-headers (e.g. "Total
-        # Number" / "of Shares" / "Purchased" -- each its own line,
-        # stacked above the actual numeric data) sit at a DIFFERENT
-        # y than the data rows below them, so Pass 2's same-y
-        # row-mate rescue never catches them. Confirmed on real data
-        # (Apple 2016's "Share Repurchase" table): "Total Number",
-        # "of Shares", "Average", "Price", "Paid Per" all stayed
-        # is_candidate=False and never reached TableParser at all.
-        #
-        # Fix: for every non-candidate line, check if it's (a) SHORT
-        # (<=5 words -- header fragments are short; real paragraphs
-        # aren't), (b) positioned ABOVE a confirmed-candidate line
-        # within a reasonable vertical window (header zone sits
-        # just above the table body), AND (c) x-aligned with some
-        # confirmed candidate's column position (this is the key
-        # guard against false positives -- a random paragraph
-        # sitting above the table won't share the table's exact
-        # column x-positions, but genuine wrapped header fragments
-        # will).
-        # -----------------------------------------------------
-
         confirmed_x_positions = []
 
         for item in line_analysis:
-            if item["is_candidate"]:
+            if item["is_candidate"] and item["line_index"] not in heading_line_indices:
                 confirmed_x_positions.extend(item.get("x_positions", []))
 
-        HEADER_ZONE_WINDOW = 150  # points above a confirmed row to search
+        HEADER_ZONE_WINDOW = 150
         HEADER_X_TOLERANCE = 20
 
         for item in line_analysis:
 
             if item["is_candidate"]:
+                continue
+
+            if item["line_index"] in heading_line_indices:
                 continue
 
             if item["_y"] is None:
@@ -168,7 +194,7 @@ class TableAnalyzer:
                 continue
 
             if item["text"].strip().endswith("."):
-                continue  # looks like end of a sentence, not a header fragment
+                continue
 
             is_above_a_table = any(
                 0 < (y - item["_y"]) <= HEADER_ZONE_WINDOW
@@ -188,50 +214,38 @@ class TableAnalyzer:
                 item["is_candidate"] = True
                 item["promoted_as_header_fragment"] = True
 
-        # -----------------------------------------------------
-        # PASS 4: adjacent-predecessor rescue (wrapped row-labels
-        # INSIDE a table body)
-        #
-        # Confirmed on Apple 2022's Comprehensive Income table: a
-        # row-label wrapping across 2 physical lines (e.g.
-        # "Adjustment for net (gains)/losses realized and included
-        # in net" / "income" -- where the SECOND line sits on the
-        # same y as the row's actual numeric values) has ZERO
-        # numeric content on its FIRST line. Pass 2 (same-y rescue)
-        # doesn't help since the two lines are at DIFFERENT y's.
-        # Pass 3 (header-zone) doesn't help either -- it only
-        # rescues lines ABOVE where a table's data starts, not
-        # continuation-lines INSIDE an already-running table body.
-        # Result: the first line never became a candidate at all,
-        # and only the last word/line of the wrapped label survived.
-        #
-        # Fix: if a non-candidate line is the IMMEDIATE predecessor
-        # (by line-index, not y) of a CONFIRMED candidate line, is
-        # reasonably short (not a stray full paragraph), and sits
-        # close in y to the surrounding table (tighter window than
-        # Pass 3, since this is specifically about adjacency, not
-        # "somewhere above the table"), promote it too.
-        # -----------------------------------------------------
-
         ADJACENT_Y_WINDOW = 40
         MAX_LABEL_WORDS = 15
 
-        # Processing in REVERSE order (last line first) lets a
-        # multi-line chain (3+ wrapped lines, not just 2) cascade-
-        # rescue correctly in a SINGLE pass. Forward-order would only
-        # catch the line immediately before an ALREADY-confirmed
-        # candidate -- so a 3-line wrap ("Adjustment for net
-        # (gains)/losses..." / "income, net of tax expense..." /
-        # "respectively") only rescued the middle line, since the
-        # first line's own next-line (the middle one) hadn't been
-        # promoted YET at the point forward-order reached it.
-        # Reverse-order guarantees each line's next-line has already
-        # been evaluated (and possibly promoted) before we check it.
+        # NEW: a copyright/legal notice ("Copyright (c) 2016 S&P, a
+        # division of McGraw Hill Financial. All rights reserved.")
+        # is NEVER a genuine table row-label, no matter how short or
+        # how close it sits to a real table. Confirmed on Apple
+        # 2016 page 23: the real stock-performance table's header
+        # happened to sit close enough (within ADJACENT_Y_WINDOW) to
+        # a preceding copyright line that the copyright line got
+        # promoted as if it were a wrapped label continuation for
+        # that table -- and because Pass 4 processes lines in
+        # REVERSE and cascades (by design, so a genuine 3+-line
+        # wrapped label rescues correctly in one pass), that single
+        # false promotion then chained BACKWARD through two more
+        # unrelated lines (a second copyright notice, and the tail
+        # of an unrelated footnote sentence), none of which had
+        # anything to do with the table that triggered the chain.
+        # Blocking the copyright line from ever being promoted stops
+        # the cascade at its source, so it can no longer drag in
+        # unrelated narrative text before it.
+        def _looks_like_copyright_notice(text):
+            return bool(re.search(r"copyright|\u00a9", text, re.IGNORECASE))
+
         for index in range(len(line_analysis) - 1, -1, -1):
 
             item = line_analysis[index]
 
             if item["is_candidate"]:
+                continue
+
+            if item["line_index"] in heading_line_indices:
                 continue
 
             if index + 1 >= len(line_analysis):
@@ -242,9 +256,40 @@ class TableAnalyzer:
             if not next_item["is_candidate"]:
                 continue
 
+            # NEW: never cascade FROM a confirmed heading either -- if
+            # the "anchor" that triggered this promotion is itself a
+            # genuine heading (e.g. "Debt", "Mac"), the line before it
+            # is almost certainly the TAIL of an unrelated paragraph,
+            # not that heading's own wrapped row-label. Confirmed on
+            # Apple 2016 page 33: "Debt" (a heading) sat close enough
+            # to the end of the preceding "Capital Assets" paragraph
+            # that its last sentence ("facilities and infrastructure,
+            # ... retail store facilities.") was being swallowed as if
+            # it were "Debt"'s own wrapped label.
+            if next_item["line_index"] in heading_line_indices:
+                continue
+
             word_count = len(item["text"].split())
 
             if word_count == 0 or word_count > MAX_LABEL_WORDS:
+                continue
+
+            # NEW: a genuine wrapped row-label fragment never forms a
+            # complete grammatical sentence -- it just continues onto
+            # the next physical line without natural sentence-ending
+            # punctuation (e.g. "Open market and privately negotiated"
+            # / "purchases"). A line that ends in "." is far more
+            # likely the TAIL of an unrelated narrative paragraph that
+            # simply happens to sit close to a real table's start.
+            # Confirmed on Apple 2016 page 21: "...Company's common
+            # stock on the NASDAQ during each quarter of the two most
+            # recent years." (a complete sentence, 15 words) was being
+            # swept in as if it were a wrapped label for the price-
+            # range table's own header row directly below it.
+            if item["text"].strip().endswith("."):
+                continue
+
+            if _looks_like_copyright_notice(item["text"]):
                 continue
 
             if item["_y"] is None or next_item.get("_y") is None:
@@ -256,27 +301,19 @@ class TableAnalyzer:
                 item["is_candidate"] = True
                 item["promoted_as_label_continuation"] = True
 
-        # Drop the internal-only helper key before saving
         for item in line_analysis:
             item.pop("_y", None)
 
         analyzed_page["table_analysis"] = {
-
             "candidate_lines": line_analysis,
-
             "candidate_count": sum(
                 1
                 for item in line_analysis
                 if item["is_candidate"]
             ),
-
         }
 
         return analyzed_page
-
-    # =========================================================
-    # LINE ANALYSIS
-    # =========================================================
 
     def _analyze_line(self, line, index, lines):
 
@@ -381,13 +418,9 @@ class TableAnalyzer:
 
             "nearby_numeric_lines": nearby_numeric_lines,
 
-            "_y": y,  # internal-only, stripped before saving
+            "_y": y,
 
         }
-
-    # =========================================================
-    # NUMERIC TOKEN
-    # =========================================================
 
     def _is_numeric_token(self, text):
 
@@ -397,47 +430,12 @@ class TableAnalyzer:
 
             return False
 
-        # NOTE: We intentionally do NOT treat a lone "-"/"—" as numeric
-        # here. Bulleted lists (e.g. "- Updated MacBook Air...") also
-        # start with a dash, and counting it as "numeric" was enough
-        # to push short bullet lines over the candidate threshold --
-        # misclassifying entire bullet-point paragraphs as tables.
-        # Real financial tables that use "-" for a zero/blank cell
-        # always have OTHER genuine numeric cells in the same row,
-        # which already trigger candidate detection on their own --
-        # so this special case wasn't actually needed for real tables,
-        # only harmful for bullet lists.
-
-        # Remove common accounting wrappers/symbols AND whitespace.
-        #
-        # We used to try float(cleaned) on the WHOLE remaining string,
-        # which only works for a SINGLE clean number. But a single
-        # PDF span can sometimes contain a RANGE like
-        # "$116.18 - $91.50" (two numbers, one dash, one space) as
-        # one continuous text-run -- float() on that fails entirely
-        # (ValueError), so the whole line scored numeric_ratio=0.0
-        # and a real financial table (quarterly stock price ranges)
-        # was silently dropped as "not a table" -- confirmed on
-        # Apple 2016's "Price Range of Common Stock" table.
-        #
-        # Fix: instead of requiring the WHOLE token to parse as one
-        # float, strip every character that's normal in financial
-        # formatting ($, comma, period, dash, plus, parens, percent,
-        # whitespace) and check if what's LEFT is purely digits. This
-        # correctly recognizes both single numbers ("252") AND
-        # compound numeric content like ranges ("$116.18 - $91.50")
-        # as numeric, without needing them to be one valid float.
-
         cleaned = re.sub(r"[\$,\.\-\+\(\)%\s]", "", cleaned)
 
         if not cleaned:
             return False
 
         return cleaned.isdigit()
-
-    # =========================================================
-    # NEARBY NUMERIC LINES
-    # =========================================================
 
     def _count_nearby_numeric_lines(
         self,
@@ -454,8 +452,6 @@ class TableAnalyzer:
         if current_y is None:
 
             return 0
-
-        # Look around the current line
 
         start = max(
             0,
@@ -493,10 +489,6 @@ class TableAnalyzer:
 
         return count
 
-    # =========================================================
-    # LINE Y POSITION
-    # =========================================================
-
     def _line_y(self, line):
 
         bbox = line.get("bbox")
@@ -512,10 +504,6 @@ class TableAnalyzer:
         except (TypeError, ValueError):
 
             return None
-
-    # =========================================================
-    # LINE NUMERIC RATIO
-    # =========================================================
 
     def _line_numeric_ratio(self, line):
 
@@ -544,10 +532,6 @@ class TableAnalyzer:
 
         return numeric / total
 
-
-# =============================================================
-# LOAD CLEANED JSON
-# =============================================================
 
 def load_cleaned_reports(input_dir):
 
@@ -588,9 +572,32 @@ def load_cleaned_reports(input_dir):
     return reports
 
 
-# =============================================================
-# SAVE ANALYZED JSON
-# =============================================================
+def load_matching_heading_report(
+    report,
+    heading_dir="STAGE_1/heading_detection",
+):
+    """
+    Loads the heading_detector.py output that corresponds to a given
+    cleaned report (same company + same file stem), so TableAnalyzer
+    can cross-reference confirmed headings and avoid ever promoting
+    them as table candidates. Returns None (graceful degradation) if
+    heading_detection hasn't been run yet for this report -- analysis
+    then simply falls back to the previous, heading-unaware behavior
+    for that one report.
+    """
+
+    company = report.get("company")
+
+    stem = Path(report.get("file_name", "")).stem
+
+    heading_path = Path(heading_dir) / company / f"{stem}_headings.json"
+
+    if not heading_path.exists():
+        return None
+
+    with open(heading_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
 
 def save_analyzed_reports(
     analyzed_reports,
@@ -644,10 +651,6 @@ def save_analyzed_reports(
         )
 
 
-# =============================================================
-# MAIN
-# =============================================================
-
 if __name__ == "__main__":
 
     INPUT_DIR = (
@@ -690,9 +693,19 @@ if __name__ == "__main__":
 
         analyzer = TableAnalyzer()
 
+        # Cross-reference heading_detector.py's results so confirmed
+        # headings never get mistaken for table candidates. Falls
+        # back gracefully (per-report) if a report's heading_detection
+        # output isn't available yet.
+        heading_reports = [
+            load_matching_heading_report(report)
+            for report in cleaned_reports
+        ]
+
         analyzed_reports = (
             analyzer.analyze(
-                cleaned_reports
+                cleaned_reports,
+                heading_reports,
             )
         )
 
