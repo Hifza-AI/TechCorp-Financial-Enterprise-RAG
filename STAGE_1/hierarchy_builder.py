@@ -313,8 +313,8 @@ if __name__ == "__main__":
                 f"Tables: {tables}"
             )
 
-        print("\n====================================")
+        print("\n=====================================")
         print(" Hierarchy Building Completed")
-        print("====================================")
+        print("=====================================")
         print("\nOutput:")
         print("STAGE_1/hierarchy")
