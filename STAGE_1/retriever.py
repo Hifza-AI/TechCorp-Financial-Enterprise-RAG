@@ -285,7 +285,29 @@ class Retriever:
         # already-verified out-of-scope rejection behavior (unknown
         # topics, irrelevant queries) exactly as it worked before
         # hybrid retrieval was wired in.
-        if not results or results[0]["score"] < self.MIN_CONFIDENCE_SCORE:
+        #
+        # NEW: relax the bar when a hard company/year filter was
+        # applied. Confirmed on real queries: "What is Apple's most
+        # recent total net sales?" correctly resolved wanted_year to
+        # the latest indexed year, and the genuinely correct answer
+        # (a table chunk rendering "Total net sales -- 2024: 391,035
+        # ...") WAS in the year-filtered candidate pool -- but table-
+        # rendered text ("Columns: 2024, 2023, 2022 \n Label -- ...")
+        # tends to embed less naturally against a natural-language
+        # query than prose does, so its dense score fell just under
+        # 0.58, and the WHOLE query returned "no match" despite a
+        # real answer existing. The 0.58 bar exists to catch queries
+        # about things not in the corpus AT ALL (weather, a stock
+        # price today, an unindexed company) -- but once we've
+        # already deterministically confirmed via metadata that this
+        # exact company+year combination IS in the corpus, that risk
+        # is already ruled out, so a lower bar is safe here.
+        confidence_threshold = self.MIN_CONFIDENCE_SCORE
+
+        if needs_hard_filter:
+            confidence_threshold = self.MIN_CONFIDENCE_SCORE * 0.7
+
+        if not results or results[0]["score"] < confidence_threshold:
             return {
                 "matched": False,
                 "reason": "No sufficiently relevant data found for this query.",

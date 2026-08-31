@@ -29,10 +29,6 @@ class ChunkBuilder:
         self.chunk_overlap_chars = chunk_overlap_chars
         self.min_chunk_chars = min_chunk_chars
 
-    # =========================================================
-    # MAIN
-    # =========================================================
-
     def build_chunks(self, company, year, file_name, sections):
 
         chunks = []
@@ -45,23 +41,6 @@ class ChunkBuilder:
             file_name=file_name,
             chunks=chunks,
         )
-
-        # -----------------------------------------------------
-        # Coalesce small chunks.
-        #
-        # Chunks are built PER-SECTION as the tree is walked -- if a
-        # heading's own paragraphs are short (common in financial
-        # reports: brief risk-factor items, short note-disclosures),
-        # that section becomes its own tiny chunk on its own, even
-        # though max_chunk_chars allows much more. Tiny chunks hurt
-        # embedding quality (too little text for a distinguishing
-        # signal) and fragment related context across more pieces
-        # than necessary. This pass merges consecutive small TEXT
-        # chunks (same company/year, adjacent in document order)
-        # up to max_chunk_chars, tracking a combined section_path so
-        # citations still show where each piece came from. Table
-        # chunks are never touched -- they stay whole and separate.
-        # -----------------------------------------------------
 
         chunks = self._merge_small_chunks(chunks)
 
@@ -132,19 +111,11 @@ class ChunkBuilder:
 
         return merged
 
-    # =========================================================
-    # RECURSIVE WALK
-    # =========================================================
-
     def _walk(self, nodes, section_path, company, year, file_name, chunks):
 
         for node in nodes:
 
             current_path = section_path + [node["title"].strip()]
-
-            # -------------------------------------------------
-            # Text chunks from this node's own paragraphs
-            # -------------------------------------------------
 
             if node["paragraphs"]:
 
@@ -158,19 +129,8 @@ class ChunkBuilder:
 
                 chunks.extend(text_chunks)
 
-            # -------------------------------------------------
-            # One chunk per table (kept whole, never split)
-            # -------------------------------------------------
-
             for table in node["tables"]:
 
-                # Sanity check: a real financial table should be
-                # mostly numeric values. Occasionally a legal/
-                # trademark list (e.g. "AirPods (R), ... Apple TV (R)")
-                # gets mis-flagged as a table upstream because its
-                # short symbol-heavy lines happen to sit at aligned
-                # y-positions. Skip anything that doesn't actually
-                # look like real tabular data.
                 if not self._looks_like_real_table(table):
                     continue
 
@@ -184,10 +144,6 @@ class ChunkBuilder:
                     )
                 )
 
-            # -------------------------------------------------
-            # Recurse into children with the extended path
-            # -------------------------------------------------
-
             self._walk(
                 nodes=node["children"],
                 section_path=current_path,
@@ -196,10 +152,6 @@ class ChunkBuilder:
                 file_name=file_name,
                 chunks=chunks,
             )
-
-    # =========================================================
-    # TEXT CHUNKING (paragraph grouping with overlap)
-    # =========================================================
 
     def _chunk_paragraphs(self, paragraphs, section_path, company, year, file_name):
 
@@ -238,11 +190,6 @@ class ChunkBuilder:
 
             page = paragraph.get("page_number")
 
-            # A single paragraph can itself exceed max_chunk_chars
-            # (common in Risk Factors sections with long run-on
-            # sentences). Split it into sentence-aligned pieces first
-            # so no chunk ever comes out oversized just because it
-            # started life as one giant paragraph.
             for piece in self._split_long_text(text):
 
                 if (
@@ -275,25 +222,15 @@ class ChunkBuilder:
         if finished:
             chunks.append(finished)
 
-        # Drop trivially small chunks (e.g. a lone "-" or stray
-        # symbol that survived earlier cleanup) -- they add noise
-        # to the embedding index without carrying any real content.
         chunks = [c for c in chunks if len(c["text"].strip()) >= 15]
 
         return chunks
-
-    # =========================================================
-    # SPLIT AN OVERLY LONG PARAGRAPH INTO SENTENCE-SIZED PIECES
-    # =========================================================
 
     def _split_long_text(self, text):
 
         if len(text) <= self.max_chunk_chars:
             return [text]
 
-        # Split on sentence boundaries (period/question/exclamation
-        # followed by a space and a capital letter) rather than a
-        # hard character cut, so we don't slice a sentence in half.
         sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z(])", text)
 
         pieces = []
@@ -312,18 +249,7 @@ class ChunkBuilder:
 
         return pieces if pieces else [text]
 
-    # =========================================================
-    # TABLE SANITY CHECK
-    # =========================================================
-
     def _looks_like_real_table(self, table, min_numeric_row_ratio=0.4):
-        """
-        A real financial table should have most of its rows carrying
-        at least one genuinely numeric value. This catches cases
-        upstream detection occasionally gets wrong -- e.g. a bulleted
-        list or trademark/legal listing whose short, aligned lines
-        got mis-flagged as a table candidate.
-        """
 
         rows = table.get("rows", [])
 
@@ -369,7 +295,7 @@ class ChunkBuilder:
         cleaned = cleaned.replace("(", "")
         cleaned = cleaned.replace(")", "")
 
-        if not cleaned or cleaned in ("-", "--", "—"):
+        if not cleaned or cleaned in ("-", "--", "\u2014"):
             return False
 
         try:
@@ -378,13 +304,9 @@ class ChunkBuilder:
         except ValueError:
             return False
 
-    # =========================================================
-    # TABLE CHUNK (kept whole)
-    # =========================================================
-
     def _build_table_chunk(self, table, section_path, company, year, file_name):
 
-        table_text = self._render_table_as_text(table)
+        table_text = self._render_table_as_text(table, section_path, company, year)
 
         return {
             "chunk_type": "table",
@@ -399,15 +321,50 @@ class ChunkBuilder:
             "header_detected": table.get("header_detected", False),
         }
 
-    def _render_table_as_text(self, table):
+    def _render_table_as_text(self, table, section_path=None, company=None, year=None):
         """
         Renders a parsed table back into a readable text block so the
         LLM can read it directly from the chunk (rather than needing
         a separate structured-lookup path). Kept simple and literal --
         this is what actually gets embedded and shown to the LLM.
+
+        NEW: prepends a short, natural-language lead-in sentence
+        (using the table's own immediate section title, plus
+        company/year) before the raw "Columns: ..." rendering.
+        Confirmed on real retrieval tests: a natural-language query
+        like "What was Apple's total net sales in fiscal 2024?" was
+        failing to surface the correct table (the one literally
+        containing "Total net sales -- 2024: 391,035") in the top
+        results -- both BM25 and dense embeddings match noticeably
+        better against ordinary prose than against a compact
+        "Columns: X, Y, Z" grid with no surrounding sentence. This
+        lead-in doesn't change any parsing/structure -- it's purely
+        an additive natural-language hint layered on top of the
+        exact same rendered data.
         """
 
         lines = []
+
+        if section_path:
+
+            topic = section_path[-1]
+
+            lead_in_parts = []
+
+            if company:
+                lead_in_parts.append(company)
+
+            if year:
+                lead_in_parts.append(f"{year}")
+
+            who_when = " ".join(str(p) for p in lead_in_parts)
+
+            if who_when:
+                lines.append(
+                    f"The following table shows {topic} data for {who_when}:"
+                )
+            else:
+                lines.append(f"The following table shows {topic} data:")
 
         header = table.get("header", [])
 
@@ -436,10 +393,6 @@ class ChunkBuilder:
 
         return "\n".join(lines)
 
-
-# =============================================================
-# LOAD / SAVE
-# =============================================================
 
 def load_hierarchy(company, stem, base_dir="STAGE_1/hierarchy"):
 
@@ -470,10 +423,6 @@ def discover_stems(hierarchy_dir="STAGE_1/hierarchy"):
 
 
 def extract_year(stem):
-    """
-    Pulls a 4-digit year out of a file stem like "Apple_2021_10K".
-    Falls back to None if no year-looking token is found.
-    """
 
     for part in stem.split("_"):
 
@@ -501,10 +450,6 @@ def save_chunks(company, stem, chunks, output_dir="STAGE_1/chunks"):
 
     print(f"Saved Chunks: {output_file} ({len(chunks)} chunks)")
 
-
-# =============================================================
-# MAIN
-# =============================================================
 
 if __name__ == "__main__":
 

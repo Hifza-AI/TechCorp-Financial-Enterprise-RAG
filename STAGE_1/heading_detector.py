@@ -489,9 +489,35 @@ class HeadingDetector:
         if word_count == 0:
             return 0, ["empty"]
 
-        if word_count <= self.max_heading_words:
+        # NEW: "Item N.", "PART N", and "Note N" are SEC-mandated
+        # structural markers -- they must NEVER be scored down just
+        # because their descriptive title portion happens to be long.
+        # Confirmed on Apple 2024: "Item 7. Management's Discussion
+        # and Analysis of Financial Condition and Results of
+        # Operations" (13 words) fell into the neutral "medium_length"
+        # bucket (no bonus, since it's a TITLE and correctly doesn't
+        # end in a period, so it also didn't qualify for the
+        # bold-sentence bonus either) -- scoring only 4, just under
+        # the heading threshold of 5. Meanwhile short titles like
+        # "Item 6. [Reserved]" or "Item 7A." passed easily. This
+        # silently dropped "Item 7." as a heading entirely, which
+        # then made EVERY one of its real sub-sections (Segment
+        # Operating Performance, Operating Expenses, Provision for
+        # Income Taxes, etc.) incorrectly flatten under "Item 6.
+        # [Reserved]" instead -- a systemic, high-impact bug, since
+        # Item 7 (MD&A) is one of the most commonly retrieved
+        # sections in any 10-K.
+        is_structural_marker = (
+            self._is_top_level_marker(text) or self._is_note_marker(text)
+        )
+
+        if word_count <= self.max_heading_words or is_structural_marker:
             score += 2
-            reasons.append("short")
+            reasons.append(
+                "short"
+                if word_count <= self.max_heading_words
+                else "structural_marker"
+            )
         elif is_bold and text.strip().endswith(".") and word_count <= self.max_heading_words * 4:
             # NEW: the bonus above only applies when the sentence is
             # actually COMPLETE (ends in a period) -- a bold line
