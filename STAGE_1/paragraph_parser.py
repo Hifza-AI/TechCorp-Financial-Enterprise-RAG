@@ -3,6 +3,32 @@ import re
 from pathlib import Path
 
 
+def _is_browser_print_artifact(text):
+    """
+    True for the browser-injected "Print to PDF" header seen at the
+    top of every page in some of these files -- a timestamp
+    ("5/16/26, 9:56 AM") and/or the literal word "Document". Mirrors
+    the same check in table_analyzer.py (kept as a plain module-level
+    function here since paragraph_parser.py doesn't import that
+    module). See ParagraphParser._parse_page() for the full
+    rationale -- this is never genuine 10-K content.
+    """
+
+    stripped = text.strip()
+
+    if stripped == "Document":
+        return True
+
+    if re.fullmatch(
+        r"\d{1,2}/\d{1,2}/\d{2,4},?\s+\d{1,2}:\d{2}\s*[AP]M",
+        stripped,
+        re.IGNORECASE,
+    ):
+        return True
+
+    return False
+
+
 class ParagraphParser:
     """
     Merges cleaned lines + heading_analysis + table_analysis into
@@ -159,6 +185,26 @@ class ParagraphParser:
             text = (line.get("text") or "").strip()
 
             if not text:
+                continue
+
+            # NEW: some of these PDFs were exported via a browser's
+            # own "Print to PDF" (not the original SEC-filed PDF) --
+            # every page carries a browser-injected print header: a
+            # timestamp like "5/16/26, 9:56 AM" and/or the literal
+            # word "Document" (the browser tab's generic title), both
+            # sitting at the very top of the page, above any real
+            # content. table_analyzer.py already excludes this from
+            # ever becoming a table candidate, but when it ISN'T
+            # swept into a table it was falling through to here and
+            # being treated as ordinary paragraph text -- sometimes
+            # landing mid-sentence in the middle of a real paragraph
+            # (confirmed on Apple 2018: "...submit and post such
+            # files). Document Yes No" -- the word "Document" spliced
+            # directly into unrelated real content). This is never
+            # genuine 10-K content, so it's skipped entirely here too,
+            # regardless of whether it would otherwise be a heading,
+            # table line, or plain paragraph text.
+            if _is_browser_print_artifact(text):
                 continue
 
             is_table_line = table_flags.get(index, {}).get(

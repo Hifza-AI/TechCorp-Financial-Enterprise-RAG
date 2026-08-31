@@ -284,6 +284,7 @@ class TableParser:
         """
 
         span_heights = []
+        span_bottoms = []
 
         for line in row["lines"]:
             spans = line.get("spans") or [line]
@@ -291,10 +292,16 @@ class TableParser:
                 bbox = span.get("bbox")
                 if bbox and len(bbox) >= 4:
                     span_heights.append(bbox[3] - bbox[1])
+                    span_bottoms.append(bbox[3])
 
         typical_height = (
             sorted(span_heights)[len(span_heights) // 2]
             if span_heights else None
+        )
+
+        typical_bottom = (
+            sorted(span_bottoms)[len(span_bottoms) // 2]
+            if span_bottoms else None
         )
 
         for line in row["lines"]:
@@ -308,7 +315,9 @@ class TableParser:
                 if not text:
                     continue
 
-                if self._is_undersized_footnote_marker(span, text, typical_height):
+                if self._is_undersized_footnote_marker(
+                    span, text, typical_height, typical_bottom
+                ):
                     continue
 
                 if self._looks_numeric_cell(text):
@@ -316,21 +325,41 @@ class TableParser:
 
         return False
 
-    def _is_undersized_footnote_marker(self, span, text, typical_height):
+    def _is_undersized_footnote_marker(
+        self, span, text, typical_height, typical_bottom=None
+    ):
         """
-        True for a standalone "(N)" or "(NN)" token whose own font
-        is meaningfully smaller (<80%) than the typical text height
-        in its row -- the signature of a footnote/superscript
-        reference, not a real value. A genuine negative dollar
-        figure like "(1,687)" or "(5)" is NEVER rendered smaller
-        than the rest of its row, so this check cannot mistake a
-        real value for a footnote marker.
+        True for a standalone "(N)" or "(NN)" token that's genuinely
+        rendered as a footnote/superscript reference, not a real
+        value -- checked via TWO independent signals, since how
+        subtly a company renders its superscripts varies:
+
+          1. Height meaningfully smaller (<90%) than the row's
+             typical span height.
+          2. Baseline meaningfully RAISED (bottom edge sits above --
+             i.e. numerically less than -- the row's typical bottom)
+             -- the defining visual trait of a superscript, since it
+             sits higher than the surrounding text regardless of how
+             much smaller its font is.
+
+        Either signal alone is enough. Confirmed necessary on real
+        data: CVS's footnote markers were ~35% shorter than
+        surrounding text (caught easily by the height check alone),
+        but Apple's are only ~17% shorter (7.44pt vs 8.93pt) -- just
+        under the ORIGINAL 80% cutoff, so the Share Repurchase
+        table's whole multi-line, multi-column header was getting
+        merged into one scrambled row. Apple's marker's baseline
+        (bottom=178.41) sits clearly above its row's typical bottom
+        (~180.19), so the raised-baseline signal catches it even
+        where the height signal alone narrowly misses.
+
+        A genuine negative dollar figure like "(1,687)" or "(5)" is
+        never rendered smaller OR raised relative to the rest of its
+        row, so neither signal can mistake a real value for a
+        footnote marker.
         """
 
         if not re.fullmatch(r"\(\d{1,2}\)", text):
-            return False
-
-        if typical_height is None:
             return False
 
         bbox = span.get("bbox")
@@ -339,8 +368,15 @@ class TableParser:
             return False
 
         height = bbox[3] - bbox[1]
+        bottom = bbox[3]
 
-        return height < typical_height * 0.8
+        if typical_height is not None and height < typical_height * 0.9:
+            return True
+
+        if typical_bottom is not None and bottom < typical_bottom - 1.0:
+            return True
+
+        return False
 
     def _merge_wrapped_continuation_labels(self, rows):
         """
