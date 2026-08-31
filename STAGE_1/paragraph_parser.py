@@ -307,6 +307,10 @@ class ParagraphParser:
                     "level": heading_info.get("level", 0),
                     "page_number": page_number,
                     "bbox": line.get("bbox"),
+                    "is_note_marker": heading_info.get("is_note_marker", False),
+                    "is_top_level_marker": heading_info.get(
+                        "is_top_level_marker", False
+                    ),
                 })
 
                 continue

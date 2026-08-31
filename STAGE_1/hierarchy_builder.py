@@ -117,6 +117,10 @@ class HierarchyBuilder:
 
                     level = block.get("level", 2)
 
+                    is_note_marker = block.get("is_note_marker", False)
+
+                    is_top_level_marker = block.get("is_top_level_marker", False)
+
                     # A level of 0 can occasionally slip through if a
                     # block was downgraded (e.g. by fix_paragraphs.py).
                     # Treat it as a normal paragraph instead of trying
@@ -133,6 +137,7 @@ class HierarchyBuilder:
                     node = {
                         "title": block["text"],
                         "level": level,
+                        "is_note_marker": is_note_marker,
                         "page_start": page_number,
                         "page_end": page_number,
                         "paragraphs": [],
@@ -143,7 +148,40 @@ class HierarchyBuilder:
                     # Pop back to the correct parent: anything on the
                     # stack with a level >= this heading's level is
                     # NOT an ancestor of this heading, so close it out.
+                    #
+                    # NEW EXCEPTION: a currently-open "Note N" heading
+                    # (e.g. "Note 1 - Summary of Significant Accounting
+                    # Policies") is NEVER popped just because the
+                    # incoming heading happens to share the same raw
+                    # level number. A Note and its own topic
+                    # sub-headings ("Basis of Presentation", "Cash
+                    # Equivalents", "Revenue", etc.) are styled
+                    # IDENTICALLY in the PDF (same bold, same size),
+                    # so heading_detector.py has no way to tell "this
+                    # is the Note's own container title" from "this is
+                    # one of its topics" by styling alone -- both
+                    # score as ordinary Level-3 bold headings.
+                    #
+                    # Confirmed on Apple 2024: 7 of Apple's 13
+                    # numbered notes (1, 4, 6, 7, 9, 10, 11, 12) had
+                    # their own sub-topics flattening out as SIBLINGS
+                    # of the Note (both landing directly under "Item
+                    # 8.") instead of nesting under it, because the
+                    # stack popped the Note the instant its first
+                    # sub-topic heading arrived. A "Note N" heading is
+                    # only closed out by ANOTHER Note-level marker
+                    # (the next Note, or an Item/Part boundary) --
+                    # never by a same-level GENERIC heading, which
+                    # instead becomes its child.
                     while len(stack) > 1 and stack[-1]["level"] >= level:
+
+                        if (
+                            stack[-1].get("is_note_marker")
+                            and not is_note_marker
+                            and not is_top_level_marker
+                        ):
+                            break
+
                         stack.pop()
 
                     stack[-1]["children"].append(node)
@@ -313,8 +351,8 @@ if __name__ == "__main__":
                 f"Tables: {tables}"
             )
 
-        print("\n=====================================")
+        print("\n====================================")
         print(" Hierarchy Building Completed")
-        print("=====================================")
+        print("====================================")
         print("\nOutput:")
         print("STAGE_1/hierarchy")

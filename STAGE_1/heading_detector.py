@@ -247,6 +247,12 @@ class HeadingDetector:
                                 True,
                                 False,
                             )
+                            analysis["is_note_marker"] = self._is_note_marker(
+                                combined_text
+                            )
+                            analysis["is_top_level_marker"] = (
+                                self._is_top_level_marker(combined_text)
+                            )
 
                         # If combined_score didn't qualify, we
                         # deliberately do NOT touch any buffered
@@ -375,6 +381,8 @@ class HeadingDetector:
             "relative_size": round(relative_size, 2),
             "is_bold": is_bold,
             "is_italic": is_italic,
+            "is_note_marker": is_heading and self._is_note_marker(text),
+            "is_top_level_marker": is_heading and self._is_top_level_marker(text),
         }
 
     # =========================================================
@@ -392,6 +400,8 @@ class HeadingDetector:
             "relative_size": None,
             "is_bold": False,
             "is_italic": False,
+            "is_note_marker": False,
+            "is_top_level_marker": False,
         }
 
     # =========================================================
@@ -645,7 +655,50 @@ class HeadingDetector:
         if re.match(r"^Item\s+\d+[A-Za-z]?\.", stripped, re.IGNORECASE):
             return True
 
+        # "Report of Independent Registered Public Accounting Firm" is
+        # standard, PCAOB-mandated wording that appears verbatim in
+        # every 10-K's auditor opinion section -- as universal a
+        # boundary-marker as "Item N." or "PART N". It sits AFTER the
+        # last numbered Note, so without recognizing it, a Note (e.g.
+        # "Note 13") never gets closed out and incorrectly swallows
+        # the whole audit-opinion section as its own children.
+        if re.match(
+            r"^Reports?\s+of\s+Independent\s+Registered\s+Public\s+Accounting\s+Firm",
+            stripped,
+            re.IGNORECASE,
+        ):
+            return True
+
         return False
+
+    def _is_note_marker(self, text):
+        """
+        Matches "Note N - Title" / "Note N – Title" (SEC filings use
+        both a plain hyphen and an en-dash interchangeably) -- e.g.
+        "Note 1 - Summary of Significant Accounting Policies",
+        "Note 4 - Financial Instruments". Like Item/Part, this
+        numbering convention is universal across virtually every
+        company's "Notes to Financial Statements" -- so recognizing
+        it generalizes the same way _is_top_level_marker() does.
+
+        This does NOT change the heading's own "level" number (it
+        still scores as a normal bold Level-3 heading, same as its
+        own sub-topics) -- it's used separately by hierarchy_builder
+        to decide when a Note should be closed out. See
+        hierarchy_builder.py for the full rationale: a "Note N"
+        heading and its own sub-topic headings ("Basis of
+        Presentation", "Cash Equivalents", etc.) are styled
+        IDENTICALLY in the PDF, so heading_detector has no way to
+        tell "this is a container" from "this is one of its topics"
+        by styling alone -- confirmed on Apple 2024, where 7 of 13
+        numbered notes had their own sub-topics flattening out as
+        SIBLINGS of the Note instead of nesting under it, because a
+        same-level heading was closing the Note out prematurely.
+        """
+
+        stripped = text.strip()
+
+        return bool(re.match(r"^Note\s+\d+\s*[-\u2013\u2014]", stripped))
 
 
 # =============================================================
