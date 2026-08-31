@@ -221,6 +221,13 @@ class Retriever:
             else:
                 wanted_year = self.global_latest_year
 
+        # Used below to relax the confidence gate once we've
+        # deterministically confirmed (via metadata, not fuzzy
+        # matching) that this company/year combination is in the
+        # corpus at all -- see the confidence-gate comment further
+        # down for the full rationale.
+        needs_hard_filter = bool(wanted_company or (wanted_year is not None))
+
         # -----------------------------------------------------
         # Run BOTH retrieval methods over the WHOLE corpus (needed
         # so RRF has a real rank for every chunk, and so post-hoc
@@ -286,28 +293,35 @@ class Retriever:
         # topics, irrelevant queries) exactly as it worked before
         # hybrid retrieval was wired in.
         #
-        # NEW: relax the bar when a hard company/year filter was
-        # applied. Confirmed on real queries: "What is Apple's most
-        # recent total net sales?" correctly resolved wanted_year to
-        # the latest indexed year, and the genuinely correct answer
-        # (a table chunk rendering "Total net sales -- 2024: 391,035
-        # ...") WAS in the year-filtered candidate pool -- but table-
-        # rendered text ("Columns: 2024, 2023, 2022 \n Label -- ...")
-        # tends to embed less naturally against a natural-language
-        # query than prose does, so its dense score fell just under
-        # 0.58, and the WHOLE query returned "no match" despite a
-        # real answer existing. The 0.58 bar exists to catch queries
-        # about things not in the corpus AT ALL (weather, a stock
+        # NEW: skip the numeric threshold ENTIRELY when a hard
+        # company/year filter was applied. Confirmed on real queries:
+        # a 0.7x-relaxed threshold (0.406) helped "most recent total
+        # net sales" (top dense score 0.544) but still failed "latest
+        # reported net income" (its best year-filtered candidate
+        # apparently scored even lower) -- there's no single relaxed
+        # multiplier that reliably covers every metric/phrasing
+        # combination, because different metrics naturally embed with
+        # different strength against a given query, especially once
+        # STRICTLY filtered to one specific year.
+        #
+        # The numeric threshold's actual PURPOSE is to catch queries
+        # about things not in the corpus at all (weather, a stock
         # price today, an unindexed company) -- but once we've
-        # already deterministically confirmed via metadata that this
-        # exact company+year combination IS in the corpus, that risk
-        # is already ruled out, so a lower bar is safe here.
-        confidence_threshold = self.MIN_CONFIDENCE_SCORE
-
+        # already deterministically confirmed via metadata (not
+        # fuzzy/semantic matching) that this exact company+year
+        # combination IS in the corpus, that specific risk is fully
+        # ruled out. Any content that survived the hard filter is, by
+        # definition, real disclosed content for that company/year --
+        # for an ordinary financial-metric question, that's enough to
+        # return an answer rather than a false "no match".
         if needs_hard_filter:
-            confidence_threshold = self.MIN_CONFIDENCE_SCORE * 0.7
-
-        if not results or results[0]["score"] < confidence_threshold:
+            if not results:
+                return {
+                    "matched": False,
+                    "reason": "No sufficiently relevant data found for this query.",
+                    "results": [],
+                }
+        elif not results or results[0]["score"] < self.MIN_CONFIDENCE_SCORE:
             return {
                 "matched": False,
                 "reason": "No sufficiently relevant data found for this query.",

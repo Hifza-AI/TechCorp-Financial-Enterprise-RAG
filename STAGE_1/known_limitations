@@ -77,3 +77,20 @@ Limitations at Stage 2 on the Table Analysis and Table PArsing stage
 - Cause: `heading_detector.py` relies strictly on visual font signals rather than NLP/semantic analysis, making it unable to detect conceptual hierarchy changes when styling is identical.
 - Impact: Zero data loss. All text is fully preserved in paragraph content and retrievable via vector embeddings. The sub-topics are simply absorbed into the nearest parent heading node instead of forming independent heading nodes.
 - Scope: Audited 13 L4-heading clusters across Apple 2016 10-K; only 1 cluster ("Products" on p. 5) exhibited this ambiguity. Confirmed as an isolated edge case per Section 7 triage rules.
+
+
+
+
+Retrieval Accuracy — Summary
+
+Recall@3: ~95% (21/22) — top-3 mein sahi answer maujood hai
+Precision@1: ~54% (13/24) — sirf #1 pe sahi
+
+Honest Caveats
+Chhota sample — 24 queries statistically weak signal hai, agla batch alag number de sakta hai
+Sirf Apple pe test hua — fixes pattern-based/company-agnostic hain (Item N., Note N, PART N — koi hardcoded Apple-text nahi), is wajah se generalize hone ki umeed hai, lekin confirm nahi
+Precision-gap "solve" nahi hua, LLM pe shift hua hai — agar Stage-4 ka prompt weak raha, real accuracy 95% ki jagah 54% jaisi lag sakti hai
+
+Deferred (jaan-boojh kar)
+Reranking — Precision@1 improve karne ke liye chahiye, lekin naya bada component hai, abhi cost-benefit justify nahi karta
+Table vs narrative-text trade-off — table-lead-in fix ne numeric-queries help ki, lekin kabhi-kabhi conceptual-answer wali query pe table over-rank ho jaati hai (reranking-level nuance)
