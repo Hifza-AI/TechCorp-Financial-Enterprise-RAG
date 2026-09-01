@@ -470,6 +470,47 @@ class HeadingDetector:
         ):
             return 0, ["units_disclaimer_caption"]
 
+        # A bare column-header DATE ("Jan 25, 2026", "December 31,
+        # 2025") or a period-range label ("Year Ended", "Quarter
+        # Ended", "Three Months Ended") is another universal SEC-
+        # filing convention: financial statement tables commonly
+        # stack their column headers across MULTIPLE physical PDF
+        # lines -- e.g. "Year Ended" on one line, then each date on
+        # its own line below it, all sitting directly above the
+        # actual numeric data. These are short and often bold, so
+        # they otherwise score well enough to be misclassified as
+        # SEPARATE, genuine section headings.
+        #
+        # Confirmed on Nvidia 2026: "Year Ended", "Jan 25, 2026",
+        # "Jan 26, 2025", and "Jan 28, 2024" each became their own
+        # heading node directly above EVERY core financial statement
+        # (Income Statement, Comprehensive Income, Balance Sheet,
+        # Shareholders' Equity, Cash Flows) and several MD&A tables.
+        # Since table_analyzer never got a chance to treat these
+        # lines as the table's own header-zone, table_parser fell
+        # back to using the table's FIRST DATA ROW as if it were the
+        # header -- e.g. a Revenue table's header showed "215,938,
+        # 130,497, 60,922" (the actual Revenue figures) instead of
+        # "Jan 25, 2026, Jan 26, 2025, Jan 28, 2024", corrupting
+        # every downstream table's column meaning across the entire
+        # filing.
+        if re.fullmatch(
+            r"(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|"
+            r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|"
+            r"Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2},\s+\d{4}",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+            return 0, ["table_column_header_date"]
+
+        if re.fullmatch(
+            r"(Year|Years|Quarter|Quarters|Month|Months|Week|Weeks|"
+            r"Three\s+Months|Six\s+Months|Nine\s+Months)\s+Ended",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+            return 0, ["table_column_header_date"]
+
         # ---------------------------------------------------
         # Style signals (strongest predictors, per real data)
         # ---------------------------------------------------

@@ -103,6 +103,25 @@ class ParagraphParser:
         min_repeat_ratio=0.3,
         min_occurrences=5,
     ):
+        """
+        NEW: now checks HEADING blocks too, not just paragraphs.
+
+        Confirmed on Nvidia 2026: "NVIDIA Corporation and
+        Subsidiaries" is a page-header that repeats at the top of
+        nearly every page in the financial-statements section (31
+        occurrences) -- but because it's short and bold, it scores
+        as a genuine HEADING rather than a paragraph, so it was
+        completely bypassing this removal (which only ever checked
+        block_type == "paragraph"). Each occurrence became its own
+        spurious, empty heading node cluttering the hierarchy tree.
+
+        Applying the identical frequency-based logic to headings is
+        safe: a GENUINE document-structure heading (an Item, a Note,
+        a statement title) only ever appears ONCE per report by
+        definition -- it's only page-header-style boilerplate
+        (company name, repeated filing captions) that could
+        realistically repeat across 30%+ of pages or 5+ times.
+        """
 
         total_pages = len(parsed_pages)
 
@@ -117,7 +136,7 @@ class ParagraphParser:
 
             for block in page["blocks"]:
 
-                if block["block_type"] != "paragraph":
+                if block["block_type"] not in ("paragraph", "heading"):
                     continue
 
                 text = block["text"].strip()
@@ -129,9 +148,25 @@ class ParagraphParser:
 
                 text_page_counts[text] = text_page_counts.get(text, 0) + 1
 
+        # NEW: cap the percentage-based portion at 20 occurrences.
+        # Confirmed on Nvidia 2026 (87 pages): "Notes to the
+        # Consolidated Financial Statements" repeats as a page-header
+        # 25 times -- clearly boilerplate -- but 30% of 87 pages is
+        # 26.1, just ABOVE 25, so the uncapped threshold would have
+        # let this one slip through. The 30%-of-total-pages rule
+        # makes sense as a safety net for SHORT documents, but for
+        # LONGER filings (80-130+ pages), boilerplate is often
+        # specific to just one section (e.g. the ~25-30 pages of
+        # financial statements + notes), not the whole document --
+        # so scaling the threshold to the FULL page count makes it
+        # unreasonably strict exactly when it needs to be more
+        # lenient. Capping keeps the floor (min_occurrences=5)
+        # meaningful for short documents while preventing the
+        # percentage rule from becoming impossibly strict for long
+        # ones.
         threshold = max(
             min_occurrences,
-            total_pages * min_repeat_ratio,
+            min(total_pages * min_repeat_ratio, 20),
         )
 
         boilerplate_texts = {
@@ -149,7 +184,7 @@ class ParagraphParser:
                 block
                 for block in page["blocks"]
                 if not (
-                    block["block_type"] == "paragraph"
+                    block["block_type"] in ("paragraph", "heading")
                     and block["text"].strip() in boilerplate_texts
                 )
             ]
