@@ -109,3 +109,24 @@ GOOGLE 2025 — TIER-2 AUDIT RESULT (verified vs real PDF)
    struggles when 2 small tables sit close together on same page.
    Scope: isolated to this 1 sub-section, rest of Tier-2 clean.
    Priority: LOW (rarely-queried lease-term/discount-rate detail).
+
+   META 2025 — AUDIT RESULT
+
+✅ Clean: Core-statements values 100% match (Revenue/COGS/R&D/Net Income/
+   Cash Flow all verified against PDF). No boilerplate/date-header leaks.
+   Chart-graphs correctly skipped (not garbled into fake tables).
+
+🟡 3 minor, non-blocking issues (documented, not fixed):
+   1. 2-column Critical-Audit-Matter title-split ("Description of the"/
+      "Matter") -- cosmetic, content correctly attached, just 2 empty
+      extra nodes.
+   2. Text-only tables (no numbers, e.g. "Useful Life: Five to 5.5 years")
+      don't form clean tables -- become paragraph bullets instead.
+      Data present, just not table-structured. Tier-3/rare-query topic.
+   3. RECURRING (also seen in Nvidia): first data-row right after
+      "Columns:" line sometimes loses its row-label (e.g. "Revenue",
+      "Net income" show blank label, value still correct). 2/2
+      companies so far -- watch for 3rd occurrence to decide if this
+      needs a real fix.
+
+Decision: proceeding to next company (IBM). No blocking issues.
