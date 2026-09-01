@@ -776,7 +776,32 @@ class HeadingDetector:
         ):
             return True
 
+        # "CONSOLIDATED BALANCE SHEETS", "CONSOLIDATED STATEMENTS OF
+        # INCOME/OPERATIONS/CASH FLOWS/COMPREHENSIVE INCOME/
+        # STOCKHOLDERS' EQUITY" -- the 4-5 core financial statement
+        # titles -- are ALSO universal, ALL-CAPS SEC-filing boundary
+        # markers, same as Notes and the audit report. Without
+        # treating them the same way, they're just plain generic
+        # headings, so they can get swallowed as CHILDREN of whatever
+        # note-style container happens to still be open before them.
+        # Confirmed on Google/Alphabet 2025: the audit opinion on
+        # Internal Control ("Report of Independent...") sits directly
+        # before "CONSOLIDATED BALANCE SHEETS" in the document, and
+        # since the statement title wasn't recognized as its own
+        # boundary marker, it (and by extension the Income Statement,
+        # Comprehensive Income, Stockholders' Equity, and Cash Flow
+        # statements that follow it on the same page-run) all nested
+        # as children of that audit-opinion section instead of being
+        # its siblings.
+        if re.match(
+            r"^CONSOLIDATED\s+(BALANCE\s+SHEETS?|STATEMENTS?\s+OF\s+)",
+            stripped,
+            re.IGNORECASE,
+        ):
+            return True
+
         return False
+
 
 
 # =============================================================

@@ -94,3 +94,18 @@ Precision-gap "solve" nahi hua, LLM pe shift hua hai — agar Stage-4 ka prompt 
 Deferred (jaan-boojh kar)
 Reranking — Precision@1 improve karne ke liye chahiye, lekin naya bada component hai, abhi cost-benefit justify nahi karta
 Table vs narrative-text trade-off — table-lead-in fix ne numeric-queries help ki, lekin kabhi-kabhi conceptual-answer wali query pe table over-rank ho jaati hai (reranking-level nuance)
+
+GOOGLE 2025 — TIER-2 AUDIT RESULT (verified vs real PDF)
+
+✅ Clean (exact match): Core 4 statements, Segment/Executive-Overview,
+   Cost/R&D/S&M/G&A, Provision-for-Tax, Share-Repurchase, most Lease-tables
+
+🔴 KNOWN ISSUE (not fixed, documented only):
+   Note "Leases" section — 2 small adjacent tables (lease-term +
+   discount-rate) merge incorrectly:
+   - Row-values from one table attach to other table's row-labels
+   - One table's TITLE gets swapped with nearby table's caption
+   Root cause: NOT fixed — table_parser's region-splitting logic
+   struggles when 2 small tables sit close together on same page.
+   Scope: isolated to this 1 sub-section, rest of Tier-2 clean.
+   Priority: LOW (rarely-queried lease-term/discount-rate detail).
