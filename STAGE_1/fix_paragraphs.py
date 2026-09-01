@@ -7,6 +7,28 @@ def _is_page_progress_indicator(text):
     return bool(re.fullmatch(r"\d{1,4}\s*/\s*\d{1,4}", text.strip()))
 
 
+def _is_standalone_page_footer_number(text):
+    """
+    Some companies (e.g. Alphabet/Google) print their OWN internal
+    page number at the bottom of every page, separate from the PDF's
+    overall page count -- e.g. a lone "53." or "88." sitting by
+    itself with nothing else on the line. This is never real 10-K
+    content, just a footer artifact -- but unlike the repeated-
+    footer-text case (which _normalize_for_repeat_check already
+    catches by stripping the trailing number and comparing), THIS
+    footer is the number and NOTHING else, so there's no surrounding
+    text left to match against -- every single occurrence is a
+    unique, one-off string ("53." only ever appears once, "54." only
+    once, etc.), so the frequency-based boilerplate check can't catch
+    it either. Confirmed on Google/Alphabet 2025: 79 separate
+    standalone "N." paragraphs (numbers 1 through 98) scattered
+    throughout the Notes to Financial Statements section.
+    A real paragraph is never JUST a bare number with a period and
+    nothing else, so this is safe to drop unconditionally.
+    """
+    return bool(re.fullmatch(r"\d{1,4}\.", text.strip()))
+
+
 def _normalize_for_repeat_check(text):
     return re.sub(r"\d+\s*$", "#", text.strip())
 
@@ -51,6 +73,9 @@ def fix_paragraph_file(data):
             if block["block_type"] == "paragraph":
 
                 if _is_page_progress_indicator(text):
+                    continue
+
+                if _is_standalone_page_footer_number(text):
                     continue
 
                 normalized = _normalize_for_repeat_check(text)

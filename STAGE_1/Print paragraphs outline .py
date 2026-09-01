@@ -1,8 +1,8 @@
 """
 print_paragraphs_outline.py
 
-Reads a *_paragraphs.json file (output of paragraph_parser.py) and
-produces a READABLE, page-by-page outline .txt -- headings and
+Reads *_paragraphs.json files (output of paragraph_parser.py) and
+produces READABLE, page-by-page outline .txt files -- headings and
 paragraphs shown in reading order, exactly as they'd appear in the
 PDF -- so you can open the PDF side-by-side and visually confirm
 headings/paragraphs are being captured correctly, without ever
@@ -13,15 +13,25 @@ USAGE (single file):
 
 USAGE (batch -- whole folder, one subfolder per company):
     python print_paragraphs_outline.py [input_dir] [output_dir]
+
+If run with NO arguments, it defaults to the PARENT paragraphs folder
+(covers every company's subfolder automatically -- Apple, Google,
+and any company added later -- not just one specific company).
 """
 
 import json
 import sys
 from pathlib import Path
 
-# Default paths hardcoded for Apple folder
-DEFAULT_INPUT_PATH = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\STAGE_1\paragraphs\Apple"
-DEFAULT_OUTPUT_PATH = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\STAGE_1\paragraphs_outlines\Apple"
+# NEW: default path points to the PARENT "paragraphs" folder (covers
+# every company subfolder automatically), not one specific company's
+# subfolder. Confirmed bug: pointing this directly at ".../paragraphs/
+# Apple" meant Google (and any other company) was silently skipped
+# every time this ran with no arguments -- output always showed
+# exactly 10 files (Apple's 10 years) regardless of how many other
+# companies had actually been processed upstream.
+DEFAULT_INPUT_PATH = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\STAGE_1\paragraphs"
+DEFAULT_OUTPUT_PATH = r"C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG\STAGE_1\paragraphs_outlines"
 
 
 def build_outline(paragraphs_json_path, max_paragraph_chars=400):
@@ -70,7 +80,6 @@ def build_outline(paragraphs_json_path, max_paragraph_chars=400):
 
                 level = block.get("level", "?")
 
-                # Ensure level is an integer for calculation
                 try:
                     level_num = int(level)
                 except (ValueError, TypeError):
@@ -126,7 +135,8 @@ def process_folder(input_dir, output_dir):
         print(f"Input folder not found: {input_dir}")
         sys.exit(1)
 
-    # If the input directory directly contains json files
+    # If the input directory directly contains json files (single-
+    # company folder passed explicitly)
     json_files = sorted(input_dir.glob("*_paragraphs.json"))
 
     if json_files:
@@ -139,7 +149,8 @@ def process_folder(input_dir, output_dir):
         print(f"{'=' * 60}")
         return
 
-    # If input directory has subdirectories per company
+    # Otherwise, treat input_dir as the PARENT folder containing one
+    # subdirectory per company -- this is the normal batch case.
     total_files = 0
     for company_dir in sorted(input_dir.iterdir()):
 

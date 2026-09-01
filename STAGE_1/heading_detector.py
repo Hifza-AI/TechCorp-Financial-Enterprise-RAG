@@ -445,6 +445,31 @@ class HeadingDetector:
             if not looks_like_numbering:
                 return 0, ["dangling_sentence_fragment"]
 
+        # A parenthetical units-disclaimer -- "(in millions)", "(in
+        # thousands, except per share amounts)", "(dollars in
+        # millions)" -- is a UNIVERSAL SEC-filing convention sitting
+        # directly under nearly every financial statement's real
+        # title. It's short and often bold/italic, so it otherwise
+        # scores well enough to be misclassified as its own SEPARATE
+        # heading (a sibling of the real title, not part of it).
+        # Confirmed on Google/Alphabet 2025: "CONSOLIDATED BALANCE
+        # SHEETS" and "(in millions, except par value per share
+        # amounts)" became TWO separate same-level headings, so the
+        # actual data table ended up attached to the meaningless
+        # caption instead of the real statement title -- across all
+        # 4 core financial statements (Balance Sheet, Income
+        # Statement, Comprehensive Income, Cash Flows). This pattern
+        # is not company-specific -- it's the standard way SEC
+        # filings caption their statements -- so it will recur for
+        # any company.
+        if re.fullmatch(
+            r"\(\s*(dollars\s+|amounts\s+)?in\s+(millions|thousands|billions)"
+            r"(\s*,\s*[^)]*)?\)",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+            return 0, ["units_disclaimer_caption"]
+
         # ---------------------------------------------------
         # Style signals (strongest predictors, per real data)
         # ---------------------------------------------------
@@ -681,31 +706,20 @@ class HeadingDetector:
         if re.match(r"^Item\s+\d+[A-Za-z]?\.", stripped, re.IGNORECASE):
             return True
 
-        # "Report of Independent Registered Public Accounting Firm" is
-        # standard, PCAOB-mandated wording that appears verbatim in
-        # every 10-K's auditor opinion section -- as universal a
-        # boundary-marker as "Item N." or "PART N". It sits AFTER the
-        # last numbered Note, so without recognizing it, a Note (e.g.
-        # "Note 13") never gets closed out and incorrectly swallows
-        # the whole audit-opinion section as its own children.
-        if re.match(
-            r"^Reports?\s+of\s+Independent\s+Registered\s+Public\s+Accounting\s+Firm",
-            stripped,
-            re.IGNORECASE,
-        ):
-            return True
-
         return False
 
     def _is_note_marker(self, text):
         """
-        Matches "Note N - Title" / "Note N – Title" (SEC filings use
-        both a plain hyphen and an en-dash interchangeably) -- e.g.
-        "Note 1 - Summary of Significant Accounting Policies",
-        "Note 4 - Financial Instruments". Like Item/Part, this
-        numbering convention is universal across virtually every
+        Matches "Note N - Title" / "Note N – Title" / "Note N. Title"
+        -- different companies punctuate their numbered notes
+        differently (Apple uses a hyphen/en-dash: "Note 1 - Summary
+        of Significant Accounting Policies"; Google/Alphabet uses a
+        period: "Note 1. Summary of Significant Accounting Policies",
+        "Note 10. Commitments and Contingencies"). Like Item/Part,
+        this numbering convention is universal across virtually every
         company's "Notes to Financial Statements" -- so recognizing
-        it generalizes the same way _is_top_level_marker() does.
+        it generalizes the same way _is_top_level_marker() does, as
+        long as the punctuation variants are all covered.
 
         This does NOT change the heading's own "level" number (it
         still scores as a normal bold Level-3 heading, same as its
@@ -724,7 +738,45 @@ class HeadingDetector:
 
         stripped = text.strip()
 
-        return bool(re.match(r"^Note\s+\d+\s*[-\u2013\u2014]", stripped))
+        if re.match(r"^Note\s+\d+\s*[-.\u2013\u2014]", stripped):
+            return True
+
+        # "Report of Independent Registered Public Accounting Firm" is
+        # standard, PCAOB-mandated wording that appears verbatim in
+        # every 10-K's auditor opinion section. It behaves exactly
+        # like a Note for nesting purposes -- it must NEVER become a
+        # "container" that swallows unrelated sections as its
+        # children, regardless of whether it happens to appear BEFORE
+        # or AFTER the numbered Notes in a given company's layout.
+        #
+        # This was ORIGINALLY classified as a top-level (Item/PART-
+        # style, level 2) marker instead, which worked correctly for
+        # Apple (where the audit report appears AFTER the last
+        # numbered Note: the shallower level-2 marker correctly
+        # closed out the deeper level-3 Note). But confirmed on
+        # Google/Alphabet 2025, whose audit report appears BEFORE the
+        # Notes section: being level-2 (shallower) meant it never got
+        # closed out by the level-3 Notes that followed -- instead it
+        # incorrectly became their PARENT CONTAINER, since a shallower
+        # heading always opens a container for any deeper heading
+        # that follows. "Note 12. Net Income Per Share" ended up
+        # nested under "Report of Independent Registered Public
+        # Accounting Firm" instead of being its sibling.
+        #
+        # Reclassifying it as a Note-style marker (level 3, same
+        # exclusivity rules as Notes -- only closed by ANOTHER Note-
+        # style marker or a genuine Item/PART boundary, never by its
+        # own subsections) makes it symmetric: it correctly stays a
+        # sibling of the Notes regardless of which side of them it
+        # appears on.
+        if re.match(
+            r"^Reports?\s+of\s+Independent\s+Registered\s+Public\s+Accounting\s+Firm",
+            stripped,
+            re.IGNORECASE,
+        ):
+            return True
+
+        return False
 
 
 # =============================================================

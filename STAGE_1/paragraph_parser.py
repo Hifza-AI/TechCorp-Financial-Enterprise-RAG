@@ -218,14 +218,14 @@ class ParagraphParser:
             # -------------------------------------------------
             # BOLD-SENTENCE-RUN FRAGMENT -> skip entirely.
             #
-            # NEW: heading_detector.py can now recognize a heading
-            # that wraps across MULTIPLE physical PDF lines (common
-            # in SEC Risk-Factors sections) and merge it into ONE
-            # complete heading, attached to the line where the
-            # sentence actually ends. The earlier fragment line(s)
-            # are tagged "in_bold_run": True to say "this content is
-            # already fully captured in that later merged heading --
-            # don't treat it as anything else."
+            # heading_detector.py can recognize a heading that wraps
+            # across MULTIPLE physical PDF lines (common in SEC
+            # Risk-Factors sections) and merge it into ONE complete
+            # heading, attached to the line where the sentence
+            # actually ends. The earlier fragment line(s) are tagged
+            # "in_bold_run": True to say "this content is already
+            # fully captured in that later merged heading -- don't
+            # treat it as anything else."
             #
             # Without this check, those earlier fragments (which are
             # NOT marked as headings themselves) would fall through
@@ -251,10 +251,10 @@ class ParagraphParser:
             # -------------------------------------------------
             # HEADING LINE -> flush pending paragraph, emit heading
             #
-            # NEW (checked BEFORE the table-line check below): a line
-            # that heading_detector.py has already confirmed as a
-            # genuine heading (bold/italic + size + scoring signals)
-            # must never be silently dropped just because
+            # Checked BEFORE the table-line check below: a line that
+            # heading_detector.py has already confirmed as a genuine
+            # heading (bold/italic + size + scoring signals) must
+            # never be silently dropped just because
             # table_analyzer.py's speculative rescue-passes ALSO
             # flagged it as a table candidate. Confirmed on Apple
             # 2016: short section titles that sit directly above a
@@ -364,18 +364,18 @@ class ParagraphParser:
 
     def _is_new_paragraph(self, previous_line, current_line):
 
-        # NEW: a line that IS a standalone footnote marker (e.g.
-        # "(1)", "(2)") always starts a fresh, separate footnote
-        # item -- even when the gap/indent from the previous line
-        # is small. Confirmed on Apple 2016 page 22: three distinct
-        # footnotes explaining share-repurchase details were being
-        # merged into ONE 1500+ character paragraph, because
-        # consecutive footnote items are typeset with the same
-        # tight line-spacing and left margin as normal body text --
-        # neither the vertical-gap nor indent-shift checks below
-        # ever fire between them. A lone "(N)" marker is a reliable,
-        # company-agnostic signal that a new, unrelated item is
-        # starting right here, regardless of layout spacing.
+        # A line that IS a standalone footnote marker (e.g. "(1)",
+        # "(2)") always starts a fresh, separate footnote item --
+        # even when the gap/indent from the previous line is small.
+        # Confirmed on Apple 2016 page 22: three distinct footnotes
+        # explaining share-repurchase details were being merged into
+        # ONE 1500+ character paragraph, because consecutive footnote
+        # items are typeset with the same tight line-spacing and left
+        # margin as normal body text -- neither the vertical-gap nor
+        # indent-shift checks below ever fire between them. A lone
+        # "(N)" marker is a reliable, company-agnostic signal that a
+        # new, unrelated item is starting right here, regardless of
+        # layout spacing.
         current_text = (current_line.get("text") or "").strip()
 
         if re.fullmatch(r"\(\d{1,2}\)", current_text):
@@ -594,11 +594,6 @@ if __name__ == "__main__":
     print("====================================\n")
 
     stems = discover_report_stems()
-
-    # TEMP: only process Apple for now (other companies' table_analysis
-    # files were removed while table_parser.py fixes were being
-    # verified). Remove this filter once ready to process everyone.
-    stems = [(company, stem) for company, stem in stems if company == "Apple"]
 
     if not stems:
 
