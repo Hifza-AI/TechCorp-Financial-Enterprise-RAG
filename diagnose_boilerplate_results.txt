@@ -1,0 +1,37 @@
+================================================================================
+STEP 1 -- DIAGNOSIS (current retriever, default BM25 b=0.75)
+================================================================================
+
+Query: What is Meta's Family of Apps revenue?
+Looking for chunk containing: 'Family of Apps -- 2024: 162,355'
+  Retriever's #1 result -- chunk_type=text  dense_score=0.704  dense_rank=0  bm25_rank=14
+  Correct chunk (idx 16895) -- chunk_type=table  dense_score=0.650  dense_rank=35  bm25_rank=15
+  Text length -- winner: 657 chars | correct: 371 chars
+
+Query: What competitive risks does Meta mention?
+Looking for chunk containing: 'adversely affect our business'
+  Retriever's #1 result -- chunk_type=text  dense_score=0.607  dense_rank=29  bm25_rank=1
+  Correct chunk (idx 3189) -- chunk_type=text  dense_score=0.502  dense_rank=3150  bm25_rank=1372
+  Text length -- winner: 1110 chars | correct: 290 chars
+
+Query: What risks does Intel disclose related to manufacturing?
+Looking for chunk containing: 'vulnerable to product and manufacturing-related risks'
+  Retriever's #1 result -- chunk_type=text  dense_score=0.694  dense_rank=11  bm25_rank=2
+  Correct chunk (idx 9556) -- chunk_type=text  dense_score=0.663  dense_rank=36  bm25_rank=13
+  Text length -- winner: 930 chars | correct: 1140 chars
+
+================================================================================
+STEP 2 -- CANDIDATE FIX (BM25 b=0.3, less length-penalty)
+================================================================================
+
+Query: What is Meta's Family of Apps revenue?
+  Correct chunk NEW bm25_rank (b=0.3): 25  (was 15 with default b=0.75)
+  New #1 by BM25 alone -- chunk_type=table  section=FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 10. Acquisitions, Goodwill, and Intangible Assets
+
+Query: What competitive risks does Meta mention?
+  Correct chunk NEW bm25_rank (b=0.3): 2381  (was 1372 with default b=0.75)
+  New #1 by BM25 alone -- chunk_type=text  section=FORM 10-K > PART IV > NOTE ABOUT FORWARD-LOOKING STATEMENTS
+
+Query: What risks does Intel disclose related to manufacturing?
+  Correct chunk NEW bm25_rank (b=0.3): 11  (was 13 with default b=0.75)
+  New #1 by BM25 alone -- chunk_type=text  section=FORWARD-LOOKING STATEMENTS
