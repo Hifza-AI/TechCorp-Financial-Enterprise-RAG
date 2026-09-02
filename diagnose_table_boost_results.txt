@@ -1,0 +1,24 @@
+
+================================================================================
+Query: What is Meta's Family of Apps revenue?
+is_metric_query: True
+  BEFORE (no boost) -- correct chunk RRF rank: 17
+  BEFORE -- current #1: chunk_type=text  section=FORM 10-K > Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF CASH FLOWS > Supplemental cash flow data | FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 1. Summary of Significant Accounting Policies > Organization and Description of Business
+  AFTER (table-boost=ON) -- correct chunk RRF rank: 12
+  AFTER -- new #1: chunk_type=table  section=FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Results of Operations
+
+================================================================================
+Query: What was Intel's net income in 2024?
+is_metric_query: True
+  BEFORE (no boost) -- correct chunk RRF rank: 91
+  BEFORE -- current #1: chunk_type=text  section=Intel Products > Operating income
+  AFTER (table-boost=ON) -- correct chunk RRF rank: 48
+  AFTER -- new #1: chunk_type=table  section=Note 6 : > Other Financial Statement Details > Total property, plant, and equipment, net
+
+================================================================================
+Query: What was Apple's total net sales in fiscal 2024?
+is_metric_query: True
+  BEFORE (no boost) -- correct chunk RRF rank: 29
+  BEFORE -- current #1: chunk_type=table  section=FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Operating Expenses
+  AFTER (table-boost=ON) -- correct chunk RRF rank: 12
+  AFTER -- new #1: chunk_type=table  section=FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Operating Expenses
