@@ -1,0 +1,1523 @@
+
+================================================================================
+[1] Q: What was Apple's total net sales in fiscal 2024?
+================================================================================
+
+  #1  dense=0.740  rrf=0.0301  | Apple 2024 | table
+      section: FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Operating Expenses
+      pages  : [29]
+      text   : The following table shows Operating Expenses data for Apple 2024:
+Columns: 2024, 2023, 2022
+Research and development -- 2024: 31,370, 2023: 29,915, 2022: 26,251
+Percentage of total net sales -- 2024: 8 %, 2023: 8 %, 2022: 7 %
+Selling, general and administrative -- 2024: 26,097, 2023: 24,932, 2022: 25,094
+Percentage of total net sales -- 2024: 7 %, 2023: 7 %, 2022: 6 %
+Total operating expenses -- 2024: 57,467, 2023: 54,847, 2022: 51,345
+Percentage of total net sales -- 2024: 15 %, 2023: 14 %, 2022: 13 %
+
+  #2  dense=0.755  rrf=0.0296  | Apple 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 13 - Segment Information and Geographic Data
+      pages  : [54]
+      text   : The following table shows Note 13 - Segment Information and Geographic Data data for Apple 2024:
+Columns: 2024, 2023, 2022
+Net sales:
+U.S. -- 2024: 142,196, 2023: 138,573, 2022: 147,859
+China (1) -- 2024: 66,952, 2023: 72,559, 2022: 74,200
+Other countries -- 2024: 181,887, 2023: 172,153, 2022: 172,269
+Total net sales -- 2024: 391,035, 2023: 383,285, 2022: 394,328
+
+  #3  dense=0.736  rrf=0.0263  | Apple 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF OPERATIONS
+      pages  : [35]
+      text   : The following table shows CONSOLIDATED STATEMENTS OF OPERATIONS data for Apple 2024:
+Columns: 2024, 2023, 2022
+Net sales:
+Products -- 2024: 294,866, 2023: 298,085, 2022: 316,199
+Services -- 2024: 96,169, 2023: 85,200, 2022: 78,129
+Total net sales -- 2024: 391,035, 2023: 383,285, 2022: 394,328
+Cost of sales:
+Products -- 2024: 185,233, 2023: 189,282, 2022: 201,471
+Services -- 2024: 25,119, 2023: 24,855, 2022: 22,075
+Total cost of sales -- 2024: 210,352, 2023: 214,137, 2022: 223,546
+Gross margin -- 2024: 180,683, 2023: 169,148, 2022: 170,782
+Operating expenses:
+Research and development -- 2024: 31,370, 2023: 29,915, 2022: 26,251
+Selling, general and administrative -- 2024: 26,097, 2023: 24,932, 2022: 25,094
+Total operating expenses -- 2024: 57,467, 2023: 54,847, 2022: 51,345
+Operating income -- 2024: 123,216, 2023: 114,301, 2022: 119,437
+Other income/(expense), net -- 2024: 269, 2023: (565), 2022: (334)
+Income before provision for income taxes -- 2024: 123,485, 2023: 113,736, 2022: 119,103
+Provision for income taxes -- 2024: 29,749, 2023: 16,741, 2022: 19,300
+Net income -- 2024: 93,736, 2023: 96,995, 2022: 99,803
+Earnings per share:
+Basic -- 2024: 6.11, 2023: 6.16, 2022: 6.15
+Diluted -- 2024: 6.08, 2023: 6.13, 2022: 6.11
+Shares used in computing earnings per share:
+Basic -- 2024: 15,343,783, 2023: 15,744,231, 2022: 16,215,963
+Diluted -- 2024: 15,408,095, 2023: 15,812,547, 2022: 16,325,819
+
+================================================================================
+[2] Q: What was Apple's net income in 2024?
+================================================================================
+
+  #1  dense=0.764  rrf=0.0320  | Apple 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 13 - Segment Information and Geographic Data
+      pages  : [54]
+      text   : The following table shows Note 13 - Segment Information and Geographic Data data for Apple 2024:
+Columns: 2024, 2023, 2022
+Americas:
+Net sales -- 2024: 167,045, 2023: 162,560, 2022: 169,658
+Operating income -- 2024: 67,656, 2023: 60,508, 2022: 62,683
+Europe:
+Net sales -- 2024: 101,328, 2023: 94,294, 2022: 95,118
+Operating income -- 2024: 41,790, 2023: 36,098, 2022: 35,233
+Greater China:
+Net sales -- 2024: 66,952, 2023: 72,559, 2022: 74,200
+Operating income -- 2024: 27,082, 2023: 30,328, 2022: 31,153
+Japan:
+Net sales -- 2024: 25,052, 2023: 24,257, 2022: 25,977
+Operating income -- 2024: 12,454, 2023: 11,888, 2022: 12,257
+Rest of Asia Pacific:
+Net sales -- 2024: 30,658, 2023: 29,615, 2022: 29,375
+Operating income -- 2024: 13,062, 2023: 12,066, 2022: 11,569
+is as follows (in millions):
+
+  #2  dense=0.741  rrf=0.0315  | Apple 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME
+      pages  : [36]
+      text   : The following table shows CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME data for Apple 2024:
+Columns: 2024, 2023, 2022
+Net income -- 2024: 93,736, 2023: 96,995, 2022: 99,803
+Other comprehensive income/(loss):
+Change in foreign currency translation, net of tax -- 2024: 395, 2023: (765), 2022: (1,511)
+Change in unrealized gains/losses on derivative instruments, net of tax:
+Change in fair value of derivative instruments -- 2024: (832), 2023: 323, 2022: 3,212
+Adjustment for net (gains)/losses realized and included in net income -- 2024: (1,337), 2023: (1,717), 2022: (1,074)
+Total change in unrealized gains/losses on derivative instruments -- 2024: (2,169), 2023: (1,394), 2022: 2,138
+Change in unrealized gains/losses on marketable debt securities, net of
+tax:
+Change in fair value of marketable debt securities -- 2024: 5,850, 2023: 1,563, 2022: (12,104)
+Adjustment for net (gains)/losses realized and included in net income -- 2024: 204, 2023: 253, 2022: 205
+Total change in unrealized gains/losses on marketable debt securities -- 2024: 6,054, 2023: 1,816, 2022: (11,899)
+Total other comprehensive income/(loss) -- 2024: 4,280, 2023: (343), 2022: (11,272)
+Total comprehensive income -- 2024: 98,016, 2023: 96,652, 2022: 88,531
+
+  #3  dense=0.755  rrf=0.0300  | Apple 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 13 - Segment Information and Geographic Data
+      pages  : [54]
+      text   : The following table shows Note 13 - Segment Information and Geographic Data data for Apple 2024:
+Columns: 2024, 2023, 2022
+Segment operating income -- 2024: 162,044, 2023: 150,888, 2022: 152,895
+Research and development expense -- 2024: (31,370), 2023: (29,915), 2022: (26,251)
+Other corporate expenses, net (1) -- 2024: (7,458), 2023: (6,672), 2022: (7,207)
+Total operating income -- 2024: 123,216, 2023: 114,301, 2022: 119,437
+(1) Includes general and administrative compensation costs, various nonrecurring charges, and other separately managed costs.
+remaining countries (in millions):
+
+================================================================================
+[3] Q: What was Apple's diluted earnings per share in 2024?
+================================================================================
+
+  #1  dense=0.753  rrf=0.0328  | Apple 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 3 - Earnings Per Share
+      pages  : [42]
+      text   : The following table shows Note 3 - Earnings Per Share data for Apple 2024:
+Columns: 2024, 2023, 2022
+Numerator:
+Net income -- 2024: 93,736, 2023: 96,995, 2022: 99,803
+Denominator:
+Weighted-average basic shares outstanding -- 2024: 15,343,783, 2023: 15,744,231, 2022: 16,215,963
+Effect of dilutive share-based awards -- 2024: 64,312, 2023: 68,316, 2022: 109,856
+Weighted-average diluted shares -- 2024: 15,408,095, 2023: 15,812,547, 2022: 16,325,819
+Basic earnings per share -- 2024: 6.11, 2023: 6.16, 2022: 6.15
+Diluted earnings per share -- 2024: 6.08, 2023: 6.13, 2022: 6.11
+
+  #2  dense=0.661  rrf=0.0261  | Apple 2024 | text
+      section: ['FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 3 - Earnings Per Share']
+      pages  : [42]
+      text   : The following table shows the computation of basic and diluted earnings per share for 2024, 2023 and 2022 (net income in millions Approximately 24 million restricted stock units ("RSUs") were excluded from the computation of diluted earnings per share for 2023 because their effect would have been antidilutive.
+
+  #3  dense=0.693  rrf=0.0228  | Apple 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF OPERATIONS
+      pages  : [35]
+      text   : The following table shows CONSOLIDATED STATEMENTS OF OPERATIONS data for Apple 2024:
+Columns: 2024, 2023, 2022
+Net sales:
+Products -- 2024: 294,866, 2023: 298,085, 2022: 316,199
+Services -- 2024: 96,169, 2023: 85,200, 2022: 78,129
+Total net sales -- 2024: 391,035, 2023: 383,285, 2022: 394,328
+Cost of sales:
+Products -- 2024: 185,233, 2023: 189,282, 2022: 201,471
+Services -- 2024: 25,119, 2023: 24,855, 2022: 22,075
+Total cost of sales -- 2024: 210,352, 2023: 214,137, 2022: 223,546
+Gross margin -- 2024: 180,683, 2023: 169,148, 2022: 170,782
+Operating expenses:
+Research and development -- 2024: 31,370, 2023: 29,915, 2022: 26,251
+Selling, general and administrative -- 2024: 26,097, 2023: 24,932, 2022: 25,094
+Total operating expenses -- 2024: 57,467, 2023: 54,847, 2022: 51,345
+Operating income -- 2024: 123,216, 2023: 114,301, 2022: 119,437
+Other income/(expense), net -- 2024: 269, 2023: (565), 2022: (334)
+Income before provision for income taxes -- 2024: 123,485, 2023: 113,736, 2022: 119,103
+Provision for income taxes -- 2024: 29,749, 2023: 16,741, 2022: 19,300
+Net income -- 2024: 93,736, 2023: 96,995, 2022: 99,803
+Earnings per share:
+Basic -- 2024: 6.11, 2023: 6.16, 2022: 6.15
+Diluted -- 2024: 6.08, 2023: 6.13, 2022: 6.11
+Shares used in computing earnings per share:
+Basic -- 2024: 15,343,783, 2023: 15,744,231, 2022: 16,215,963
+Diluted -- 2024: 15,408,095, 2023: 15,812,547, 2022: 16,325,819
+
+================================================================================
+[4] Q: What was Google's total revenue in 2024?
+================================================================================
+
+  #1  dense=0.781  rrf=0.0250  | Google 2024 | table
+      section: FORM 10-K > ITEM 7. > Revenues
+      pages  : [61]
+      text   : The following table shows Revenues data for Google 2024:
+Columns: 2023, 2024
+Google Search & other -- 2023: 175,033, 2024: 198,084
+YouTube ads -- 2023: 31,510, 2024: 36,147
+Google Network -- 2023: 31,312, 2024: 30,359
+Google advertising -- 2023: 237,855, 2024: 264,590
+Google subscriptions, platforms, and devices -- 2023: 34,688, 2024: 40,340
+Google Services total -- 2023: 272,543, 2024: 304,930
+Google Cloud -- 2023: 33,088, 2024: 43,229
+Other Bets -- 2023: 1,527, 2024: 1,648
+Hedging gains (losses) -- 2023: 236, 2024: 211
+Total revenues -- 2023: 307,394, 2024: 350,018
+
+  #2  dense=0.690  rrf=0.0245  | Google 2024 | text
+      section: FORM 10-K > ITEM 8. > Note 2. Revenues > Deferred Revenues
+      pages  : [101]
+      text   : We record deferred revenues when cash payments are received or due in advance of our performance, including amounts which are refundable. Deferred revenues primarily relate to Google Cloud and Google subscriptions, platforms, and devices. Total deferred revenue as of December 31, 2023 was $5.0 billion, of which $3.9 billion was recognized as revenues for the year ended December 31, 2024. Total deferred revenue as of December 31, 2024 was $6.0 billion.
+
+  #3  dense=0.717  rrf=0.0235  | Google 2024 | text
+      section: FORM 10-K > ITEM 7. > Revenues > Google subscriptions, platforms, and devices
+      pages  : [62]
+      text   : Google subscriptions, platforms, and devices revenues increased $5.7 billion from 2023 to 2024. The growth was primarily driven by an increase in subscription revenues, largely from growth in the number of paid subscribers for YouTube services followed by Google One. Google Cloud revenues increased $10.1 billion from 2023 to 2024 primarily driven by growth in Google Cloud Platform largely from infrastructure services.
+
+================================================================================
+[5] Q: What was Google's net income in 2024?
+================================================================================
+
+  #1  dense=0.732  rrf=0.0295  | Google 2024 | table
+      section: FORM 10-K > ITEM 8. > CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME
+      pages  : [85]
+      text   : The following table shows CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME data for Google 2024:
+Columns: 2022, 2023, 2024
+Net income -- 2022: 59,972, 2023: 73,795, 2024: 100,118
+Other comprehensive income (loss):
+Change in foreign currency translation adjustment, net of income tax benefit (expense) of $(134), $63 and $(49) -- 2022: (1,836), 2023: 735, 2024: (1,673)
+Available-for-sale investments:
+Change in net unrealized gains (losses) -- 2022: (4,720), 2023: 1,344, 2024: (116)
+Less: reclassification adjustment for net (gains) losses included in net income -- 2022: 1,007, 2023: 1,168, 2024: 782
+Net change, net of income tax benefit (expense) of $1,056, $(698), and $(190) -- 2022: (3,713), 2023: 2,512, 2024: 666
+Cash flow hedges:
+Change in net unrealized gains (losses) -- 2022: 1,275, 2023: 168, 2024: 775
+Less: reclassification adjustment for net (gains) losses included in net income -- 2022: (1,706), 2023: (214), 2024: (166)
+Net change, net of income tax benefit (expense) of $110, $2, and $(151) -- 2022: (431), 2023: (46), 2024: 609
+Other comprehensive income (loss) -- 2022: (5,980), 2023: 3,201, 2024: (398)
+Comprehensive income -- 2022: 53,992, 2023: 76,996, 2024: 99,720
+54.
+
+  #2  dense=0.749  rrf=0.0293  | Google 2024 | table
+      section: FORM 10-K > ITEM 7. > Executive Overview
+      pages  : [60]
+      text   : The following table shows Executive Overview data for Google 2024:
+Columns: 2023, 2024
+Consolidated revenues -- 2023: 307,394, 2024: 350,018
+Change in consolidated constant currency revenues (1)
+Cost of revenues -- 2023: 133,332, 2024: 146,306
+Operating expenses -- 2023: 89,769, 2024: 91,322
+Operating income -- 2023: 84,293, 2024: 112,390
+Operating margin -- 2023: 27 %, 2024: 32 %
+Other income (expense), net -- 2023: 1,424, 2024: 7,425
+Net income -- 2023: 73,795, 2024: 100,118
+Diluted EPS (2) -- 2023: 5.80, 2024: 8.04
+(1)
+(2)
+
+  #3  dense=0.725  rrf=0.0259  | Google 2024 | table
+      section: FORM 10-K > ITEM 8. > Note 7. Supplemental Financial Statement Information > Accumulated Other Comprehensive Income (Loss)
+      pages  : [115]
+      text   : The following table shows Accumulated Other Comprehensive Income (Loss) data for Google 2024:
+Columns: 2022, 2023, 2024
+Unrealized gains (losses) on available-for-sale investments Other income (expense), net -- 2022: (1,291), 2023: (1,497), 2024: (1,008)
+Benefit (provision) for income taxes -- 2022: 284, 2023: 329, 2024: 226
+Net of income tax -- 2022: (1,007), 2023: (1,168), 2024: (782)
+Unrealized gains (losses) on cash flow hedges Foreign exchange contracts Revenue -- 2022: 2,046, 2023: 213, 2024: 174
+Interest rate contracts Other income (expense), net -- 2022: 6, 2023: 6, 2024: 1
+Benefit (provision) for income taxes -- 2022: (346), 2023: (5), 2024: (9)
+Net of income tax -- 2022: 1,706, 2023: 214, 2024: 166
+Total amount reclassified, net of income tax -- 2022: 699, 2023: (954), 2024: (616)
+Components of OI&E were as follows (in millions):
+
+================================================================================
+[6] Q: What was Intel's total revenue in 2024?
+================================================================================
+
+  #1  dense=0.714  rrf=0.0290  | Intel 2024 | text
+      section: Network and Edge > Operating income
+      pages  : [26]
+      text   : Operating segment results include intersegment financial activity; refer to "Note 3: Operating Segments" for a reconciliation between our operating segment and consolidated financial results for the periods presented. Total Intel Products revenue was $48.9 billion in 2024, up $1.3 billion from 2023. CCG revenue increased $1.0 billion from 2023. Notebook revenue was $19.1 billion in 2024, up $2.1 billion from 2023. Notebook volume increased 12% from 2023, as customer inventory levels improved compared to higher levels in 2023. Notebook ASPs were roughly flat with 2023. Desktop revenue was $9.7 billion, down $516 million from 2023. Desktop volume decreased 5% from 2023, primarily due to lower demand compared to 2023. Desktop ASPs were roughly flat with 2023. Other CCG revenue was $1.6 billion , down $530 million from 2023, primarily driven by the exit of legacy businesses. DCAI revenue increased $182 million from 2023, primarily driven by an increase in server revenue. Server ASPs increased
+
+  #2  dense=0.751  rrf=0.0236  | Intel 2024 | text
+      section: ['Consolidated Revenue']
+      pages  : [32]
+      text   : Consolidated Revenue Walk $B 2024 vs. 2023 2024 revenue was $53.1 billion, down $1.1 billion, or 2%, from 2023 due to lower all other revenue and lower Intel Foundry revenue, partially offset by higher Intel Products revenue. All other revenue decreased 32% from 2023, driven by lower Altera revenue due to customers tempering purchases to reduce existing inventories across all product lines and lower Mobileye revenue as customers tempered purchases to reduce existing inventories of EyeQ products. Intel Foundry external revenue decreased 60% from 2023 due to lower traditional packaging services and lower equipment sales. Intel Products revenue increased 3% from 2023 due primarily to higher CCG and DCAI revenue. CCG revenue increased 4% from 2023 primarily due to higher notebook volume compared to 2023 and was partially offset by lower other CCG revenue, which decreased from 2023 due to the exit of legacy businesses, and lower desktop revenue, which decreased on lower demand compared to 2023. DCAI revenue increased 1% from 2023 driven by higher server revenue primarily from high core count products, which increased ASPs and lowered volume compared to 2023.
+
+  #3  dense=0.720  rrf=0.0221  | Intel 2024 | table
+      section: Note 7 : > Restructuring and Other Charges > Total restructuring and other charges
+      pages  : [100]
+      text   : The following table shows Total restructuring and other charges data for Intel 2024:
+Columns: 2024, 2022
+(In Millions)
+ -- 2024: -, 2022: -
+Accruals and adjustments -- 2024: -, 2022: 1,038
+Cash payments -- 2024: -, 2022: (165)
+ -- 2024: -, 2022: 873
+Accruals and adjustments -- 2024: -, 2022: 222
+Cash payments -- 2024: -, 2022: (1,013)
+ -- 2024: -, 2022: 82
+Accruals and adjustments -- 2024: 2,306, 2022: -
+Cash payments -- 2024: (2,004), 2022: (82)
+
+================================================================================
+[7] Q: What was Intel's net income in 2024?
+================================================================================
+
+  #1  dense=0.711  rrf=0.0193  | Intel 2024 | table
+      section: Note 6 : > Other Financial Statement Details > Total property, plant, and equipment, net
+      pages  : [99]
+      text   : The following table shows Total property, plant, and equipment, net data for Intel 2024:
+▪
+▪
+each period were as follows:
+Years Ended (In Millions)
+Dec 28, 2024 | Dec 30, 2023
+Operating-related grants receivables | Other current assets | $ | 272 | $ | 17
+Other long-term assets | $ | 186 | $ | 130
+Capital-related grants receivables | Other current assets | $ | 859 | $ | 64
+Other long-term assets | $ | 374 | $ | 348
+
+  #2  dense=0.744  rrf=0.0174  | Intel 2024 | table
+      section: Network and Edge > Operating income
+      pages  : [26]
+      text   : The following table shows Operating income data for Intel 2024:
+12% from | 2023 | , primarily due to a higher mix of high core count products. Server volume decreased 10% from | 2023 | , due to
+
+  #3  dense=0.711  rrf=0.0171  | Intel 2024 | table
+      section: Note 7 : > Restructuring and Other Charges > Total restructuring and other charges
+      pages  : [100]
+      text   : The following table shows Total restructuring and other charges data for Intel 2024:
+Columns: 2024, 2022
+(In Millions)
+ -- 2024: -, 2022: -
+Accruals and adjustments -- 2024: -, 2022: 1,038
+Cash payments -- 2024: -, 2022: (165)
+ -- 2024: -, 2022: 873
+Accruals and adjustments -- 2024: -, 2022: 222
+Cash payments -- 2024: -, 2022: (1,013)
+ -- 2024: -, 2022: 82
+Accruals and adjustments -- 2024: 2,306, 2022: -
+Cash payments -- 2024: (2,004), 2022: (82)
+
+================================================================================
+[8] Q: What was Meta's total revenue in 2024?
+================================================================================
+
+  #1  dense=0.767  rrf=0.0303  | META 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 2. Revenue
+      pages  : [126]
+      text   : The following table shows Note 2. Revenue data for META 2024:
+Columns: 2024, 2023, 2022
+Advertising -- 2024: 160,633, 2023: 131,948, 2022: 113,642
+Other revenue -- 2024: 1,722, 2023: 1,058, 2022: 808
+Family of Apps -- 2024: 162,355, 2023: 133,006, 2022: 114,450
+Reality Labs -- 2024: 2,146, 2023: 1,896, 2022: 2,159
+Total revenue -- 2024: 164,501, 2023: 134,902, 2022: 116,609
+
+  #2  dense=0.762  rrf=0.0286  | META 2024 | table
+      section: FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Results of Operations
+      pages  : [91]
+      text   : The following table shows Results of Operations data for META 2024:
+Columns: 2024, 2023, 2022
+Advertising -- 2024: 160,633, 2023: 131,948, 2022: 113,642
+Other revenue -- 2024: 1,722, 2023: 1,058
+Family of Apps -- 2024: 162,355, 2023: 133,006, 2022: 114,450
+Reality Labs -- 2024: 2,146, 2023: 1,896, 2022: 2,159
+Total revenue -- 2024: 164,501, 2023: 134,902, 2022: 116,609
+
+  #3  dense=0.731  rrf=0.0245  | META 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 2. Revenue
+      pages  : [126]
+      text   : The following table shows Note 2. Revenue data for META 2024:
+Columns: 2024, 2023, 2022
+United States and Canada (1) -- 2024: 63,207, 2023: 52,888, 2022: 50,150
+Europe (3) -- 2024: 38,361, 2023: 31,210, 2022: 26,681
+Asia-Pacific (2) -- 2024: 45,009, 2023: 36,154, 2022: 27,760
+Rest of World (3) -- 2024: 17,924, 2023: 14,650, 2022: 12,018
+Total revenue -- 2024: 164,501, 2023: 134,902, 2022: 116,609
+_________________________ (1)
+(2)
+(3)
+
+================================================================================
+[9] Q: What was Meta's diluted earnings per share in 2024?
+================================================================================
+
+  #1  dense=0.698  rrf=0.0325  | META 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 4. Earnings per Share
+      pages  : [128]
+      text   : The following table shows Note 4. Earnings per Share data for META 2024:
+Columns: 2024, 2023, 2022
+Basic EPS:
+Numerator Distributed earnings -- 2024: 5,072, 2023: -, 2022: -
+Undistributed earnings -- 2024: 57,288, 2023: 39,098, 2022: 23,200
+Net income -- 2024: 62,360, 2023: 39,098, 2022: 23,200
+Denominator Shares used in computation of basic EPS (1) -- 2024: 2,534, 2023: 2,574, 2022: 2,687
+Basic EPS -- 2024: 24.61, 2023: 15.19, 2022: 8.63
+Diluted EPS:
+Numerator Net income for diluted EPS -- 2024: 62,360, 2023: 39,098, 2022: 23,200
+Denominator Shares used in computation of basic EPS (1) -- 2024: 2,534, 2023: 2,574, 2022: 2,687
+Effect of dilutive RSUs -- 2024: 80, 2023: 55, 2022: 15
+Shares used in computation of diluted EPS -- 2024: 2,614, 2023: 2,629, 2022: 2,702
+Diluted EPS -- 2024: 23.86, 2023: 14.87, 2022: 8.59
+____________________________________ (1)
+
+  #2  dense=0.627  rrf=0.0176  | META 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF STOCKHOLDERS' EQUITY
+      pages  : [110]
+      text   : The following table shows CONSOLIDATED STATEMENTS OF STOCKHOLDERS' EQUITY data for META 2024:
+Columns: (In millions, except per share amounts), Class A and Class B Common Stock Shares 2,741 54, Par Value, Additional Paid-In Capital 55,811, Accumulated Other Comprehensive Income (Loss), Retained Earnings 69,761, Total Stockholders' Equity 124,879
+Shares withheld related to net share settlement -- (In millions, except per share amounts): (20), Par Value: -, Additional Paid-In Capital 55,811: (3,359), Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: (236), Total Stockholders' Equity 124,879: (3,595)
+Share-based compensation -- (In millions, except per share amounts): -, Par Value: -, Additional Paid-In Capital 55,811: 11,992, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: -, Total Stockholders' Equity 124,879: 11,992
+Share repurchases -- (In millions, except per share amounts): (161), Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: (27,926), Total Stockholders' Equity 124,879: (27,926)
+Other comprehensive loss -- (In millions, except per share amounts): -, Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): (2,837), Retained Earnings 69,761: -, Total Stockholders' Equity 124,879: (2,837)
+Net income -- (In millions, except per share amounts): -, Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: 23,200, Total Stockholders' Equity 124,879: 23,200
+ -- (In millions, except per share amounts): 2,614, Par Value: -, Additional Paid-In Capital 55,811: 64,444, Accumulated Other Comprehensive Income (Loss): (3,530), Retained Earnings 69,761: 64,799, Total Stockholders' Equity 124,879: 125,713
+Issuance of common stock -- (In millions, except per share amounts): 65, Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: -, Total Stockholders' Equity 124,879: -
+Shares withheld related to net share settlement -- (In millions, except per share amounts): (26), Par Value: -, Additional Paid-In Capital 55,811: (5,218), Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: (1,794), Total Stockholders' Equity 124,879: (7,012)
+Share-based compensation -- (In millions, except per share amounts): -, Par Value: -, Additional Paid-In Capital 55,811: 14,027, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: -, Total Stockholders' Equity 124,879: 14,027
+Share repurchases -- (In millions, except per share amounts): (92), Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: (20,033), Total Stockholders' Equity 124,879: (20,033)
+Other comprehensive income -- (In millions, except per share amounts): -, Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): 1,375, Retained Earnings 69,761: -, Total Stockholders' Equity 124,879: 1,375
+Net income -- (In millions, except per share amounts): -, Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: 39,098, Total Stockholders' Equity 124,879: 39,098
+ -- (In millions, except per share amounts): 2,561, Par Value: -, Additional Paid-In Capital 55,811: 73,253, Accumulated Other Comprehensive Income (Loss): (2,155), Retained Earnings 69,761: 82,070, Total Stockholders' Equity 124,879: 153,168
+Issuance of common stock -- (In millions, except per share amounts): 65, Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: -, Total Stockholders' Equity 124,879: -
+Shares withheld related to net share settlement -- (In millions, except per share amounts): (27), Par Value: -, Additional Paid-In Capital 55,811: (6,721), Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: (7,049), Total Stockholders' Equity 124,879: (13,770)
+Share-based compensation -- (In millions, except per share amounts): -, Par Value: -, Additional Paid-In Capital 55,811: 16,690, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: -, Total Stockholders' Equity 124,879: 16,690
+Share repurchases -- (In millions, except per share amounts): (65), Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: (29,754), Total Stockholders' Equity 124,879: (29,754)
+Dividends and dividend equivalents declared ($2.00 per share) (1) -- (In millions, except per share amounts): -, Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: (5,121), Total Stockholders' Equity 124,879: (5,121)
+Other -- (In millions, except per share amounts): -, Par Value: -, Additional Paid-In Capital 55,811: 6, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: -, Total Stockholders' Equity 124,879: 6
+Other comprehensive loss -- (In millions, except per share amounts): -, Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): (942), Retained Earnings 69,761: -, Total Stockholders' Equity 124,879: (942)
+Net income -- (In millions, except per share amounts): -, Par Value: -, Additional Paid-In Capital 55,811: -, Accumulated Other Comprehensive Income (Loss): -, Retained Earnings 69,761: 62,360, Total Stockholders' Equity 124,879: 62,360
+ -- (In millions, except per share amounts): 2,534, Par Value: -, Additional Paid-In Capital 55,811: 83,228, Accumulated Other Comprehensive Income (Loss): (3,097), Retained Earnings 69,761: 102,506, Total Stockholders' Equity 124,879: 182,637
+_______________________ (1) Our dividend program began in the -- (In millions, except per share amounts): quarter of 2024.
+
+  #3  dense=0.698  rrf=0.0174  | META 2024 | table
+      section: FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Consolidated and Segment Results
+      pages  : [78]
+      text   : The following table shows Consolidated and Segment Results data for META 2024:
+Columns: 2024, 2023, 2024, 2023, 2024, 2023
+Revenue -- 2024: 164,501, 2023: 134,902
+Costs and expenses -- 2024: 95,121, 2023: 88,151
+Income (loss) from operations -- 2024: 69,380, 2023: 46,751
+ -- 2024: 42 %, 2023: 35 %
+
+================================================================================
+[10] Q: What was Nvidia's total revenue in fiscal 2025?
+================================================================================
+
+  #1  dense=0.731  rrf=0.0237  | Nvidia 2025 | table
+      section: Item 15. Exhibits and Financial Statement Schedules > Note 9 - Balance Sheet Components > Deferred Revenue
+      pages  : [75]
+      text   : The following table shows Deferred Revenue data for Nvidia 2025:
+Columns: Jan 26, 2025, 1,337 (In millions), Jan 28, 2024, 572
+Deferred revenue additions (1) -- Jan 26, 2025: 5,083, Jan 28, 2024: 2,038
+Revenue recognized (2) -- Jan 26, 2025: (4,607), Jan 28, 2024: (1,273)
+Balance at end of period -- Jan 26, 2025: 1,813, Jan 28, 2024: 1,337
+
+  #2  dense=0.725  rrf=0.0191  | Nvidia 2025 | table
+      section: Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Revenue by Reportable Segments
+      pages  : [43]
+      text   : The following table shows Revenue by Reportable Segments data for Nvidia 2025:
+Columns: Jan 26, 2025, Jan 28, 2024, Year Ended, %
+Compute & Networking -- Jan 26, 2025: 116,193, Jan 28, 2024: 47,405, Year Ended: 68,788, %: 145 %
+Graphics -- Jan 26, 2025: 14,304, Jan 28, 2024: 13,517, Year Ended: 787, %: 6 %
+Total -- Jan 26, 2025: 130,497, Jan 28, 2024: 60,922, Year Ended: 69,575, %: 114 %
+ -- Jan 28, 2024: Year Ended
+ -- Jan 26, 2025: Jan 26, 2025, Jan 28, 2024: Jan 28, 2024
+Compute & Networking -- Jan 26, 2025: 82,875, Jan 28, 2024: 32,016, Year Ended: 50,859, %: 159 %
+Graphics -- Jan 26, 2025: 5,085, Jan 28, 2024: 5,846, Year Ended: (761), %: (13)%
+All Other -- Jan 26, 2025: (6,507), Jan 28, 2024: (4,890), Year Ended: (1,617), %: 33 %
+Total -- Jan 26, 2025: 81,453, Jan 28, 2024: 32,972, Year Ended: 48,481, %: 147 %
+
+  #3  dense=0.602  rrf=0.0182  | Nvidia 2025 | text
+      section: Item 15. Exhibits and Financial Statement Schedules > Note 16 - Segment Information > Geographic Revenue based upon Customer Billing Location:
+      pages  : [83]
+      text   : (1) Singapore represented 18% of fiscal year 2025 total revenue based upon customer billing location. Customers use Singapore to centralize invoicing while our products are almost always shipped elsewhere. Shipments to Singapore were less than 2% of fiscal year 2025 total revenue. Revenue from sales to customers outside of the United States accounted for 53%, 56%, and 69% of total revenue for fiscal years 2025, 2024, and 2023, respectively. The increase in revenue to the United States for fiscal years 2025 and 2024 was primarily due to higher U.S.-based Compute & Networking segment demand. We refer to customers who purchase products directly from NVIDIA as direct customers, such as AIBs, distributors, ODMs, OEMs, and system integrators. We have certain customers that may purchase products directly from NVIDIA and may use either internal resources or third-party system integrators to complete their build. We also have indirect customers, who purchase products through our direct customers; indirect customers include CSPs, consumer internet companies, enterprises, and public sector entities.
+
+================================================================================
+[11] Q: What was Nvidia's net income in fiscal 2025?
+================================================================================
+
+  #1  dense=0.766  rrf=0.0279  | Nvidia 2025 | table
+      section: Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Fiscal Year 2025 Summary
+      pages  : [40]
+      text   : The following table shows Fiscal Year 2025 Summary data for Nvidia 2025:
+Columns: Jan 26, 2025 130,497, Year Ended Jan 28, 2024, 60,922, Up 114%
+Gross margin -- Jan 26, 2025 130,497: 75.0 %, Year Ended Jan 28, 2024: 72.7 %, Up 114%: Up 2.3 pts
+Operating expenses -- Jan 26, 2025 130,497: 16,405, Year Ended Jan 28, 2024: 11,329, Up 114%: Up 45%
+Operating income -- Jan 26, 2025 130,497: 81,453, Year Ended Jan 28, 2024: 32,972, Up 114%: Up 147%
+Net income -- Jan 26, 2025 130,497: 72,880, Year Ended Jan 28, 2024: 29,760, Up 114%: Up 145%
+Net income per diluted share -- Jan 26, 2025 130,497: 2.94, Year Ended Jan 28, 2024: 1.19, Up 114%: Up 147%
+
+  #2  dense=0.710  rrf=0.0241  | Nvidia 2025 | table
+      section: Item 15. Exhibits and Financial Statement Schedules > Consolidated Statements of Comprehensive Income
+      pages  : [55]
+      text   : The following table shows Consolidated Statements of Comprehensive Income data for Nvidia 2025:
+Columns: (In millions), Jan 26, 2025, 72,880, Year Ended Jan 28, 2024, 29,760, Jan 29, 2023, 4,368
+Net change in unrealized gain (loss) -- Jan 26, 2025: 1, Year Ended Jan 28, 2024: 80, Jan 29, 2023: (31)
+Reclassification adjustments for net realized gain included in net income -- Jan 26, 2025: -, Year Ended Jan 28, 2024: -, Jan 29, 2023: 1
+Net change in unrealized gain (loss) -- Jan 26, 2025: 1, Year Ended Jan 28, 2024: 80, Jan 29, 2023: (30)
+Cash flow hedges:
+Net change in unrealized gain -- Jan 26, 2025: 21, Year Ended Jan 28, 2024: 38, Jan 29, 2023: 47
+Reclassification adjustments for net realized loss included in net income -- Jan 26, 2025: (21), Year Ended Jan 28, 2024: (48), Jan 29, 2023: (49)
+Net change in unrealized loss -- Jan 26, 2025: -, Year Ended Jan 28, 2024: (10), Jan 29, 2023: (2)
+Other comprehensive income (loss), net of tax -- Jan 26, 2025: 1, Year Ended Jan 28, 2024: 70, Jan 29, 2023: (32)
+Total comprehensive income -- Jan 26, 2025: 72,881, Year Ended Jan 28, 2024: 29,830, Jan 29, 2023: 4,336
+ -- (In millions): 53
+
+  #3  dense=0.732  rrf=0.0204  | Nvidia 2025 | table
+      section: Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Other Income (Expense), Net
+      pages  : [45]
+      text   : The following table shows Other Income (Expense), Net data for Nvidia 2025:
+Columns: Jan 26, 2025, 1,786, Year Ended Jan 28, 2024, 866, 920
+Interest expense -- Jan 26, 2025: (247), Year Ended Jan 28, 2024: (257), 920: 10
+Other, net -- Jan 26, 2025: 1,034, Year Ended Jan 28, 2024: 237, 920: 797
+Other income (expense), net -- Jan 26, 2025: 2,573, Year Ended Jan 28, 2024: 846, 920: 1,727
+
+================================================================================
+[12] Q: What was Apple's total assets on the balance sheet?
+================================================================================
+
+  #1  dense=0.760  rrf=0.0175  | Apple 2019 | table
+      section: FORM 10-K > Item 8. > CONSOLIDATED BALANCE SHEETS
+      pages  : [34]
+      text   : The following table shows CONSOLIDATED BALANCE SHEETS data for Apple 2019:
+Columns: 2019, 2018
+Current assets:
+Cash and cash equivalents -- 2019: 48,844, 2018: 25,913
+Marketable securities -- 2019: 51,713, 2018: 40,388
+Accounts receivable, net -- 2019: 22,926, 2018: 23,186
+Inventories -- 2019: 4,106, 2018: 3,956
+Vendor non-trade receivables -- 2019: 22,878, 2018: 25,809
+Other current assets -- 2019: 12,352, 2018: 12,087
+Total current assets -- 2019: 162,819, 2018: 131,339
+Non-current assets:
+Marketable securities -- 2019: 105,341, 2018: 170,799
+Property, plant and equipment, net -- 2019: 37,378, 2018: 41,304
+Other non-current assets -- 2019: 32,978, 2018: 22,283
+Total non-current assets -- 2019: 175,697, 2018: 234,386
+Total assets -- 2019: 338,516, 2018: 365,725
+Current liabilities:
+Accounts payable -- 2019: 46,236, 2018: 55,888
+Other current liabilities -- 2019: 37,720, 2018: 33,327
+Deferred revenue -- 2019: 5,522, 2018: 5,966
+Commercial paper -- 2019: 5,980, 2018: 11,964
+Term debt -- 2019: 10,260, 2018: 8,784
+Total current liabilities -- 2019: 105,718, 2018: 115,929
+Non-current liabilities:
+Term debt -- 2019: 91,807, 2018: 93,735
+Other non-current liabilities -- 2019: 50,503, 2018: 48,914
+Total non-current liabilities -- 2019: 142,310, 2018: 142,649
+Total liabilities -- 2019: 248,028, 2018: 258,578
+Commitments and contingencies
+Shareholders' equity:
+Common stock and additional paid-in capital, $0.00001 par value: 12,600,000 shares authorized; 4,443,236 and 4,754,986 shares issued and outstanding, respectively -- 2019: 45,174, 2018: 40,201
+Retained earnings -- 2019: 45,898, 2018: 70,400
+Accumulated other comprehensive income/(loss) -- 2019: (584), 2018: (3,454)
+Total shareholders' equity -- 2019: 90,488, 2018: 107,147
+Total liabilities and shareholders' equity -- 2019: 338,516, 2018: 365,725
+
+  #2  dense=0.763  rrf=0.0175  | Apple 2017 | table
+      section: FORM 10-K > Item 8. > CONSOLIDATED BALANCE SHEETS
+      pages  : [44]
+      text   : The following table shows CONSOLIDATED BALANCE SHEETS data for Apple 2017:
+Columns: 2017, 2016
+Current assets:
+Cash and cash equivalents -- 2017: 20,289, 2016: 20,484
+Short-term marketable securities -- 2017: 53,892, 2016: 46,671
+Accounts receivable, less allowances of $58 and $53, respectively -- 2017: 17,874, 2016: 15,754
+Inventories -- 2017: 4,855, 2016: 2,132
+Vendor non-trade receivables -- 2017: 17,799, 2016: 13,545
+Other current assets -- 2017: 13,936, 2016: 8,283
+Total current assets -- 2017: 128,645, 2016: 106,869
+Long-term marketable securities -- 2017: 194,714, 2016: 170,430
+Property, plant and equipment, net -- 2017: 33,783, 2016: 27,010
+Goodwill -- 2017: 5,717, 2016: 5,414
+Acquired intangible assets, net -- 2017: 2,298, 2016: 3,206
+Other non-current assets -- 2017: 10,162, 2016: 8,757
+Total assets -- 2017: 375,319, 2016: 321,686
+Current liabilities:
+Accounts payable -- 2017: 49,049, 2016: 37,294
+Accrued expenses -- 2017: 25,744, 2016: 22,027
+Deferred revenue -- 2017: 7,548, 2016: 8,080
+Commercial paper -- 2017: 11,977, 2016: 8,105
+Current portion of long-term debt -- 2017: 6,496, 2016: 3,500
+Total current liabilities -- 2017: 100,814, 2016: 79,006
+Deferred revenue, non-current -- 2017: 2,836, 2016: 2,930
+Long-term debt -- 2017: 97,207, 2016: 75,427
+Other non-current liabilities -- 2017: 40,415, 2016: 36,074
+Total liabilities -- 2017: 241,272, 2016: 193,437
+Commitments and contingencies
+Shareholders' equity:
+Common stock and additional paid-in capital, $0.00001 par value: 12,600,000 shares authorized; 5,126,201 and 5,336,166 shares issued and outstanding, respectively -- 2017: 35,867, 2016: 31,251
+Retained earnings -- 2017: 98,330, 2016: 96,364
+Accumulated other comprehensive income/(loss) -- 2017: (150), 2016: 634
+Total shareholders' equity -- 2017: 134,047, 2016: 128,249
+Total liabilities and shareholders' equity -- 2017: 375,319, 2016: 321,686
+
+  #3  dense=0.757  rrf=0.0172  | Apple 2018 | table
+      section: FORM 10-K > Item 8. > CONSOLIDATED BALANCE SHEETS
+      pages  : [43]
+      text   : The following table shows CONSOLIDATED BALANCE SHEETS data for Apple 2018:
+Columns: 2018, 2017
+Current assets:
+Cash and cash equivalents -- 2018: 25,913, 2017: 20,289
+Marketable securities -- 2018: 40,388, 2017: 53,892
+Accounts receivable, net -- 2018: 23,186, 2017: 17,874
+Inventories -- 2018: 3,956, 2017: 4,855
+Vendor non-trade receivables -- 2018: 25,809, 2017: 17,799
+Other current assets -- 2018: 12,087, 2017: 13,936
+Total current assets -- 2018: 131,339, 2017: 128,645
+Non-current assets:
+Marketable securities -- 2018: 170,799, 2017: 194,714
+Property, plant and equipment, net -- 2018: 41,304, 2017: 33,783
+Other non-current assets -- 2018: 22,283, 2017: 18,177
+Total non-current assets -- 2018: 234,386, 2017: 246,674
+Total assets -- 2018: 365,725, 2017: 375,319
+Current liabilities:
+Accounts payable -- 2018: 55,888, 2017: 44,242
+Other current liabilities -- 2018: 32,687, 2017: 30,551
+Deferred revenue -- 2018: 7,543, 2017: 7,548
+Commercial paper -- 2018: 11,964, 2017: 11,977
+Term debt -- 2018: 8,784, 2017: 6,496
+Total current liabilities -- 2018: 116,866, 2017: 100,814
+Non-current liabilities:
+Deferred revenue -- 2018: 2,797, 2017: 2,836
+Term debt -- 2018: 93,735, 2017: 97,207
+Other non-current liabilities -- 2018: 45,180, 2017: 40,415
+Total non-current liabilities -- 2018: 141,712, 2017: 140,458
+Total liabilities -- 2018: 258,578, 2017: 241,272
+Commitments and contingencies
+Shareholders' equity:
+Common stock and additional paid-in capital, $0.00001 par value: 12,600,000 shares authorized; 4,754,986 and 5,126,201 shares issued and outstanding, respectively -- 2018: 40,201, 2017: 35,867
+Retained earnings -- 2018: 70,400, 2017: 98,330
+Accumulated other comprehensive income/(loss) -- 2018: (3,454), 2017: (150)
+Total shareholders' equity -- 2018: 107,147, 2017: 134,047
+Total liabilities and shareholders' equity -- 2018: 365,725, 2017: 375,319
+
+================================================================================
+[13] Q: What was Apple's revenue from iPhone in 2024?
+================================================================================
+
+  #1  dense=0.734  rrf=0.0323  | Apple 2024 | text
+      section: FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Product, Service and Software Announcements
+      pages  : [26]
+      text   : The Company announces new product, service and software offerings at various times during the year. Significant announcements during fiscal year 2024 included the following: First Quarter 2024: - MacBook Pro 14-in.; - MacBook Pro 16-in.; and - iMac. Second Quarter 2024: - MacBook Air 13-in.; and - MacBook Air 15-in. Third Quarter 2024: - iPad Air; - iPad Pro; - iOS 18, macOS Sequoia, iPadOS 18, watchOS 11, visionOS 2 and tvOS 18, updates to the Company's operating systems; and - Apple Intelligence™, a personal intelligence system that uses generative models. Fourth Quarter 2024: - iPhone 16, iPhone 16 Plus, iPhone 16 Pro and iPhone 16 Pro Max; - Apple Watch Series 10; and - AirPods 4.
+
+  #2  dense=0.751  rrf=0.0301  | Apple 2024 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 2 - Revenue
+      pages  : [41]
+      text   : The following table shows Note 2 - Revenue data for Apple 2024:
+Columns: 2024, 2023, 2022
+iPhone -- 2024: 201,183, 2023: 200,583, 2022: 205,489
+Mac -- 2024: 29,984, 2023: 29,357, 2022: 40,177
+iPad -- 2024: 26,694, 2023: 28,300, 2022: 29,292
+Wearables, Home and Accessories -- 2024: 37,005, 2023: 39,845, 2022: 41,241
+Services (1) -- 2024: 96,169, 2023: 85,200, 2022: 78,129
+Total net sales -- 2024: 391,035, 2023: 383,285, 2022: 394,328
+(1)
+
+  #3  dense=0.662  rrf=0.0264  | Apple 2024 | text
+      section: ['FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 2 - Revenue']
+      pages  : [41, 42]
+      text   : s follows (in millions): ® ® Services net sales include amortization of the deferred value of services bundled in the sales price of certain products. Total net sales include $7.7 billion of revenue recognized in 2024 that was included in deferred revenue as of September 30, 2023, $8.2 billion of revenue recognized in 2023 that was included in deferred revenue as of September 24, 2022, and $7.5 billion of revenue recognized in 2022 that was included in deferred revenue as of September 25, 2021. The Company's proportion of net sales by disaggregated revenue source was generally consistent for each reportable segment in Note 13, "Segment Information and Geographic Data" for 2024, 2023 and 2022, except in Greater China, where iPhone revenue represented a moderately higher proportion of net sales. As of September 28, 2024 and September 30, 2023, the Company had total deferred revenue of $12.8 billion and $12.1 billion, respectively. As of September 28, 2024, the Company expects 64% of total deferred revenue to be realized in less than a year, 25% within one-to-two years, 9% within two-to-three years and 2% in greater than three years.
+
+================================================================================
+[14] Q: What was Google's total liabilities on the balance sheet?
+================================================================================
+
+  #1  dense=0.690  rrf=0.0251  | Google 2020 | table
+      section: FORM 10-K > ITEM 6. > SELECTED FINANCIAL DATA
+      pages  : [39]
+      text   : The following table shows SELECTED FINANCIAL DATA data for Google 2020:
+Columns: 2016, 2017, 2018, 2019, 2020
+ -- 2018: (in millions)
+Consolidated Balance Sheet Data:
+Cash, cash equivalents, and marketable securities -- 2016: 86,333, 2017: 101,871, 2018: 109,140, 2019: 119,675, 2020: 136,694
+Total assets -- 2016: 167,497, 2017: 197,295, 2018: 232,792, 2019: 275,909, 2020: 319,616
+Total long-term liabilities -- 2016: 11,705, 2017: 20,610, 2018: 20,544, 2019: 29,246, 2020: 40,238
+Total stockholders' equity -- 2016: 139,036, 2017: 152,502, 2018: 177,628, 2019: 201,442, 2020: 222,544
+
+  #2  dense=0.690  rrf=0.0250  | Google 2016 | table
+      section: FORM 10-K > ITEM 6. > SELECTED FINANCIAL DATA
+      pages  : [33]
+      text   : The following table shows SELECTED FINANCIAL DATA data for Google 2016:
+Columns: 2012, 2013, 2014, 2015, 2016
+ -- 2014: (in millions)
+Consolidated Balance Sheet Data:
+Cash, cash equivalents, and marketable securities -- 2012: 48,088, 2013: 58,717, 2014: 64,395, 2015: 73,066, 2016: 86,333
+Total assets -- 2012: 92,711, 2013: 109,050, 2014: 129,187, 2015: 147,461, 2016: 167,497
+Total long-term liabilities -- 2012: 6,662, 2013: 6,165, 2014: 8,548, 2015: 7,820, 2016: 11,705
+Total stockholders' equity -- 2012: 71,570, 2013: 86,977, 2014: 103,860, 2015: 120,331, 2016: 139,036
+
+  #3  dense=0.756  rrf=0.0247  | Google 2016 | table
+      section: FORM 10-K > ITEM 8. > CONSOLIDATED BALANCE SHEETS
+      pages  : [64]
+      text   : The following table shows CONSOLIDATED BALANCE SHEETS data for Google 2016:
+Retained earnings | 89,223 | 105,131
+Total stockholders' equity | 120,331 | 139,036
+Total liabilities and stockholders' equity | $ | 147,461 | $ | 167,497
+42
+
+================================================================================
+[15] Q: What was Google's revenue from Google Cloud?
+================================================================================
+
+  #1  dense=0.747  rrf=0.0304  | Google 2016 | text
+      section: FORM 10-K > ITEM 7. > Google segment > Google other revenues
+      pages  : [40, 41]
+      text   : Google other revenues consist primarily of revenues and sales from: - Apps, in-app purchases, and digital content in the Google Play store; - Hardware; - Licensing-related revenue; and - Service fees received for our Google Cloud offerings. Our Google other revenues increased $2,926 million from 2015 to 2016 and increased as a percentage of Google segment revenues. These increases were primarily due to the growth in revenues from Google Play, primarily relating to in-app purchases (revenues which we recognize net of payout to developers), hardware sales, and Google Cloud offerings. Our Google other revenues increased $1,104 million from 2014 to 2015 and increased as a percentage of Google segment revenues. These increases were primarily due to the growth of our sales of digital content products in the Google Play store, primarily apps (revenues which we recognize net of payout to partners). In addition, there was an increase in revenues from service fees received for Google Cloud offerings. These increases were partially offset by the general strengthening of the U.S. dollar compared to certain foreign currencies.
+
+  #2  dense=0.820  rrf=0.0291  | Google 2019 | text
+      section: ['FORM 10-K > ITEM 7. > Google advertising revenues > Google Cloud']
+      pages  : [38]
+      text   : Google Cloud revenues consist primarily of revenues from Cloud offerings, including - Google Cloud Platform (GCP), which includes infrastructure, data and analytics, and other services - G Suite productivity tools; and - other enterprise cloud services. Our Google Cloud revenues increased $3,080 million from 2018 to 2019 and increased $1,782 million from 2017 to 2018. The growth during both periods was primarily driven by continued strength in our GCP and G Suite offerings. Our infrastructure and our data and analytics platform products have been the largest drivers of growth in GCP.
+
+  #3  dense=0.735  rrf=0.0291  | Google 2023 | text
+      section: FORM 10-K > ITEM 7. > Revenues > Google subscriptions, platforms, and devices
+      pages  : [37]
+      text   : increase in Google subscriptions, platforms, and devices revenues was adversely affected by the unfavorable effect of foreign currency exchange rates. Google Cloud revenues increased $6.8 billion from 2022 to 2023. Growth was primarily driven by Google Cloud Platform followed by Google Workspace offerings. Google Cloud's infrastructure and platform services were the largest drivers of growth in Google Cloud Platform.
+
+================================================================================
+[16] Q: What was Intel's total assets on the balance sheet?
+================================================================================
+
+  #1  dense=0.680  rrf=0.0208  | Intel 2017 | table
+      section: Note 18: Retirement Benefit Plans > BENEFIT OBLIGATION AND PLAN ASSETS FOR PENSION BENEFITS PLANS
+      pages  : [106]
+      text   : The following table shows BENEFIT OBLIGATION AND PLAN ASSETS FOR PENSION BENEFITS PLANS data for Intel 2017:
+Columns: 2017, 2016
+ -- 2017: 3,640, 2016: 3,130
+Service cost -- 2017: 84, 2016: 130
+Interest cost -- 2017: 117, 2016: 106
+Actuarial (gain) loss -- 2017: 24, 2016: 575
+Currency exchange rate changes -- 2017: 281, 2016: (80)
+Plan curtailments -- 2017: (162), 2016: 17
+Plan settlements -- 2017: (101), 2016: (202)
+Other -- 2017: (41), 2016: (36)
+Ending projected benefit obligation 1 -- 2017: 3,842, 2016: 3,640
+ -- 2017: 1,696, 2016: 1,638
+Actual return on plan assets -- 2017: 136, 2016: 81
+Employer contributions -- 2017: 471, 2016: 416
+Currency exchange rate changes -- 2017: 124, 2016: (26)
+Plan settlements -- 2017: (101), 2016: (202)
+Benefits paid to plan participants -- 2017: (42), 2016: (84)
+Other -- 2017: 3, 2016: (127)
+Ending fair value of plan assets 2 -- 2017: 2,287, 2016: 1,696
+Amounts recognized in the consolidated balance sheet 3 -- 2017: 1,555, 2016: 1,944
+Accumulated other comprehensive loss (income), before tax 4 -- 2017: 1,257, 2016: 1,603
+Accumulated benefit obligation 5 -- 2017: 3,423, 2016: 2,976
+1 The split between U.S. and non-U.S. in the projected benefit obligation was 38% and 62%, respectively, as of December 30, 2017 and December 31, 2016.
+2 The split between the U.S. and non-U.S. in the fair value of plan assets was 49% and 51%, respectively, as of December 30, 2017 and 46% and 54%, respectively,
+3 Substantially all amounts recognized in the consolidated balance sheet are recorded in other long-term liabilities for all periods presented.
+4 The split between U.S. and non-U.S. in the accumulated other comprehensive loss (income), before tax, was 38% and 62%, respectively, as of December 30, 2017
+5 All plans had accumulated benefit obligations and projected benefit obligations in excess of plan assets for all periods presented.
+
+  #2  dense=0.655  rrf=0.0186  | Intel 2016 | table
+      section: FORM 10-K > ITEM 8. > Note 17: Derivative Financial Instruments > Amounts Offset in the Consolidated Balance Sheets
+      pages  : [105]
+      text   : The following table shows Amounts Offset in the Consolidated Balance Sheets data for Intel 2016:
+Columns: Gross Recognized Amounts 433 1,018, Gross Amounts Offset in the Balance Sheet, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018, Gross Amounts Not Offset in Financial Instruments, the Balance Sheet (368), Cash and Non-Cash Collateral Received or Pledged (1,018), Net Amount, 23
+ -- Gross Recognized Amounts 433 1,018: 1,451, Gross Amounts Offset in the Balance Sheet: -, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: 1,451, Gross Amounts Not Offset in Financial Instruments: (368), the Balance Sheet (368): (1,060), Net Amount: 23
+Liabilities:
+Derivative liabilities subject to master netting arrangements -- Gross Recognized Amounts 433 1,018: 588, Gross Amounts Offset in the Balance Sheet: -, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: 588, Gross Amounts Not Offset in Financial Instruments: (368), Cash and Non-Cash Collateral Received or Pledged (1,018): (201), Net Amount: 19
+ -- Gross Recognized Amounts 433 1,018: 588, Gross Amounts Offset in the Balance Sheet: -, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: 588, Gross Amounts Not Offset in Financial Instruments: (368), Cash and Non-Cash Collateral Received or Pledged (1,018): (201), Net Amount: 19
+ -- Gross Amounts Offset in the Balance Sheet: December 26, 2015
+ -- December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: Gross Amounts Not Offset in
+ -- December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: the Balance Sheet
+ -- Gross Recognized Amounts 433 1,018: Gross, the Balance Sheet (368): Cash and
+ -- Gross Recognized Amounts 433 1,018: Amounts, Gross Amounts Offset in the Balance Sheet: Net Amounts, the Balance Sheet (368): Non-Cash
+ -- Gross Recognized Amounts 433 1,018: Gross, Gross Amounts Offset in the Balance Sheet: Offset in the, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: Presented in, the Balance Sheet (368): Collateral
+ -- Gross Recognized Amounts 433 1,018: Amounts, Gross Amounts Offset in the Balance Sheet: Balance, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: the Balance, Gross Amounts Not Offset in Financial Instruments: Financial, the Balance Sheet (368): Received or
+(In Millions) -- Gross Recognized Amounts 433 1,018: Recognized, Gross Amounts Offset in the Balance Sheet: Sheet, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: Sheet, Gross Amounts Not Offset in Financial Instruments: Instruments, the Balance Sheet (368): Pledged, Cash and Non-Cash Collateral Received or Pledged (1,018): Net Amount
+Assets:
+Derivative assets subject to master netting arrangements -- Gross Recognized Amounts 433 1,018: 482, Gross Amounts Offset in the Balance Sheet: -, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: 482, Gross Amounts Not Offset in Financial Instruments: (201), Cash and Non-Cash Collateral Received or Pledged (1,018): (188), Net Amount: 93
+Reverse repurchase agreements -- Gross Recognized Amounts 433 1,018: 3,368, Gross Amounts Offset in the Balance Sheet: -, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: 3,368, Gross Amounts Not Offset in Financial Instruments: -, the Balance Sheet (368): (3,368), Net Amount: -
+ -- Gross Recognized Amounts 433 1,018: 3,850, Gross Amounts Offset in the Balance Sheet: -, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: 3,850, Gross Amounts Not Offset in Financial Instruments: (201), the Balance Sheet (368): (3,556), Net Amount: 93
+Liabilities:
+Derivative liabilities subject to master netting arrangements -- Gross Recognized Amounts 433 1,018: 242, Gross Amounts Offset in the Balance Sheet: -, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: 242, Gross Amounts Not Offset in Financial Instruments: (201), Cash and Non-Cash Collateral Received or Pledged (1,018): (27), Net Amount: 14
+ -- Gross Recognized Amounts 433 1,018: 242, Gross Amounts Offset in the Balance Sheet: -, December 31, 2016 Net Amounts Presented in the Balance Sheet 433 1,018: 242, Gross Amounts Not Offset in Financial Instruments: (201), Cash and Non-Cash Collateral Received or Pledged (1,018): (27), Net Amount: 14
+
+  #3  dense=0.735  rrf=0.0185  | Intel 2019 | table
+      section: RETIREMENT BENEFIT PLANS > Amounts recognized in the Consolidated Balance Sheets
+      pages  : [106]
+      text   : The following table shows Amounts recognized in the Consolidated Balance Sheets data for Intel 2019:
+Columns: 2019, 2018
+Accumulated benefit obligation -- 2019: 3,862, 2018: 1,965
+Plan assets -- 2019: 2,654, 2018: 1,106
+Projected benefit obligation -- 2019: 4,284, 2018: 2,232
+Plan assets -- 2019: 2,654, 2018: 1,106
+
+================================================================================
+[17] Q: What was Intel's research and development expense?
+================================================================================
+
+  #1  dense=0.672  rrf=0.0231  | Intel 2025 | text
+      section: Note 3 : > Operating Segments
+      pages  : [88]
+      text   : services revenue and intersegment expenses primarily between Altera and our Intel Foundry segment during the periods in which we consolidated Altera. We allocate operating expenses from our sales and marketing group to the Intel Products operating segments and allocate substantially all our operating expenses from our general and administration groups to our reportable operating segments. We estimate that the substantial majority of our consolidated depreciation expense was incurred by Intel Foundry in 2025, 2024 and 2023. Intel Foundry depreciation expense is substantially included in overhead cost pools and then combined with other costs, and subsequently absorbed into inventory as each product passes through the manufacturing process and is sold to Intel Products or other customers. As a result, it is impracticable to determine the total depreciation expense included as a component of each Intel Products operating segment's operating income (loss). We do not allocate the following corporate operating expenses to our operating segments: ▪ restructuring and other charges; ▪ share-based compensation; and ▪ certain acquisition-related costs, including amortization and any impairment of acquisition-related intangibles and goodwill.
+
+  #2  dense=0.690  rrf=0.0207  | Intel 2016 | table
+      section: FORM 10-K > ITEM 7. > Operating Expenses
+      pages  : [43]
+      text   : The following table shows Operating Expenses data for Intel 2016:
+Columns: 2016, 2015, 2014
+Research and development (R&D) -- 2016: 12,740, 2015: 12,128, 2014: 11,537
+Marketing, general and administrative (MG&A) -- 2016: 8,397, 2015: 7,930, 2014: 8,136
+R&D and MG&A as percentage of net revenue -- 2016: 35.6%, 2015: 36.2%, 2014: 35.2%
+Restructuring and other charges -- 2016: 1,886, 2015: 354, 2014: 295
+Amortization of acquisition-related intangibles -- 2016: 294, 2015: 265, 2014: 294
+
+  #3  dense=0.645  rrf=0.0198  | Intel 2017 | table
+      section: Note 10: Acquisitions and Divestitures > Estimated Useful Life
+      pages  : [91]
+      text   : The following table shows Estimated Useful Life data for Intel 2017:
+(In Millions)
+Developed technology | $ | 2,346 | 9
+Customer relationships | 713 | 12
+Brands | 64 | 10
+3,123
+In-process research and development | 1,359
+1,359
+
+================================================================================
+[18] Q: What was Meta's total costs and expenses?
+================================================================================
+
+  #1  dense=0.656  rrf=0.0301  | META 2019 | table
+      section: FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Quarterly Results of Operations Data
+      pages  : [66]
+      text   : The following table shows Quarterly Results of Operations Data data for META 2019:
+Columns: 2019, 2019, 2019, 2019, 2018, 2018, 2018, 2018
+ -- 2019: (in millions)
+Cost of revenue -- 2019: 87, 2018: 56
+Research and development -- 2019: 723, 2018: 718
+Marketing and sales -- 2019: 113, 2018: 109
+General and administrative -- 2019: 87, 2018: 72
+Total share-based compensation expense -- 2019: 1,010, 2018: 955
+Share-based compensation expense included in costs and expenses (as a percentage of revenue)
+
+  #2  dense=0.647  rrf=0.0266  | META 2018 | table
+      section: Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Results of Operations
+      pages  : [55]
+      text   : The following table shows Results of Operations data for META 2018:
+Columns: 2018, 2017, 2016
+ -- 2017: (in millions)
+Consolidated Statements of Income Data:
+Revenue -- 2018: 55,838, 2017: 40,653, 2016: 27,638
+Costs and expenses:
+Cost of revenue -- 2018: 9,355, 2017: 5,454, 2016: 3,789
+Research and development -- 2018: 10,273, 2017: 7,754, 2016: 5,919
+Marketing and sales -- 2018: 7,846, 2017: 4,725, 2016: 3,772
+General and administrative -- 2018: 3,451, 2017: 2,517, 2016: 1,731
+Total costs and expenses -- 2018: 30,925, 2017: 20,450, 2016: 15,211
+Income from operations -- 2018: 24,913, 2017: 20,203, 2016: 12,427
+Interest and other income (expense), net -- 2018: 448, 2017: 391, 2016: 91
+Income before provision for income taxes -- 2018: 25,361, 2017: 20,594, 2016: 12,518
+Provision for income taxes -- 2018: 3,249, 2017: 4,660, 2016: 2,301
+Net income -- 2018: 22,112, 2017: 15,934, 2016: 10,217
+Share-based compensation expense included in costs and expenses:
+
+  #3  dense=0.635  rrf=0.0262  | META 2020 | table
+      section: FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Quarterly Results of Operations Data
+      pages  : [91]
+      text   : The following table shows Quarterly Results of Operations Data data for META 2020:
+Columns: 2020, 2020, 2020, 2020, 2019, 2019, 2019, 2019
+ -- 2020: (in millions)
+Cost of revenue -- 2020: 94, 2019: 87
+Research and development -- 2020: 999, 2019: 723
+Marketing and sales -- 2020: 149, 2019: 113
+General and administrative -- 2020: 93, 2019: 87
+Total share-based compensation expense -- 2020: 1,335, 2019: 1,010
+Share-based compensation expense included in costs and expenses (as a percentage of revenue)
+
+================================================================================
+[19] Q: What was Meta's cash and cash equivalents?
+================================================================================
+
+  #1  dense=0.697  rrf=0.0328  | META 2019 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF CASH FLOWS > Cash and Cash Equivalents and Marketable Securities
+      pages  : [93]
+      text   : The following table shows Cash and Cash Equivalents and Marketable Securities data for META 2019:
+Columns: 2019, 2018
+Cash and cash equivalents:
+Cash -- 2019: 4,735, 2018: 2,713
+Money market funds -- 2019: 12,787, 2018: 6,792
+U.S. government securities -- 2019: 815, 2018: 90
+U.S. government agency securities -- 2019: 444, 2018: 54
+Certificate of deposits and time deposits -- 2019: 217, 2018: 369
+Corporate debt securities -- 2019: 81, 2018: 1
+Total cash and cash equivalents -- 2019: 19,079, 2018: 10,019
+Marketable securities:
+U.S. government securities -- 2019: 18,679, 2018: 13,836
+U.S. government agency securities -- 2019: 6,712, 2018: 8,333
+Corporate debt securities -- 2019: 10,385, 2018: 8,926
+Total marketable securities -- 2019: 35,776, 2018: 31,095
+Total cash and cash equivalents and marketable securities -- 2019: 54,855, 2018: 41,114
+
+  #2  dense=0.643  rrf=0.0320  | META 2016 | table
+      section: Item 8. Financial Statements and Supplementary Data > Note 3. Cash and Cash Equivalents, and Marketable Securities
+      pages  : [72]
+      text   : The following table shows Note 3. Cash and Cash Equivalents, and Marketable Securities data for META 2016:
+Columns: 2016, 2015
+Cash and cash equivalents:
+Cash -- 2016: 1,364, 2015: 1,703
+Money market funds -- 2016: 5,409, 2015: 2,409
+U.S. government securities -- 2016: 1,463, 2015: 597
+U.S. government agency securities -- 2016: 667, 2015: 145
+Corporate debt securities -- 2016: -, 2015: 53
+Total cash and cash equivalents -- 2016: 8,903, 2015: 4,907
+Marketable securities:
+U.S. government securities -- 2016: 7,130, 2015: 5,948
+U.S. government agency securities -- 2016: 7,411, 2015: 4,475
+Corporate debt securities -- 2016: 6,005, 2015: 3,104
+Total marketable securities -- 2016: 20,546, 2015: 13,527
+Total cash and cash equivalents, and marketable securities -- 2016: 29,449, 2015: 18,434
+The following table classifies our marketable securities by contractual maturities (in millions):
+
+  #3  dense=0.649  rrf=0.0318  | META 2018 | table
+      section: Item 8. Financial Statements and Supplementary Data > Note 3. Cash and Cash Equivalents, and Marketable Securities
+      pages  : [92]
+      text   : The following table shows Note 3. Cash and Cash Equivalents, and Marketable Securities data for META 2018:
+Columns: 2018, 2017
+Cash and cash equivalents:
+Cash -- 2018: 2,713, 2017: 2,212
+Money market funds -- 2018: 6,792, 2017: 5,268
+U.S. government securities -- 2018: 90, 2017: 66
+U.S. government agency securities -- 2018: 54, 2017: 25
+Certificate of deposits and time deposits -- 2018: 369, 2017: 440
+Corporate debt securities -- 2018: 1, 2017: 68
+Total cash and cash equivalents -- 2018: 10,019, 2017: 8,079
+Marketable securities:
+U.S. government securities -- 2018: 13,836, 2017: 12,766
+U.S. government agency securities -- 2018: 8,333, 2017: 10,944
+Corporate debt securities -- 2018: 8,926, 2017: 9,922
+Total marketable securities -- 2018: 31,095, 2017: 33,632
+Total cash and cash equivalents, and marketable securities -- 2018: 41,114, 2017: 41,711
+The following table classifies our marketable securities by contractual maturities (in millions):
+
+================================================================================
+[20] Q: What was Nvidia's gross profit?
+================================================================================
+
+  #1  dense=0.757  rrf=0.0323  | Nvidia 2017 | table
+      section: ITEM 15. EXHIBITS, FINANCIAL STATEMENT SCHEDULE > Note 18 - Quarterly Summary (Unaudited) > Fiscal Year 2016
+      pages  : [97]
+      text   : The following table shows Fiscal Year 2016 data for Nvidia 2017:
+Columns: 2016, 2015, 2015, 2015
+Revenue -- 2016: 1,401, 2015: 1,151
+Cost of revenue -- 2016: 610, 2015: 498
+Gross profit -- 2016: 791, 2015: 653
+Net income -- 2016: 207, 2015: 134
+Net income per share:
+Basic -- 2016: 0.38, 2015: 0.24
+Diluted -- 2016: 0.35, 2015: 0.24
+ -- 2016: 92
+
+  #2  dense=0.754  rrf=0.0318  | Nvidia 2018 | table
+      section: ITEM 15. EXHIBITS, FINANCIAL STATEMENT SCHEDULE > Note 17 - Quarterly Summary (Unaudited) > Fiscal Year 2017
+      pages  : [123]
+      text   : The following table shows Fiscal Year 2017 data for Nvidia 2018:
+Columns: 2017, 2016, 2016, 2016
+Revenue -- 2017: 2,173, 2016: 1,305
+Cost of revenue -- 2017: 870, 2016: 554
+Gross profit -- 2017: 1,303
+Net income (1) -- 2017: 655, 2016: 208
+Net income per share (1):
+Basic -- 2017: 1.18, 2016: 0.39
+Diluted -- 2017: 0.99, 2016: 0.35
+(1)
+
+  #3  dense=0.753  rrf=0.0310  | Nvidia 2019 | table
+      section: ITEM 15. EXHIBITS, FINANCIAL STATEMENT SCHEDULE > Note 17 - Quarterly Summary (Unaudited) > Fiscal Year 2019
+      pages  : [117]
+      text   : The following table shows Fiscal Year 2019 data for Nvidia 2019:
+Columns: 2019, 2018, 2018, 2018
+Revenue -- 2019: 2,205, 2018: 3,207
+Cost of revenue -- 2019: 998, 2018: 1,139
+Gross profit -- 2019: 1,207, 2018: 2,068
+Net income (1) -- 2019: 567, 2018: 1,244
+Net income per share (1):
+Basic -- 2019: 0.93, 2018: 2.05
+Diluted -- 2019: 0.92, 2018: 1.98
+(1)
+
+================================================================================
+[21] Q: What was Nvidia's cash and cash equivalents?
+================================================================================
+
+  #1  dense=0.718  rrf=0.0320  | Nvidia 2019 | table
+      section: ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS > Liquidity and Capital Resources
+      pages  : [56]
+      text   : The following table shows Liquidity and Capital Resources data for Nvidia 2019:
+Columns: 2019, 2018
+Cash and cash equivalents -- 2018: 4,002
+Marketable securities -- 2019: 6,640, 2018: 3,106
+Cash, cash equivalents, and marketable securities -- 2019: 7,422, 2018: 7,108
+
+  #2  dense=0.705  rrf=0.0320  | Nvidia 2020 | table
+      section: ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS > Liquidity and Capital Resources
+      pages  : [53]
+      text   : The following table shows Liquidity and Capital Resources data for Nvidia 2020:
+Columns: 2020, 2019
+Cash and cash equivalents -- 2020: 10,896
+Marketable securities -- 2020: 1, 2019: 6,640
+Cash, cash equivalents, and marketable securities -- 2020: 10,897, 2019: 7,422
+
+  #3  dense=0.715  rrf=0.0320  | Nvidia 2017 | table
+      section: ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS OF > Liquidity and Capital Resources
+      pages  : [40]
+      text   : The following table shows Liquidity and Capital Resources data for Nvidia 2017:
+Columns: 2017, 2016
+Cash and cash equivalents -- 2017: 1,766
+Marketable securities -- 2017: 5,032, 2016: 4,441
+Cash, cash equivalents, and marketable securities -- 2017: 6,798, 2016: 5,037
+
+================================================================================
+[22] Q: How much revenue did Apple generate in Greater China?
+================================================================================
+
+  #1  dense=0.692  rrf=0.0308  | Apple 2016 | text
+      section: ['Form 10-K > Item 7. > Segment Operating Performance > Greater China']
+      pages  : [29]
+      text   : The following table presents Greater China net sales information for 2016, 2015 and 2014 (dollars in millions): Greater China net sales decreased during 2016 compared to 2015 due primarily to lower net sales and unit sales of iPhone and the effect of weakness in foreign currencies relative to the U.S. dollar. Greater China experienced strong year-over-year increases in net sales during 2015 driven primarily by iPhone sales.
+
+  #2  dense=0.678  rrf=0.0303  | Apple 2018 | text
+      section: ['FORM 10-K > Item 7. > Segment Operating Performance > Greater China']
+      pages  : [29]
+      text   : The following table presents Greater China net sales information for 2018, 2017 and 2016 (dollars in millions): Greater China net sales increased during 2018 compared to 2017 due primarily to higher net sales of iPhone and Services. The strength in foreign currencies relative to the U.S. dollar had a favorable impact on Greater China net sales during 2018. Greater China net sales decreased during 2017 compared to 2016 due primarily to lower net sales of iPhone, partially offset by higher net sales of Services. The weakness in foreign currencies relative to the U.S. dollar had an unfavorable impact on Greater China net sales during 2017.
+
+  #3  dense=0.685  rrf=0.0290  | Apple 2016 | text
+      section: ['Form 10-K > Item 8. > Note 11 - Segment Information and Geographic Data']
+      pages  : [72, 73]
+      text   : gments for management reporting purposes. The following table shows information by reportable operating segment for 2016, 2015 and 2014 (in millions): A reconciliation of the Company's segment operating income to the Consolidated Statements of Operations for 2016, 2015 and 2014 The U.S. and China were the only countries that accounted for more than 10% of the Company's net sales in 2016, 2015 and 2014. There was no single customer that accounted for more than 10% of net sales in 2016, 2015 or 2014. Net sales for 2016, 2015 and 2014 and long-lived assets as of September 24, 2016 and September 26, 2015 are as follows (in millions): China includes Hong Kong. Long-lived assets located in China consist primarily of product tooling and manufacturing process equipment and assets related to retail stores and related infrastructure. Includes revenue from iTunes Store, App Store, Mac App Store, TV App Store, iBooks Store, Apple Music, AppleCare, Apple Pay, licensing and other services. (3) Includes sales of Apple TV, Apple Watch, Beats products, iPod and Apple-branded and third-party accessories.
+
+================================================================================
+[23] Q: What were Google's revenues by geography?
+================================================================================
+
+  #1  dense=0.749  rrf=0.0323  | Google 2019 | table
+      section: FORM 10-K > ITEM 7. > Revenues by Geography
+      pages  : [39]
+      text   : The following table shows Revenues by Geography data for Google 2019:
+Columns: 2018, 2019
+United States -- 2018: 46%, 2019: 46%
+EMEA -- 2018: 33%, 2019: 31%
+APAC -- 2018: 15%, 2019: 17%
+Other Americas -- 2018: 6%, 2019: 6%
+
+  #2  dense=0.721  rrf=0.0315  | Google 2020 | table
+      section: FORM 10-K > ITEM 7. > Revenues by Geography
+      pages  : [46]
+      text   : The following table shows Revenues by Geography data for Google 2020:
+Columns: 2019, 2020
+United States -- 2019: 46 %, 2020: 47 %
+EMEA -- 2019: 31 %, 2020: 30 %
+APAC -- 2019: 17 %, 2020: 18 %
+Other Americas -- 2019: 6 %, 2020: 5 %
+
+  #3  dense=0.743  rrf=0.0308  | Google 2016 | table
+      section: FORM 10-K > ITEM 7. > Consolidated Revenues by Geography
+      pages  : [41]
+      text   : The following table shows Consolidated Revenues by Geography data for Google 2016:
+Columns: 2014, 2015, 2016
+United States -- 2014: 45%, 2015: 46%, 2016: 47%
+United Kingdom -- 2014: 10%, 2015: 10%, 2016: 9%
+Rest of the world -- 2014: 45%, 2015: 44%, 2016: 44%
+
+================================================================================
+[24] Q: What were Intel's operating segments?
+================================================================================
+
+  #1  dense=0.676  rrf=0.0306  | Intel 2025 | text
+      section: Overview
+      pages  : [11]
+      text   : r IP and SoC development capabilities with our leading-edge manufacturing know-how to provide differentiated and full-service semiconductor solutions. We are a global leader in the design and manufacturing of CPUs and other semiconductor products. Our products are designed and marketed by our Intel Products business, which includes our CCG and DCAI operating segments, and are manufactured by our Intel Foundry operating segment and third-party suppliers. Our Intel Foundry operating segment also offers semiconductor design and manufacturing services to external customers. We leverage our talent, IP, manufacturing assets and other resources to run our business and execute our strategic priorities. We report our business results in three reportable segments: CCG, DCAI and Intel Foundry. In addition to these reportable segments, we present an "all other" category, which is not a reportable segment. On September 12, 2025, we completed the divestiture of 51% of Altera. As of that date, Altera's results of operations were no longer included in our consolidated or segment results. Altera's financial results were reported within our "all other" category for all periods presented through September 11, 2025.
+
+  #2  dense=0.683  rrf=0.0301  | Intel 2025 | text
+      section: Note 3 : > Operating Segments
+      pages  : [87]
+      text   : our business as follows: ▪ Intel Products: ▪ Client Computing Group (CCG) ▪ Data Center and AI (DCAI) ▪ Intel Foundry ▪ All Other: ▪ Mobileye ▪ Other CCG, DCAI and Intel Foundry qualify as reportable operating segments. When we enter into federal contracts, they are aligned to the sponsoring operating segment. The accounting policies applied to our segments follow those applied to Intel as a whole. A summary of the basis for which we report our operating segment revenues and operating margin is as follows: Intel Products: CCG and DCAI ▪ Segment revenue: consists of revenues from external customers. Our Intel Products operating segments represent most of Intel consolidated revenue and are derived from our principal products that incorporate various components and technologies, including a microprocessor and chipset, a stand-alone SoC, or a multichip package, which are based on Intel architecture. ▪ Segment expenses: consists of intersegment charges for product manufacturing and related services from Intel Foundry, external foundry and other manufacturing expenses, product development costs, allocated expenses as described below and direct operating expenses.
+
+  #3  dense=0.667  rrf=0.0293  | Intel 2022 | text
+      section: Note 3 : > Operating Segments
+      pages  : [90]
+      text   : components and technologies, including a microprocessor and chipset, a stand-alone SoC, or a multichip package, which are based on Intel architecture. CCG, DCAI, NEX and AXG are our reportable operating segments. Mobileye, and IFS do not meet the quantitative thresholds to qualify as reportable operating segments; however, we have elected to disclose the results of these non-reportable operating segments. AXG revenue includes integrated graphics royalties from our CCG and NEX operating segments and are recorded as if the sales or transfers were to third parties at prices that approximate market-based selling prices. When we enter into federal contracts, they are aligned to the sponsoring operating segment. We have sales and marketing, manufacturing, engineering, finance, and administration groups. Expenses for these groups are generally allocated to the operating segments.
+
+================================================================================
+[25] Q: What is Meta's Family of Apps revenue?
+================================================================================
+
+  #1  dense=0.704  rrf=0.0297  | META 2023 | text
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF CASH FLOWS > Supplemental cash flow data | FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 1. Summary of Significant Accounting Policies > Organization and Description of Business
+      pages  : [120, 121]
+      text   : See Accompanying Notes to Consolidated Financial Statements. META PLATFORMS, INC. We were incorporated in Delaware in July 2004. Our mission is to give people the power to build community and bring the world closer together. All of our products, including our apps, share the vision of helping to bring the metaverse to life. We report our financial results based on two reportable segments: Family of Apps (FoA) and Reality Labs (RL). The segment information aligns with how the chief operating decision maker (CODM), who is our chief executive officer (CEO), reviews and manages the business. We generate substantially all of our revenue from advertising.
+
+  #2  dense=0.704  rrf=0.0296  | META 2022 | text
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF CASH FLOWS > Supplemental cash flow data | FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 1. Summary of Significant Accounting Policies > Organization and Description of Business
+      pages  : [115, 116]
+      text   : See Accompanying Notes to Consolidated Financial Statements. META PLATFORMS, INC. We were incorporated in Delaware in July 2004. Our mission is to give people the power to build community and bring the world closer together. All of our products, including our apps, share the vision of helping to bring the metaverse to life. We report our financial results based on two reportable segments: Family of Apps (FoA) and Reality Labs (RL). The segment information aligns with how the chief operating decision maker (CODM), who is our Chief Executive Officer (CEO), reviews and manages the business. We generate substantially all of our revenue from advertising.
+
+  #3  dense=0.678  rrf=0.0282  | META 2021 | text
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF CASH FLOWS > Supplemental cash flow data | FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 1. Summary of Significant Accounting Policies > Organization and Description of Business
+      pages  : [113, 114]
+      text   : See Accompanying Notes to Consolidated Financial Statements. META PLATFORMS, INC. We were incorporated in Delaware in July 2004. In October 2021, we changed our corporate name from Facebook, Inc. to Meta Platforms, Inc. Our mission is to give people the power to build community and bring the world closer together. All of our products, including our apps, share the vision of helping to bring the metaverse to life. We report our financial results based on two reportable segments: Family of Apps (FoA) and Reality Labs (RL). The segment information aligns with how the chief operating decision maker (CODM), who is our Chief Executive Officer (CEO), reviews and manages the business. We generate substantially all of our revenue from advertising.
+
+================================================================================
+[26] Q: What was Nvidia's Data Center segment revenue?
+================================================================================
+
+  #1  dense=0.743  rrf=0.0320  | Nvidia 2023 | text
+      section: ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS > Market Platform Highlights
+      pages  : [39]
+      text   : Data Center revenue for fiscal year 2023 was $15.01 billion, up 41% from fiscal year 2022. The strong growth in Data Center revenue was influenced by hyperscaler and cloud usage of our accelerated computing platforms and networking portfolio. In Data Center, we announced the NVIDIA Hopper GPU architecture and began ramping the first products based on the architecture, including the NVIDIA H100 Tensor Core GPU. The NVIDIA OVX server reference design launched for digital twins and other Omniverse applications. We completed two new large language models for cloud AI services - NVIDIA NeMo LLM and NVIDIA BioNeMo LLM. Additionally, we announced the NVIDIA Spectrum- 4 end-to-end 400Gbps networking platform and began shipping Quantum-2 in December 2022. Gaming revenue for fiscal year 2023 was $9.07 billion, down 27% from fiscal year 2022. Gaming results were influenced by the rapid change in economic conditions causing excess inventory with our channel partners. We introduced pricing programs for our channel partners and started undershipping GPU supply to the partners so that we could lower inventory in the channel.
+
+  #2  dense=0.726  rrf=0.0313  | Nvidia 2024 | text
+      section: Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Market Platform Highlights
+      pages  : [38]
+      text   : Data Center revenue for fiscal year 2024 was $47.5 billion, up 217% from fiscal year 2023. In Data Center, we launched AI inference platforms that combine our full-stack inference software with NVIDIA Ada, NVIDIA Hopper and NVIDIA Grace Hopper processors optimized for generative AI, LLMs and other AI workloads. We introduced NVIDIA DGX Cloud and AI Foundations to help businesses create and operate custom large language models and generative AI models. As AV algorithms move to video transformers, and more cars are equipped with cameras, we expect NVIDIA's automotive data center processing demand to grow significantly. We estimate that in fiscal year 2024, approximately 40% of Data Center revenue was for AI inference. In the fourth quarter of fiscal year 2024, large cloud providers represented more than half of our Data Center revenue, supporting both internal workloads and external customers. We announced NVIDIA Spectrum-X, an accelerated networking platform for AI. Gaming revenue for fiscal year 2024 was $10.4 billion, up 15% from fiscal year 2023. In Gaming, we launched the GeForce RTX 4060 and 4070 GPUs based on the NVIDIA Ada Lovelace architecture.
+
+  #3  dense=0.709  rrf=0.0296  | Nvidia 2025 | text
+      section: Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Operating Income by Reportable Segments > ($ in millions)
+      pages  : [43]
+      text   : Compute & Networking revenue - The year over year increase was due to strong demand for our accelerated computing and AI solutions. Revenue from Data Center computing grew 162% driven primarily by demand for our Hopper computing platform used for large language models, recommendation engines, and generative AI applications. Revenue from Data Center networking grew 51% driven by Ethernet for AI revenue, which includes Spectrum-X end-to-end ethernet platform. Graphics revenue - The year over year increase was driven by sales of our GeForce RTX 40 Series GPUs. Reportable segment operating income - The year over year increase in Compute & Networking segment operating income was driven by growth in revenue. The year over year decrease in Graphics segment operating income was driven by an increase of 44% in segment operating expenses, partially offset by growth in revenue. All Other operating loss - The year over year increase was due to an increase in stock-based compensation expense reflecting employee growth and compensation increases.
+
+================================================================================
+[27] Q: What is Apple's revenue recognition policy?
+================================================================================
+
+  #1  dense=0.719  rrf=0.0233  | Apple 2018 | text
+      section: FORM 10-K > Item 7. > Critical Accounting Policies and Estimates
+      pages  : [36]
+      text   : ve evidence that the sales price is fixed or determinable, such as a successful history of collection, without concession, on comparable arrangements. The Company recognizes revenue from the sale of hardware products, software bundled with hardware that is essential to the functionality of the hardware and third-party digital content sold on the iTunes Store in accordance with general revenue recognition accounting guidance. The Company recognizes revenue in accordance with industry-specific software accounting guidance for the following types of sales transactions: (i) standalone sales of software products, (ii) sales of software upgrades and (iii) sales of software bundled with hardware not essential to the functionality of the hardware. For multi-element arrangements that include hardware products containing software essential to the hardware product's functionality, undelivered software elements that relate to the hardware product's essential software and/or undelivered non-software services, the Company allocates revenue to all deliverables based on their relative selling prices.
+
+  #2  dense=0.719  rrf=0.0231  | Apple 2017 | text
+      section: FORM 10-K > Item 7. > Critical Accounting Policies and Estimates
+      pages  : [36]
+      text   : ve evidence that the sales price is fixed or determinable, such as a successful history of collection, without concession, on comparable arrangements. The Company recognizes revenue from the sale of hardware products, software bundled with hardware that is essential to the functionality of the hardware and third-party digital content sold on the iTunes Store in accordance with general revenue recognition accounting guidance. The Company recognizes revenue in accordance with industry-specific software accounting guidance for the following types of sales transactions: (i) standalone sales of software products, (ii) sales of software upgrades and (iii) sales of software bundled with hardware not essential to the functionality of the hardware. For multi-element arrangements that include hardware products containing software essential to the hardware product's functionality, undelivered software elements that relate to the hardware product's essential software and/or undelivered non-software services, the Company allocates revenue to all deliverables based on their relative selling prices.
+
+  #3  dense=0.719  rrf=0.0229  | Apple 2016 | text
+      section: Form 10-K > Item 7. > Critical Accounting Policies and Estimates
+      pages  : [36]
+      text   : ve evidence that the sales price is fixed or determinable, such as a successful history of collection, without concession, on comparable arrangements. The Company recognizes revenue from the sale of hardware products, software bundled with hardware that is essential to the functionality of the hardware and third-party digital content sold on the iTunes Store in accordance with general revenue recognition accounting guidance. The Company recognizes revenue in accordance with industry-specific software accounting guidance for the following types of sales transactions: (i) standalone sales of software products, (ii) sales of software upgrades and (iii) sales of software bundled with hardware not essential to the functionality of the hardware. For multi-element arrangements that include hardware products containing software essential to the hardware product's functionality, undelivered software elements that relate to the hardware product's essential software and/or undelivered non-software services, the Company allocates revenue to all deliverables based on their relative selling prices.
+
+================================================================================
+[28] Q: What are Apple's deferred tax assets?
+================================================================================
+
+  #1  dense=0.752  rrf=0.0325  | Apple 2019 | table
+      section: FORM 10-K > Item 8. > Note 5 - Income Taxes > Deferred Tax Assets and Liabilities
+      pages  : [51]
+      text   : The following table shows Deferred Tax Assets and Liabilities data for Apple 2019:
+Columns: 2019, 2018
+Deferred tax assets:
+Amortization and depreciation -- 2019: 11,433, 2018: 137
+Accrued liabilities and other reserves -- 2019: 5,389, 2018: 3,151
+Deferred revenue -- 2019: 1,372, 2018: 1,141
+Share-based compensation -- 2019: 749, 2018: 513
+Unrealized losses -- 2019: -, 2018: 871
+Other -- 2019: 697, 2018: 797
+Total deferred tax assets, net -- 2019: 19,640, 2018: 6,610
+Deferred tax liabilities:
+Minimum tax on foreign earnings -- 2019: 10,809, 2018: -
+Earnings of foreign subsidiaries -- 2019: 330, 2018: 275
+Other -- 2019: 456, 2018: 501
+Total deferred tax liabilities -- 2019: 11,595, 2018: 776
+Net deferred tax assets/(liabilities) -- 2019: 8,045, 2018: 5,834
+
+  #2  dense=0.748  rrf=0.0318  | Apple 2018 | table
+      section: FORM 10-K > Item 8. > Note 4 - Income Taxes > Deferred Tax Assets and Liabilities
+      pages  : [58]
+      text   : The following table shows Deferred Tax Assets and Liabilities data for Apple 2018:
+Columns: 2018, 2017
+Deferred tax assets:
+Accrued liabilities and other reserves -- 2018: 3,151, 2017: 4,019
+Basis of capital assets -- 2018: 137, 2017: 1,230
+Deferred revenue -- 2018: 1,141, 2017: 1,521
+Deferred cost sharing -- 2018: -, 2017: 667
+Share-based compensation -- 2018: 513, 2017: 703
+Unrealized losses -- 2018: 871, 2017: -
+Other -- 2018: 797, 2017: 834
+Total deferred tax assets -- 2018: 6,610, 2017: 8,974
+Deferred tax liabilities:
+Earnings of foreign subsidiaries -- 2018: 275, 2017: 36,355
+Other -- 2018: 501, 2017: 207
+Total deferred tax liabilities -- 2018: 776, 2017: 36,562
+Net deferred tax assets/(liabilities) -- 2018: 5,834, 2017: (27,588)
+
+  #3  dense=0.750  rrf=0.0315  | Apple 2020 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 5 - Income Taxes > Deferred Tax Assets and Liabilities
+      pages  : [55]
+      text   : The following table shows Deferred Tax Assets and Liabilities data for Apple 2020:
+Columns: 2020, 2019
+Deferred tax assets:
+Amortization and depreciation -- 2020: 8,317, 2019: 11,645
+Accrued liabilities and other reserves -- 2020: 4,934, 2019: 5,196
+Lease liabilities -- 2020: 2,038, 2019: -
+Deferred revenue -- 2020: 1,638, 2019: 1,372
+Other -- 2020: 2,409, 2019: 2,174
+Total deferred tax assets -- 2020: 19,336, 2019: 20,387
+Less: Valuation allowance -- 2020: (1,041), 2019: (747)
+Total deferred tax assets, net -- 2020: 18,295, 2019: 19,640
+Deferred tax liabilities:
+Minimum tax on foreign earnings -- 2020: 7,045, 2019: 10,809
+Right-of-use assets -- 2020: 1,862, 2019: -
+Unrealized gains -- 2020: 526, 2019: 186
+Other -- 2020: 705, 2019: 600
+Total deferred tax liabilities -- 2020: 10,138, 2019: 11,595
+Net deferred tax assets -- 2020: 8,157, 2019: 8,045
+
+================================================================================
+[29] Q: What is Google's stock-based compensation expense?
+================================================================================
+
+  #1  dense=0.756  rrf=0.0313  | Google 2016 | table
+      section: FORM 10-K > ITEM 8. > Note 12. Stockholders' Equity > Stock-Based Compensation
+      pages  : [104]
+      text   : The following table shows Stock-Based Compensation data for Google 2016:
+Columns: 2014, 2015, 2016
+Cost of revenues -- 2014: 535, 2015: 806, 2016: 1,157
+Research and development -- 2014: 2,200, 2015: 2,687, 2016: 3,354
+Sales and marketing -- 2014: 715, 2015: 899, 2016: 1,078
+General and administrative -- 2014: 725, 2015: 861, 2016: 1,282
+Discontinued operations -- 2014: 104, 2015: 0, 2016: 0
+Total stock-based compensation expense -- 2014: 4,279, 2015: 5,253, 2016: 6,871
+
+  #2  dense=0.724  rrf=0.0299  | Google 2016 | text
+      section: ['FORM 10-K > ITEM 7. > Stock-Based Compensation']
+      pages  : [49]
+      text   : The following table presents stock-based compensation expense for awards we expect to settle in equity (in Stock-based compensation related to awards we expected to settle in equity increased $1,500 million from 2015 to 2016 and $1,028 million from 2014 to 2015. These increases were primarily driven by headcount growth. We estimate stock-based compensation expense related to awards we expect to settle in equity to be approximately $6.3 billion in 2017 and $8.3 billion thereafter related to stock-based awards outstanding as of December 31, 2016. These estimates do not include expense related to stock-based awards granted after December 31, 2016.
+
+  #3  dense=0.722  rrf=0.0290  | Google 2016 | table
+      section: FORM 10-K > ITEM 7. > Stock-Based Compensation
+      pages  : [49]
+      text   : The following table shows Stock-Based Compensation data for Google 2016:
+Columns: 2014, 2015, 2016
+Stock-based compensation -- 2014: 4,175, 2015: 5,203, 2016: 6,703
+Stock-based compensation as a percentage of revenues -- 2014: 6.3%, 2015: 6.9%, 2016: 7.4%
+
+================================================================================
+[30] Q: What is Intel's goodwill balance?
+================================================================================
+
+  #1  dense=0.673  rrf=0.0293  | Intel 2024 | text
+      section: ['Note 11 : Goodwill > Transfers']
+      pages  : [106]
+      text   : er of 2024, as a result of modifying our segment reporting, we reallocated goodwill among our affected reporting units on a relative fair value basis. We performed a quantitative goodwill impairment assessment for each of our reporting units immediately before and after our business reorganization. We concluded, based on our pre-reorganization impairment test, that goodwill was not impaired. As a result of our post-reorganization impairment test, we recognized a non-cash goodwill impairment loss of $222 million within restructuring and other in the first quarter of 2024 related to our Intel Foundry reporting unit, as the estimated fair value of the new reporting unit was lower than the assigned carrying value, which includes substantially all of our allocated property, plant, and equipment. The Intel Foundry reporting unit has no remaining goodwill. At the conclusion of our impairment assessment performed during the first quarter of 2024, the fair value substantially exceeded the carrying value for all remaining reporting units.
+
+  #2  dense=0.645  rrf=0.0275  | Intel 2017 | text
+      section: ['Note 10: Acquisitions and Divestitures > Mobileye']
+      pages  : [90, 91]
+      text   : generated from the combination of Intel and Mobileye. Substantially all of the goodwill recognized is not expected to be deductible for tax purposes. The goodwill recognized from the acquisition is included within "all other." The identified intangible assets assumed in the acquisition of Mobileye were recognized as follows:
+
+  #3  dense=0.631  rrf=0.0269  | Intel 2025 | text
+      section: Report of Independent Registered Public Accounting Firm > Description of the
+      pages  : [71]
+      text   : At December 27, 2025, the balance of the Company's goodwill was $23.9 billion. The goodwill attributed to the Mobileye reporting unit was $8.2 billion and represented 3.9% of total assets. As discussed in "Note 2: Accounting Policies" within the consolidated financial statements, goodwill is assessed at the reporting unit level in the fourth quarter of each year, or more frequently if indicators of potential impairment exist. The assessment may include both qualitative and quantitative evaluations. If it is determined, based on the qualitative assessment, that it is more likely than not that the fair value of the unit is less than its carrying amount, a quantitative goodwill impairment test is performed. As discussed in "Note 11: Goodwill" to the consolidated financial statements, the Company identified certain impairment indicators in the three months ended December 27, 2025 which required further quantitative analysis. As a result of this assessment, no goodwill impairment charges related to the Mobileye reporting unit were recorded.
+
+================================================================================
+[31] Q: What is Meta's lease liability maturity schedule?
+================================================================================
+
+  #1  dense=0.636  rrf=0.0267  | META 2024 | text
+      section: FORM 10-K > Item 15. Exhibit and Financial Statement Schedules
+      pages  : [153, 154]
+      text   : All schedules have been omitted because they are not required, not applicable, not present in amounts sufficient to require submission of the schedule, or the required information is otherwise included. thereto). Certificate. Certificate. between Meta Platforms, Inc. and U.S. Association, as trustee. August 9, 2022, between Meta Platforms, Inc. and U.S. Bank Trust Company, National Association, as trustee. of May 3, 2023, by and between Meta Platforms, Inc. and U.S. Bank Trust Company, National Association, as trustee. August 9, 2024, by and between Meta Platforms, Inc. and U.S. Bank Trust Company, National Association, as trustee. 2012 Equity Incentive Plan, as amended. Third Amendment to the 2012 Equity Incentive Plan. Incentive Plan. agreements. 2012 Equity Incentive Plan forms of award agreements (Additional Forms). agreements (Additional Forms). agreements (Additional Forms) . agreements (Additional Forms). agreements (Additional Forms). agreements (Additional Forms). agreements (Additional Forms). effective January 1, 2023. January 27, 2012, between Registrant and Mark Zuckerberg. Registrant and Christopher K. Cox. between Registrant and Javier Olivan. between Registrant and Andrew Bosworth.
+
+  #2  dense=0.621  rrf=0.0260  | META 2025 | text
+      section: FORM 10-K > Item 15. Exhibit and Financial Statement Schedules
+      pages  : [159, 160]
+      text   : All schedules have been omitted because they are not required, not applicable, not present in amounts sufficient to require submission of the schedule, or the required information is otherwise included. thereto). Certificate. Certificate. between Meta Platforms, Inc. and U.S. Association, as trustee. August 9, 2022, between Meta Platforms, Inc. and U.S. Bank Trust Company, National Association, as trustee. of May 3, 2023, by and between Meta Platforms, Inc. and U.S. Bank Trust Company, National Association, as trustee. August 9, 2024, by and between Meta Platforms, Inc. and U.S. Bank Trust Company, National Association, as trustee. November 3, 2025, by and between Meta Platforms, Inc. and U.S. Bank Trust Company, National Association, as trustee. 2012 Equity Incentive Plan, as amended. Third Amendment to the 2012 Equity Incentive Plan. Incentive Plan. agreements . agreements (Additional Forms). agreements (Additional Forms). agreements (Additional Forms). agreements (Additional Forms). agreements. effective January 1, 2025. effective January 1, 2026. January 27, 2012, between Registrant and Mark Zuckerberg. Registrant and Christopher K. Cox. between Registrant and Javier Olivan.
+
+  #3  dense=0.642  rrf=0.0258  | META 2023 | text
+      section: FORM 10-K > Item 15. Exhibit and Financial Statement Schedules
+      pages  : [162, 163]
+      text   : All schedules have been omitted because they are not required, not applicable, not present in amounts sufficient to require submission of the schedule, or the required information is otherwise included. Incorporation. Certificate. Certificate. between Meta Platforms, Inc. and U.S. Association, as trustee. August 9, 2022, between Meta Platforms, Inc. and U.S. Bank Trust Company, National Association, as trustee. of May 3, 2023, by and between Meta Platforms, Inc. and U.S. Bank Trust Company, National Association, as trustee. 2012 Equity Incentive Plan, as amended. Third Amendment to the 2012 Equity Incentive Plan. agreements. agreements (Additional Forms). agreements (Additional Forms). agreements (Additional Forms). 2012 Equity Incentive Plan forms of award agreements (Additional Forms). agreements (Additional Forms). agreements (Additional Forms) . agreements (Additional Forms). agreements (Additional Forms). agreements (Additional Forms). effective January 1, 2023 . January 27, 2012, between Registrant and Mark Zuckerberg. Registrant and Christopher K. Cox . between Registrant and Javier Olivan. between Registrant and Andrew Bosworth. between Registrant and Susan Li. amended. Employee Directors .
+
+================================================================================
+[32] Q: What is Nvidia's inventory valuation policy?
+================================================================================
+
+  #1  dense=0.655  rrf=0.0204  | Nvidia 2020 | text
+      section: ITEM 1A. RISK FACTORS > Risks Related to Our Business, Industry and Partners > If we fail to estimate customer demand properly, our financial results could be harmed.
+      pages  : [27]
+      text   : We manufacture our GPUs and Tegra processors based on estimates of customer demand and requirements. We sell many of our products through a channel model, and our channel customers sell to retailers, distributors, and/or end customers. As a result, the decisions made by our channel partners, retailers, and distributors in response to changing market conditions and the changing demand for our products could impact our financial results. In order to have shorter shipment lead times and quicker delivery schedules for our customers, we may build inventories for anticipated periods of growth which do not occur, may build inventory anticipating demand that does not materialize, or may build inventory to serve what we believe is pent-up demand. Such decisions may and have resulted in prolonged channel sell-through, as we experienced with our mid-range gaming GPUs in fiscal year 2019. In estimating demand, we make multiple assumptions, any of which may prove to be incorrect.
+
+  #2  dense=0.655  rrf=0.0202  | Nvidia 2019 | text
+      section: ITEM 1A. RISK FACTORS > Risks Related to Our Business, Industry and Partners > If we fail to estimate customer demand properly, our financial results could be harmed.
+      pages  : [26]
+      text   : We manufacture our GPUs and Tegra processors based on estimates of customer demand and requirements. We sell many of our products through a channel model, and our channel customers sell to retailers, distributors, and/or end customers. As a result, the decisions made by our channel partners, retailers, and distributors in response to changing market conditions and the changing demand for our products could impact our financial results. In order to have shorter shipment lead times and quicker delivery schedules for our customers, we may build inventories for anticipated periods of growth which do not occur, may build inventory anticipating demand that does not materialize, or may build inventory to serve what we believe is pent-up demand. Such decisions may and have resulted in prolonged channel sell-through, as we experienced with our mid-range gaming GPUs in fiscal year 2019. In estimating demand, we make multiple assumptions, any of which may prove to be incorrect.
+
+  #3  dense=0.645  rrf=0.0199  | Nvidia 2024 | text
+      section: Item 15. Exhibit and Financial Statement Schedules > Note 13 - Commitments and Contingencies > Securities Class Action and Derivative Lawsuits
+      pages  : [79]
+      text   : on the dissemination of allegedly false and misleading statements related to channel inventory and the impact of cryptocurrency mining on GPU demand. The plaintiffs seek unspecified damages and other relief, including disgorgement of profits from the sale of NVIDIA stock and reform of unspecified corporate governance measures. This derivative matter is stayed pending the final resolution of In Re NVIDIA Corporation Securities Litigation action.
+
+================================================================================
+[33] Q: What risks does Apple face related to product introductions and transitions?
+================================================================================
+
+  #1  dense=0.705  rrf=0.0325  | Apple 2016 | text
+      section: Form 10-K > Item 1A. > Risk Factors > To remain competitive and stimulate customer demand, the Company must successfully manage frequent product introductions and transitions.
+      pages  : [12]
+      text   : Due to the highly volatile and competitive nature of the industries in which the Company competes, the Company must continually introduce new products, services and technologies, enhance existing products and services, effectively stimulate customer demand for new and upgraded products and successfully manage the transition to these new and upgraded products. The success of new product introductions depends on a number of factors including, but not limited to, timely and successful product development, market acceptance, the Company's ability to manage the risks associated with new product production ramp-up issues, the availability of application software for new products, the effective management of purchase commitments and inventory levels in line with anticipated product demand, the availability of products in appropriate quantities and at expected costs to meet anticipated demand and the risk that new products may have quality or other defects or deficiencies in the early stages of introduction. Accordingly, the Company cannot determine in advance the ultimate effect of new product introductions and transitions.
+
+  #2  dense=0.705  rrf=0.0325  | Apple 2017 | text
+      section: FORM 10-K > Item 1A. > Risk Factors > To remain competitive and stimulate customer demand, the Company must successfully manage frequent product introductions and transitions.
+      pages  : [12]
+      text   : Due to the highly volatile and competitive nature of the industries in which the Company competes, the Company must continually introduce new products, services and technologies, enhance existing products and services, effectively stimulate customer demand for new and upgraded products and successfully manage the transition to these new and upgraded products. The success of new product introductions depends on a number of factors including, but not limited to, timely and successful product development, market acceptance, the Company's ability to manage the risks associated with new product production ramp-up issues, the availability of application software for new products, the effective management of purchase commitments and inventory levels in line with anticipated product demand, the availability of products in appropriate quantities and at expected costs to meet anticipated demand and the risk that new products may have quality or other defects or deficiencies in the early stages of introduction. Accordingly, the Company cannot determine in advance the ultimate effect of new product introductions and transitions.
+
+  #3  dense=0.688  rrf=0.0313  | Apple 2018 | text
+      section: FORM 10-K > Item 1A. > Risk Factors > To remain competitive and stimulate customer demand, the Company must successfully manage frequent introductions and transitions of products and services.
+      pages  : [12]
+      text   : Due to the highly volatile and competitive nature of the industries in which the Company competes, the Company must continually introduce new products, services and technologies, enhance existing products and services, effectively stimulate customer demand for new and upgraded products and services and successfully manage the transition to these new and upgraded products and services. The success of new product and service introductions depends on a number of factors including, but not limited to, timely and successful development, market acceptance, the Company's ability to manage the risks associated with new product production ramp-up issues, the availability of application software for new products, the effective management of purchase commitments and inventory levels in line with anticipated product demand, the availability of products in appropriate quantities and at expected costs to meet anticipated demand and the risk that new products and services may have quality or other defects or deficiencies. Accordingly, the Company cannot determine in advance the ultimate effect of new product and service introductions and transitions.
+
+================================================================================
+[34] Q: What risks does Google disclose related to competition?
+================================================================================
+
+  #1  dense=0.649  rrf=0.0229  | Google 2023 | text
+      section: FORM 10-K > ITEM 8. > Note 10. Commitments and Contingencies > Other
+      pages  : [80]
+      text   : We are subject to claims, lawsuits, regulatory and government investigations, other proceedings, and consent orders involving competition, intellectual property, data security, tax and related compliance, labor and employment, commercial disputes, content generated by our users, goods and services offered by advertisers or publishers using our platforms, personal injury, consumer protection, and other matters. For example, in December 2023, a California jury delivered a verdict in Epic Games v. Google finding that Google violated antitrust laws related to Google Play's business. The presiding judge will determine remedies in 2024, and the range of potential remedies vary widely. We plan to appeal. We also periodically have data incidents that we report to relevant regulators as required by law.
+
+  #2  dense=0.673  rrf=0.0202  | Google 2016 | text
+      section: FORM 10-K > ITEM 1A. > Risks Related to Our Businesses and Industries > Our intellectual property rights are valuable, and any inability to protect them could reduce the value of our products, services, and brand.
+      pages  : [20]
+      text   : ployees, which could cause us to lose the competitive advantage resulting from these trade secrets. We also face risks associated with our trademarks. For example, there is a risk that the word "Google" could become so commonly used that it becomes synonymous with the word "search." If this happens, we could lose protection for this trademark, which could result in other people using the word "Google" to refer to their own products, thus diminishing our brand. Any significant impairment of our intellectual property rights could harm our business and our ability to compete. Also, protecting our intellectual property rights is costly and time consuming. Any increase in the unauthorized use of our intellectual property could make it more expensive to do business and harm our operating results.
+
+  #3  dense=0.667  rrf=0.0189  | Google 2018 | text
+      section: FORM 10-K > ITEM 1A. > Risks Related to Our Businesses and Industries > We are regularly subject to claims, suits, government investigations, and other proceedings that may adversely affect our business and results of operations.
+      pages  : [17]
+      text   : We are regularly subject to claims, suits, and government investigations involving competition, intellectual property, data privacy and security, consumer protection, tax, labor and employment, commercial disputes, content generated by our users, goods and services offered by advertisers or publishers using our platforms, and other matters. Due to our manufacturing and sale of an expanded suite of products, including hardware as well as our Google Cloud offerings, we may also be subject to a variety of claims including product warranty, product liability and consumer protection claims related to product defects, among other litigation. We may also be subject to claims involving health and safety, hazardous materials usage, other environmental concerns or if users or customers experience service disruptions, failures, or other issues. In addition, our businesses face intellectual property litigation, as discussed later, that exposes us to the risk of exclusion and cease and desist orders, which could limit our ability to sell products and services. Such claims, suits, and government investigations are inherently uncertain.
+
+================================================================================
+[35] Q: What risks does Intel disclose related to manufacturing?
+================================================================================
+
+  #1  dense=0.694  rrf=0.0298  | Intel 2025 | text
+      section: Critical Accounting Estimates
+      pages  : [51]
+      text   : ificant investments of time and resources needed to develop products on our nodes. ▪ Other Significant Financial, Operational and Reputational Risks . If we pause or discontinue the design, development and manufacture of Intel 14A and future leading-edge nodes, it may give rise to additional material risks that we are not able to foresee or that are more significant than we anticipate, including, but not limited to, adverse impacts to our relationships and the terms of our engagements with customers, suppliers and strategic partners, potential credit rating risk, and diminished investor confidence and increased stock price volatility. It is also uncertain what actions, if any, may be taken by the U.S. and other governments to the extent they view a potential discontinuation of our leading-edge process technology design, development and manufacturing as a strategic risk from a national economic or defense perspective.
+
+  #2  dense=0.698  rrf=0.0294  | Intel 2020 | text
+      section: Forward-Looking Statements
+      pages  : [3]
+      text   : atements. Such risks and uncertainties include those described throughout this report and particularly in "Risk Factors" within Other Key Information. Given these risks and uncertainties, readers are cautioned not to place undue reliance on such forward-looking statements. Readers are urged to carefully review and consider the various disclosures made in this Form 10-K and in other documents we file from time to time with the SEC that disclose risks and uncertainties that may affect our business. Unless specifically indicated otherwise, the forward-looking statements in this Form 10-K do not reflect the potential impact of any divestitures, mergers, acquisitions, or other business combinations that have not been completed as of the date of this filing. In addition, the forward-looking statements in this Form 10-K are made as of the date of this filing, unless an earlier date is specified, including expectations based on third-party information and projections that management believes to be reputable, and Intel does not undertake, and expressly disclaims any duty, to update such statements, whether as a result of new information, new developments, or otherwise, except to the extent that disclosure may be required by law.
+
+  #3  dense=0.688  rrf=0.0293  | Intel 2019 | text
+      section: FORWARD-LOOKING STATEMENTS
+      pages  : [3]
+      text   : atements. Such risks and uncertainties include those described throughout this report and particularly in "Risk Factors" within Other Key Information. Given these risks and uncertainties, readers are cautioned not to place undue reliance on such forward-looking statements. Readers are urged to carefully review and consider the various disclosures made in this Form 10-K and in other documents we file from time to time with the SEC that disclose risks and uncertainties that may affect our business. Unless specifically indicated otherwise, the forward-looking statements in this Form 10-K do not reflect the potential impact of any divestitures, mergers, acquisitions, or other business combinations that have not been completed as of the date of this filing. In addition, the forward-looking statements in this Form 10-K are made as of the date of this filing, including expectations based on third-party information and projections that management believes to be reputable, and Intel does not undertake, and expressly disclaims any duty, to update such statements, whether as a result of new information, new developments, or otherwise, except to the extent that disclosure may be required by law.
+
+================================================================================
+[36] Q: What competitive risks does Meta mention?
+================================================================================
+
+  #1  dense=0.607  rrf=0.0272  | META 2022 | text
+      section: FORM 10-K > PART IV > NOTE ABOUT FORWARD-LOOKING STATEMENTS
+      pages  : [5]
+      text   : " in this Annual Report on Form 10-K. Moreover, we operate in a very competitive and rapidly changing environment. New risks emerge from time to time. It is not possible for our management to predict all risks, nor can we assess the impact of all factors on our business or the extent to which any factor, or combination of factors, may cause actual results to differ materially from those contained in any forward-looking statements we may make. In light of these risks, uncertainties and assumptions, the future events and trends discussed in this Annual Report on Form 10-K may not occur and actual results could differ materially and adversely from those anticipated or implied in the forward-looking statements. We undertake no obligation to revise or publicly release the results of any revision to these forward-looking statements, except as required by law. Given these risks and uncertainties, readers are cautioned not to place undue reliance on such forward- looking statements. Unless expressly indicated or the context requires otherwise, the terms "Meta," "company," "we," "us," and "our" in this
+
+  #2  dense=0.606  rrf=0.0266  | META 2023 | text
+      section: FORM 10-K > PART IV > NOTE ABOUT FORWARD-LOOKING STATEMENTS
+      pages  : [5]
+      text   : " in this Annual Report on Form 10-K. Moreover, we operate in a very competitive and rapidly changing environment. New risks emerge from time to time. It is not possible for our management to predict all risks, nor can we assess the impact of all factors on our business or the extent to which any factor, or combination of factors, may cause actual results to differ materially from those contained in any forward-looking statements we may make. In light of these risks, uncertainties and assumptions, the future events and trends discussed in this Annual Report on Form 10-K may not occur and actual results could differ materially and adversely from those anticipated or implied in the forward-looking statements. We undertake no obligation to revise or publicly release the results of any revision to these forward-looking statements, except as required by law. Given these risks and uncertainties, readers are cautioned not to place undue reliance on such forward‑looking statements. Unless expressly indicated or the context requires otherwise, the terms "Meta," "company," "we," "us," and "our" in this
+
+  #3  dense=0.606  rrf=0.0265  | META 2024 | text
+      section: FORM 10-K > PART IV > NOTE ABOUT FORWARD-LOOKING STATEMENTS
+      pages  : [5]
+      text   : " in this Annual Report on Form 10-K. Moreover, we operate in a very competitive and rapidly changing environment. New risks emerge from time to time. It is not possible for our management to predict all risks, nor can we assess the impact of all factors on our business or the extent to which any factor, or combination of factors, may cause actual results to differ materially from those contained in any forward-looking statements we may make. In light of these risks, uncertainties and assumptions, the future events and trends discussed in this Annual Report on Form 10-K may not occur and actual results could differ materially and adversely from those anticipated or implied in the forward-looking statements. We undertake no obligation to revise or publicly release the results of any revision to these forward-looking statements, except as required by law. Given these risks and uncertainties, readers are cautioned not to place undue reliance on such forward‑looking statements. Unless expressly indicated or the context requires otherwise, the terms "Meta," "company," "we," "us," and "our" in this
+
+================================================================================
+[37] Q: What supply chain risks does Nvidia disclose?
+================================================================================
+
+  #1  dense=0.728  rrf=0.0201  | Nvidia 2023 | text
+      section: ITEM 1A. RISK FACTORS > Risks Related to Our Global Operating Business > Product, system security, and data protection breaches, as well as cyber-attacks, could disrupt our operations, reduce our expected revenue and increase our expenses, which could adversely affect our stock price and damage our reputation.
+      pages  : [24]
+      text   : ur partners to a risk of loss or misuse of this source code, damage both us and our partners, and expose NVIDIA to potential litigation and liability. If we or a third party we rely on experience a security incident, which has occurred in the past, or are perceived to have experienced a security incident, we may experience adverse consequences, including government enforcement actions, additional reporting requirements and/or oversight, restrictions on processing data, litigation, indemnification obligations, reputational harm, diversion of funds, financial loss, loss of data, material disruptions in our systems and operations, supply chain, and ability to produce, sell and distribute our goods and services, and other similar harms. Inability to fulfill orders, delayed sales, lower margins or lost customers as a result of these disruptions could adversely affect our financial results, stock price and reputation.
+
+  #2  dense=0.736  rrf=0.0196  | Nvidia 2026 | text
+      section: Item 1A. Risk Factors > Risks Related to Our Global Operating Business > Product, system security, and data protection incidents or breaches, as well as cyber-attacks, could disrupt our operations, reduce our expected revenue, increase our expenses, and significantly harm our business and reputation.
+      pages  : [22]
+      text   : partners to the risk of loss or misuse of this source code, damage both us and our partners, and expose NVIDIA to potential litigation and liability. If we or a third party we rely on experience a security incident, which has occurred in the past, or are perceived to have experienced a security incident, we may experience adverse consequences, including government enforcement actions, additional reporting requirements and/or oversight, restrictions on processing data, litigation, indemnification obligations, reputational harm, diversion of funds, diversion of management attention, financial loss, loss of data, material disruptions in our systems and operations, supply chain, and ability to produce, sell and distribute our goods and services, and other similar harms. Inability to fulfill orders, delayed sales, lower margins or lost customers as a result of these disruptions could adversely affect our financial results, stock price and reputation. We are required by certain data privacy and security obligations to notify relevant stakeholders, including affected individuals, customers, regulators and investors, of security incidents, and mandatory disclosure of such incidents could lead to negative publicity.
+
+  #3  dense=0.699  rrf=0.0194  | Nvidia 2023 | text
+      section: ITEM 1A. RISK FACTORS
+      pages  : [16]
+      text   : In evaluating NVIDIA, the following risk factors should be considered in addition to the other information in this Annual Report on Form 10-K. Purchasing or owning NVIDIA common stock involves investment risks including, but not limited to, the risks described below. Any one of the following risks could harm our business, financial condition, results of operations or reputation, which could cause our stock price to decline, and you may lose all or a part of your investment. Additional risks, trends and uncertainties not presently known to us or that we currently believe are immaterial may also harm our business, financial condition, results of operations or reputation.
+
+================================================================================
+[38] Q: What is Apple's most recent total net sales?
+================================================================================
+
+  #1  dense=0.663  rrf=0.0143  | Apple 2025 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 13 - Segment Information and Geographic Data
+      pages  : [54]
+      text   : The following table shows Note 13 - Segment Information and Geographic Data data for Apple 2025:
+Columns: 2025, 2024, 2023
+Net sales:
+U.S. -- 2025: 151,790, 2024: 142,196, 2023: 138,573
+China (1) -- 2025: 64,377, 2024: 66,952, 2023: 72,559
+Other countries -- 2025: 199,994, 2024: 181,887, 2023: 172,153
+Total net sales -- 2025: 416,161, 2024: 391,035, 2023: 383,285
+
+  #2  dense=0.626  rrf=0.0141  | Apple 2025 | table
+      section: FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Operating Expenses
+      pages  : [28]
+      text   : The following table shows Operating Expenses data for Apple 2025:
+Columns: 2025, 2024, 2023
+Research and development -- 2025: 34,550, 2024: 31,370, 2023: 29,915
+Percentage of total net sales -- 2025: 8%, 2024: 8%, 2023: 8%
+Selling, general and administrative -- 2025: 27,601, 2024: 26,097, 2023: 24,932
+Percentage of total net sales -- 2025: 7%, 2024: 7%, 2023: 7%
+Total operating expenses -- 2025: 62,151, 2024: 57,467, 2023: 54,847
+Percentage of total net sales -- 2025: 15%, 2024: 15%, 2023: 14%
+
+  #3  dense=0.706  rrf=0.0113  | Apple 2025 | text
+      section: FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Products and Services Performance > iPhone | FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Products and Services Performance > Mac | FORM 10-K > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Products and Services Performance > iPad
+      pages  : [27]
+      text   : iPhone net sales increased during 2025 compared to 2024 due to higher net sales of Pro models. Mac net sales increased during 2025 compared to 2024 primarily due to higher net sales of laptops and desktops. iPad net sales increased during 2025 compared to 2024 primarily due to higher net sales of iPad Air, iPad mini and iPad, partially offset by lower net sales of iPad Pro.
+
+================================================================================
+[39] Q: What is Google's latest reported revenue?
+================================================================================
+
+  #1  dense=0.544  rrf=0.0133  | Google 2025 | text
+      section: FORM 10-K > ITEM 1. > Google | FORM 10-K > ITEM 1. > Serving Our Users
+      pages  : [6]
+      text   : For reporting purposes Google comprises two segments: Google Services and Google Cloud. We have always been committed to building helpful products that can improve the lives of millions of people worldwide. Our product innovations are what make our services widely used, and our brand one of the most recognized in the world. Google Services' core products and platforms include ads, Android, Chrome, devices, Gmail, Google Drive, Google Gemini, Google Maps, Google Photos, Google Play, Search, and YouTube, with broad and growing adoption by users around the world.
+
+  #2  dense=0.580  rrf=0.0130  | Google 2025 | text
+      section: FORM 10-K > ITEM 7. > Understanding Alphabet's Financial Results
+      pages  : [46]
+      text   : Alphabet is a collection of businesses - the largest of which is Google. We report Google in two segments, Google Services and Google Cloud, and all non-Google businesses collectively as Other Bets. Supporting these businesses, we have centralized certain AI-related research and development focused on advanced research in AI and developing the frontier models that serve our businesses, which is reported in Alphabet-level activities. For further details on our segments, see Part I, Item 1 Business and Note 15 of the Notes to Consolidated Financial Statements included in Item 8 of this Annual Report on Form 10-K.
+
+  #3  dense=0.497  rrf=0.0121  | Google 2025 | text
+      section: FORM 10-K > ITEM 1. > Overview
+      pages  : [4]
+      text   : As our founders Larry and Sergey wrote in the original founders' letter, "Google is not a conventional company. We do not intend to become one." That unconventional spirit has been a driving force throughout our history, inspiring us to tackle big problems and invest in moonshots. It led us to be a pioneer in the development of artificial intelligence (AI) and, since 2016, be an AI-first company. We continue this work under the leadership of Alphabet and Google CEO, Sundar Pichai. Alphabet is a collection of businesses - the largest of which is Google. We report Google in two segments, Google Services and Google Cloud, and all non-Google businesses collectively as Other Bets. Supporting these businesses, we have centralized certain AI-related research and development focused on advanced research in AI and developing the frontier models that serve our businesses, which is reported in Alphabet-level activities. Alphabet's structure is about helping each of our businesses prosper through strong leaders and independence.
+
+================================================================================
+[40] Q: What is Nvidia's most recent quarterly revenue?
+================================================================================
+
+  #1  dense=0.553  rrf=0.0110  | Nvidia 2026 | text
+      section: Item 1. Business > Our Company
+      pages  : [4]
+      text   : NVIDIA pioneered accelerated computing to help solve the most challenging computational problems. NVIDIA is now a data center scale AI infrastructure company reshaping all industries. Our technology stack includes the foundational NVIDIA CUDA development platform that runs on all NVIDIA GPUs, as well as hundreds of domain-specific software libraries, frameworks, algorithms, software development kits, or SDKs, and application programming interfaces, or APIs. This deep and broad software stack accelerates the performance and facilitates the deployment of NVIDIA accelerated computing for computationally intensive workloads such as artificial intelligence, or AI, model training and inference, data analytics, scientific computing, robotics, and 3D graphics, with vertical-specific optimizations to address industries ranging from healthcare and telecom to automotive and manufacturing. Introduced with the Blackwell architecture, our data-center-scale offerings feature extreme co-design where the infrastructure's chips, networking, systems, software, and algorithms are holistically architected and optimized to maximize performance and scale.
+
+  #2  dense=0.609  rrf=0.0109  | Nvidia 2026 | text
+      section: Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Our Company and Our Businesses
+      pages  : [38]
+      text   : NVIDIA pioneered accelerated computing to help solve the most challenging computational problems. Since our original focus on PC graphics, we have expanded to several other large and important computationally intensive fields. Fueled by the sustained demand for exceptional 3D graphics and the scale of the gaming market, NVIDIA has leveraged its GPU architecture to create platforms for scientific computing, AI, data science, autonomous vehicles, robotics, and digital twin applications. NVIDIA is now a data center scale AI infrastructure company reshaping all industries. Our two operating segments are "Compute & Networking" and "Graphics." Refer to Note 16 of the Notes to the Consolidated Financial Statements in Part IV, Item 15 of this Annual Report on Form 10-K for additional information. Headquartered in Santa Clara, California, NVIDIA was incorporated in California in April 1993 and reincorporated in Delaware in April 1998.
+
+  #3  dense=0.556  rrf=0.0074  | Nvidia 2026 | text
+      section: Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Contracts with Multiple Performance Obligations
+      pages  : [41]
+      text   : Our contracts may contain more than one performance obligation. Judgment is required in determining whether each performance obligation within a customer contract is distinct. Except for License and Development Arrangements, NVIDIA products and services function on a standalone basis and do not require a significant amount of integration or interdependency. Therefore, multiple performance obligations contained within a customer contract are considered distinct and are not combined for revenue recognition purposes. We allocate the total transaction price to each distinct performance obligation in an arrangement with multiple performance obligations on a relative standalone selling price basis. In most cases, we can establish standalone selling price based on directly observable prices of products or services sold separately in comparable circumstances to similar customers. If standalone selling price is not directly observable, such as when we do not sell a product or service separately, we determine standalone selling price based on market data and other observable inputs.
+
+================================================================================
+[41] Q: What was Google's revenue?
+================================================================================
+
+  #1  dense=0.731  rrf=0.0301  | Google 2016 | text
+      section: FORM 10-K > ITEM 7. > Google segment > Google properties
+      pages  : [39]
+      text   : The following table presents our Google properties revenues (in millions), and changes in our paid clicks and cost- Google properties revenues consist primarily of advertising revenue that is generated on: - Google search properties. This includes revenue from traffic generated by search distribution partners who use Google.com as their default search in browsers, toolbars, etc.; - Other Google owned and operated properties like Gmail, Maps, and Google Play; and - YouTube, including but not limited to, YouTube TrueView and Google Preferred. Our Google properties revenues increased $11,428 million from 2015 to 2016 and also increased as a percentage of Google segment revenues. The growth was primarily driven by increases in mobile search most notably due to ongoing improvements in ad formats and delivery launched during 2016. We also experienced growth in YouTube revenue driven primarily by video advertising across TrueView with a growing contribution from ad buying on DoubleClick Bid Manager, as well as improvements in ad formats and delivery. The growth was partially offset by the general strengthening of the U.S. dollar compared to certain foreign currencies.
+
+  #2  dense=0.735  rrf=0.0281  | Google 2019 | text
+      section: FORM 10-K > ITEM 7. > Google advertising revenues > Google Search & other
+      pages  : [36]
+      text   : Our Google Search & other revenues increased $12,819 million from 2018 to 2019. The growth was primarily driven by interrelated factors including increases in search queries resulting from ongoing growth in user adoption and usage, primarily on mobile devices, continued growth in advertiser activity, and improvements we have made in ad formats and delivery. Revenue growth was partially offset by the general strengthening of the U.S. dollar compared to certain foreign currencies. Our Google Search & other revenues increased $15,485 million from 2017 to 2018. The growth was primarily driven by increases in mobile search resulting from ongoing growth in user adoption and usage, as well as continued growth in advertiser activity. Growth was also driven by improvements in ad formats and delivery, primarily on desktop. Additionally, revenue growth was favorably affected by the general weakening of the U.S. dollar compared to certain foreign currencies.
+
+  #3  dense=0.735  rrf=0.0263  | Google 2016 | text
+      section: FORM 10-K > ITEM 7. > Google segment > Google other revenues
+      pages  : [40, 41]
+      text   : Google other revenues consist primarily of revenues and sales from: - Apps, in-app purchases, and digital content in the Google Play store; - Hardware; - Licensing-related revenue; and - Service fees received for our Google Cloud offerings. Our Google other revenues increased $2,926 million from 2015 to 2016 and increased as a percentage of Google segment revenues. These increases were primarily due to the growth in revenues from Google Play, primarily relating to in-app purchases (revenues which we recognize net of payout to developers), hardware sales, and Google Cloud offerings. Our Google other revenues increased $1,104 million from 2014 to 2015 and increased as a percentage of Google segment revenues. These increases were primarily due to the growth of our sales of digital content products in the Google Play store, primarily apps (revenues which we recognize net of payout to partners). In addition, there was an increase in revenues from service fees received for Google Cloud offerings. These increases were partially offset by the general strengthening of the U.S. dollar compared to certain foreign currencies.
+
+================================================================================
+[42] Q: What was Intel's net income?
+================================================================================
+
+  #1  dense=0.718  rrf=0.0262  | Intel 2017 | table
+      section: Note 6: Other Financial Statement Details > INTEREST AND OTHER, NET
+      pages  : [84]
+      text   : The following table shows INTEREST AND OTHER, NET data for Intel 2017:
+Columns: 2017, 2016, 2015
+Interest income -- 2017: 441, 2016: 222, 2015: 124
+Interest expense -- 2017: (646), 2016: (733), 2015: (337)
+Other, net -- 2017: (30), 2016: 67, 2015: 108
+ -- 2017: (235), 2016: (444), 2015: (105)
+
+  #2  dense=0.717  rrf=0.0256  | Intel 2018 | table
+      section: OTHER FINANCIAL STATEMENT DETAILS > INTEREST AND OTHER, NET
+      pages  : [85]
+      text   : The following table shows INTEREST AND OTHER, NET data for Intel 2018:
+Columns: 2018, 2017, 2016
+Interest income -- 2018: 438, 2017: 441, 2016: 222
+Interest expense -- 2018: (468), 2017: (646), 2016: (733)
+Other, net -- 2018: 156, 2017: (144), 2016: (192)
+ -- 2018: 126, 2017: (349), 2016: (703)
+
+  #3  dense=0.714  rrf=0.0255  | Intel 2016 | table
+      section: FORM 10-K > ITEM 8. > Note 10: Acquisitions and Divestitures > Actual and Pro Forma Results of Acquirees
+      pages  : [90]
+      text   : The following table shows Actual and Pro Forma Results of Acquirees data for Intel 2016:
+Columns: 2016, 2015
+Net revenue -- 2016: 59,486, 2015: 56,906
+Net income -- 2016: 10,788, 2015: 10,510
+Diluted earnings per share -- 2016: 2.21, 2015: 2.15
+
+================================================================================
+[43] Q: What is Apple's current stock price today?
+================================================================================
+
+  #1  dense=0.679  rrf=0.0187  | Apple 2025 | table
+      section: FORM 10-K > Item 5. Market for Registrant's Common Equity, Related Stockholder Matters and Issuer Purchases of Equity Securities > Company Stock Performance
+      pages  : [24]
+      text   : The following table shows Company Stock Performance data for Apple 2025:
+Columns: 2020, 2021, 2022, 2023, 2024, 2025
+Apple Inc. -- 2020: 100, 2021: 132, 2022: 136, 2023: 155, 2024: 208, 2025: 234
+S&P 500 Index -- 2020: 100, 2021: 137, 2022: 115, 2023: 136, 2024: 185, 2025: 217
+Dow Jones U.S. Technology Total Stock Market Index -- 2020: 100, 2021: 147, 2022: 107, 2023: 147, 2024: 220, 2025: 287
+
+  #2  dense=0.705  rrf=0.0162  | Apple 2025 | table
+      section: FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 10 - Shareholders' Equity > Shares of Common Stock
+      pages  : [51]
+      text   : The following table shows Shares of Common Stock data for Apple 2025:
+Columns: 2025, 2024, 2023
+Common stock outstanding, beginning balances -- 2025: 15,116,786, 2024: 15,550,061, 2023: 15,943,425
+Common stock repurchased -- 2025: (401,672), 2024: (499,372), 2023: (471,419)
+Common stock issued, net of shares withheld for employee taxes -- 2025: 58,146, 2024: 66,097, 2023: 78,055
+Common stock outstanding, ending balances -- 2025: 14,773,260, 2024: 15,116,786, 2023: 15,550,061
+
+  #3  dense=0.574  rrf=0.0150  | Apple 2025 | text
+      section: FORM 10-K > Item 1A. Risk Factors > General Risks > The price of the Company's stock is subject to volatility.
+      pages  : [21]
+      text   : The Company's stock has experienced substantial price volatility in the past and may continue to do so in the future. Additionally, the Company, the technology industry and the stock market as a whole have, from time to time, experienced extreme stock price and volume fluctuations that have affected stock prices in ways that may have been unrelated to these companies' operating performance. Price volatility may cause the average price at which the Company repurchases its stock in a given period to exceed the stock's price at a given point in time. The Company believes the price of its stock should reflect expectations of future growth and profitability. The Company also believes the price of its stock should reflect expectations that its cash dividend will continue at current levels or grow, and that its current share repurchase program will be fully consummated. Future dividends are subject to declaration by the Company's Board of Directors ("Board"), and the Company's share repurchase program does not obligate it to acquire any specific number of shares.

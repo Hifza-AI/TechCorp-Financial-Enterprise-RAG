@@ -1,0 +1,531 @@
+Total chunks in corpus: 21629
+================================================================================
+
+================================================================================
+CHECK: Intel net income 2024
+  company='Intel'  year=2024  chunk_type='table'
+  required patterns: ['\\bNet income\\b', '2024']
+--------------------------------------------------------------------------------
+  RESULT: FOUND 3 matching chunk(s).
+  ==> Content exists. If retriever didn't surface it, that's a RETRIEVER/RANKING bug.
+
+  --- chunk index 11722 ---
+  company=Intel year=2024 chunk_type=table
+  section_path=Consolidated Statements of Cash Flows
+  FULL TEXT:
+  The following table shows Consolidated Statements of Cash Flows data for Intel 2024:
+Columns: Dec 28, 2024, 7,079, Dec 30, 2023, 11,144, Dec 31, 2022, 4,827
+Net income (loss) -- Dec 28, 2024: (19,233), Dec 30, 2023: 1,675, Dec 31, 2022: 8,017
+Adjustments to reconcile net income (loss) to net cash provided by operating
+activities:
+Depreciation -- Dec 28, 2024: 9,951, Dec 30, 2023: 7,847, Dec 31, 2022: 11,128
+Share-based compensation -- Dec 28, 2024: 3,410, Dec 30, 2023: 3,229, Dec 31, 2022: 3,128
+Restructuring and other charges -- Dec 28, 2024: 3,491, Dec 30, 2023: (424), Dec 31, 2022: 1,074
+Amortization of intangibles -- Dec 28, 2024: 1,428, Dec 30, 2023: 1,755, Dec 31, 2022: 1,907
+(Gains) losses on equity investments, net -- Dec 28, 2024: (246), Dec 30, 2023: (42), Dec 31, 2022: (4,254)
+(Gains) losses on divestitures -- Dec 28, 2024: -, Dec 30, 2023: -, Dec 31, 2022: (1,059)
+Deferred taxes -- Dec 28, 2024: 6,132, Dec 30, 2023: (2,033), Dec 31, 2022: (5,148)
+Impairments and net (gain) loss on retirement of property, plant, and equipment -- Dec 28, 2024: 2,252, Dec 30, 2023: 33, Dec 31, 2022: 301
+Changes in assets and liabilities:
+Accounts receivable -- Dec 28, 2024: (75), Dec 30, 2023: 731, Dec 31, 2022: 5,327
+Inventories -- Dec 28, 2024: (1,105), Dec 30, 2023: 2,097, Dec 31, 2022: (2,436)
+Accounts payable -- Dec 28, 2024: 634, Dec 30, 2023: (801), Dec 31, 2022: (29)
+Accrued compensation and benefits -- Dec 28, 2024: (218), Dec 30, 2023: (614), Dec 31, 2022: (1,533)
+Income taxes -- Dec 28, 2024: (356), Dec 30, 2023: (1,498), Dec 31, 2022: 613
+Other assets and liabilities -- Dec 28, 2024: 2,223, Dec 30, 2023: (484), Dec 31, 2022: (1,603)
+Total adjustments -- Dec 28, 2024: 27,521, Dec 30, 2023: 9,796, Dec 31, 2022: 7,416
+ -- Dec 28, 2024: 8,288, 7,079: 11,471, Dec 31, 2022: 15,433
+Cash flows provided by (used for) investing activities:
+Additions to property, plant, and equipment -- Dec 28, 2024: (23,944), 7,079: (25,750), 11,144: (24,844)
+Proceeds from capital-related government incentives -- Dec 28, 2024: 1,936, Dec 30, 2023: 1,011, Dec 31, 2022: 246
+Acquisitions, net of cash acquired -- Dec 28, 2024: (82), Dec 30, 2023: (13), Dec 31, 2022: (681)
+Purchases of short-term investments -- Dec 28, 2024: (37,940), 7,079: (44,414), 11,144: (43,647)
+Maturities and sales of short-term investments -- Dec 28, 2024: 41,463, 7,079: 44,077, Dec 31, 2022: 48,730
+Sales of equity investments -- Dec 28, 2024: 1,047, Dec 30, 2023: 472, Dec 31, 2022: 4,961
+Proceeds from divestitures -- Dec 28, 2024: -, Dec 30, 2023: -, Dec 31, 2022: 6,579
+Other investing -- Dec 28, 2024: (736), Dec 30, 2023: 576, Dec 31, 2022: (1,575)
+ -- Dec 28, 2024: (18,256), 7,079: (24,041), 11,144: (10,231)
+Cash flows provided by (used for) financing activities:
+Issuance of commercial paper, net of issuance costs -- Dec 28, 2024: 7,349, Dec 30, 2023: -, Dec 31, 2022: 3,945
+Repayment of commercial paper -- Dec 28, 2024: (7,349), Dec 30, 2023: (3,944), Dec 31, 2022: -
+Partner contributions -- Dec 28, 2024: 12,714, Dec 30, 2023: 1,511, Dec 31, 2022: 874
+Proceeds from sales of subsidiary shares -- Dec 28, 2024: -, Dec 30, 2023: 2,959, Dec 31, 2022: 1,032
+Additions to property, plant, and equipment -- Dec 28, 2024: (1,178), Dec 30, 2023: -, Dec 31, 2022: -
+Issuance of long-term debt, net of issuance costs -- Dec 28, 2024: 2,975, 7,079: 11,391, Dec 31, 2022: 6,548
+Repayment of debt -- Dec 28, 2024: (2,288), Dec 30, 2023: (423), Dec 31, 2022: (4,984)
+Proceeds from sales of common stock through employee equity incentive plans -- Dec 28, 2024: 987, Dec 30, 2023: 1,042, Dec 31, 2022: 977
+Restricted stock unit withholdings -- Dec 28, 2024: (631), Dec 30, 2023: (534), Dec 31, 2022: (486)
+Payment of dividends to stockholders -- Dec 28, 2024: (1,599), Dec 30, 2023: (3,088), Dec 31, 2022: (5,997)
+Other financing -- Dec 28, 2024: 158, Dec 30, 2023: (409), Dec 31, 2022: (794)
+ -- Dec 28, 2024: 11,138, Dec 30, 2023: 8,505, Dec 31, 2022: 1,115
+ -- Dec 28, 2024: 1,170, Dec 30, 2023: (4,065), Dec 31, 2022: 6,317
+ -- Dec 28, 2024: 8,249, Dec 30, 2023: 7,079, Dec 31, 2022: 11,144
+Non-cash supplemental disclosures:
+Acquisition of property, plant, and equipment -- Dec 28, 2024: 8,125, Dec 30, 2023: 4,804, Dec 31, 2022: 5,431
+Cash paid during the year for:
+Interest, net of capitalized interest -- Dec 28, 2024: 987, Dec 30, 2023: 613, Dec 31, 2022: 459
+Income taxes, net of refunds -- Dec 28, 2024: 2,202, Dec 30, 2023: 2,621, Dec 31, 2022: 4,282
+
+  --- chunk index 11724 ---
+  company=Intel year=2024 chunk_type=table
+  section_path=Consolidated Statements of Stockholders' Equity > Balance as of December 25, 2021
+  FULL TEXT:
+  The following table shows Balance as of December 25, 2021 data for Intel 2024:
+Columns: 4,070 79, 28,006 75 1,009 3,099, (880) 318, 68,265 8,014, 3 1,831 29, 95,391 8,017 318 1,906 1,009 3,128
+Restricted stock unit withholdings -- 4,070 79: (12), 28,006 75 1,009 3,099: (609), (880) 318: -, 68,265 8,014: 123, 3 1,831 29: -, 95,391 8,017 318 1,906 1,009 3,128: (486)
+Cash dividends declared ($1.46 per share of common stock) -- 4,070 79: -, 28,006 75 1,009 3,099: -, (880) 318: -, 68,265 8,014: (5,997), 3 1,831 29: -, 95,391 8,017 318 1,906 1,009 3,128: (5,997)
+ -- 4,070 79: 4,137, 28,006 75 1,009 3,099: 31,580, (880) 318: (562), 68,265 8,014: 70,405, 3 1,831 29: 1,863, 95,391 8,017 318 1,906 1,009 3,128: 103,286
+Net income (loss) -- 4,070 79: -, 28,006 75 1,009 3,099: -, (880) 318: -, 68,265 8,014: 1,689, 3 1,831 29: (14), 95,391 8,017 318 1,906 1,009 3,128: 1,675
+Other comprehensive income (loss) -- 4,070 79: -, 28,006 75 1,009 3,099: -, (880) 318: 347, 68,265 8,014: -, 3 1,831 29: -, 95,391 8,017 318 1,906 1,009 3,128: 347
+Proceeds from sales of subsidiary shares and partner contributions -- 4,070 79: -, 28,006 75 1,009 3,099: 1,620, (880) 318: -, 68,265 8,014: -, 3 1,831 29: 2,385, 95,391 8,017 318 1,906 1,009 3,128: 4,005
+Employee equity incentive plans and other -- 4,070 79: 107, 28,006 75 1,009 3,099: 1,044, (880) 318: -, 68,265 8,014: -, 3 1,831 29: -, 95,391 8,017 318 1,906 1,009 3,128: 1,044
+Share-based compensation -- 4,070 79: -, 28,006 75 1,009 3,099: 3,088, (880) 318: -, 68,265 8,014: -, 3 1,831 29: 141, 95,391 8,017 318 1,906 1,009 3,128: 3,229
+Restricted stock unit withholdings -- 4,070 79: (16), 28,006 75 1,009 3,099: (683), (880) 318: -, 68,265 8,014: 150, 3 1,831 29: -, 95,391 8,017 318 1,906 1,009 3,128: (533)
+Cash dividends declared ($0.74 per share of common stock) -- 4,070 79: -, 28,006 75 1,009 3,099: -, (880) 318: -, 68,265 8,014: (3,088), 3 1,831 29: -, 95,391 8,017 318 1,906 1,009 3,128: (3,088)
+ -- 4,070 79: 4,228, 28,006 75 1,009 3,099: 36,649, (880) 318: (215), 68,265 8,014: 69,156, 3 1,831 29: 4,375, 95,391 8,017 318 1,906 1,009 3,128: 109,965
+Net income (loss) -- 4,070 79: -, 28,006 75 1,009 3,099: -, (880) 318: -, 68,265 8,014: (18,756), 3 1,831 29: (477), 95,391 8,017 318 1,906 1,009 3,128: (19,233)
+Other comprehensive income (loss) -- 4,070 79: -, 28,006 75 1,009 3,099: -, (880) 318: (496), 68,265 8,014: -, 3 1,831 29: -, 95,391 8,017 318 1,906 1,009 3,128: (496)
+Net proceeds from partner contributions -- 4,070 79: -, 28,006 75 1,009 3,099: 11,012, (880) 318: -, 68,265 8,014: -, 3 1,831 29: 1,702, 95,391 8,017 318 1,906 1,009 3,128: 12,714
+Partner distributions -- 4,070 79: -, 28,006 75 1,009 3,099: -, (880) 318: -, 68,265 8,014: -, 3 1,831 29: (43), 95,391 8,017 318 1,906 1,009 3,128: (43)
+Employee equity incentive plans and other -- 4,070 79: 123, 28,006 75 1,009 3,099: 988, (880) 318: -, 68,265 8,014: -, 3 1,831 29: -, 95,391 8,017 318 1,906 1,009 3,128: 988
+Share-based compensation -- 4,070 79: -, 28,006 75 1,009 3,099: 3,162, (880) 318: -, 68,265 8,014: -, 3 1,831 29: 205, 95,391 8,017 318 1,906 1,009 3,128: 3,367
+Restricted stock unit withholdings -- 4,070 79: (21), 28,006 75 1,009 3,099: (862), (880) 318: -, 68,265 8,014: 231, 3 1,831 29: -, 95,391 8,017 318 1,906 1,009 3,128: (631)
+Cash dividends declared ($0.38 per share of common stock) -- 4,070 79: -, 28,006 75 1,009 3,099: -, (880) 318: -, 68,265 8,014: (1,599), 3 1,831 29: -, 95,391 8,017 318 1,906 1,009 3,128: (1,599)
+ -- 4,070 79: 4,330, 28,006 75 1,009 3,099: 50,949, (880) 318: (711), 68,265 8,014: 49,032, 3 1,831 29: 5,762, 95,391 8,017 318 1,906 1,009 3,128: 105,032
+
+  --- chunk index 11772 ---
+  company=Intel year=2024 chunk_type=table
+  section_path=Note 3 : > Operating Segments > Total corporate unallocated expenses
+  FULL TEXT:
+  The following table shows Total corporate unallocated expenses data for Intel 2024:
+Columns: Dec 28, 2024, Dec 30, 2023, Dec 31, 2022
+Customer A -- Dec 28, 2024: 19 %, Dec 30, 2023: 19 %, Dec 31, 2022: 19 %
+Customer B -- Dec 28, 2024: 14 %, Dec 30, 2023: 11 %, Dec 31, 2022: 12 %
+Customer C -- Dec 28, 2024: 12 %, Dec 30, 2023: 10 %, Dec 31, 2022: 11 %
+ -- Dec 28, 2024: 45, Dec 30, 2023: 40, Dec 31, 2022: 42
+Net revenue by region, based on the billing location of the customer, was as follows:
+Years Ended (In Millions) -- Dec 28, 2024: Dec 28, 2024, Dec 30, 2023: Dec 30, 2023, Dec 31, 2022: Dec 31, 2022
+China -- Dec 28, 2024: 15,532, Dec 30, 2023: 14,854, Dec 31, 2022: 17,125
+United States -- Dec 28, 2024: 12,994, Dec 30, 2023: 13,958, Dec 31, 2022: 16,529
+Singapore -- Dec 28, 2024: 10,187, Dec 30, 2023: 8,602, Dec 31, 2022: 9,664
+Taiwan -- Dec 28, 2024: 7,804, Dec 30, 2023: 6,867, Dec 31, 2022: 8,287
+Other regions -- Dec 28, 2024: 6,584, Dec 30, 2023: 9,947, Dec 31, 2022: 11,449
+ -- Dec 28, 2024: 53,101, Dec 30, 2023: 54,228, Dec 31, 2022: 63,054
+Years Ended
+ -- Dec 28, 2024: Dec 30, 2023, Dec 30, 2023: Dec 31, 2022, Dec 31, 2022: Dec 28, 2024
+Ireland SCIP -- Dec 28, 2024: 49 %, Dec 30, 2023: - %, Dec 31, 2022: - %
+Arizona SCIP -- Dec 28, 2024: 49 %, Dec 30, 2023: 49 %, Dec 31, 2022: 49 %
+Mobileye -- Dec 28, 2024: 12 %, Dec 30, 2023: 12 %, Dec 31, 2022: 6 %
+IMS Nanofabrication (IMS Nano) -- Dec 28, 2024: 32 %, Dec 30, 2023: 32 %, Dec 31, 2022: - %
+(In Millions) -- Dec 28, 2024: 2,359, Dec 30, 2023: 1,838, Dec 31, 2022: 178
+Partner contributions -- Dec 28, 2024: 1,702, Dec 30, 2023: -, Dec 31, 2022: -
+Partner distributions (43) -- Dec 28, 2024: -, Dec 30, 2023: -, Dec 31, 2022: -
+Changes in equity of non-controlling interest holders -- Dec 28, 2024: -, Dec 30, 2023: 205, Dec 31, 2022: -
+Net income (loss) attributable to non-controlling interests 104 -- Dec 28, 2024: (173), Dec 30, 2023: (371), Dec 31, 2022: (37)
+61 -- Dec 28, 2024: 3,888, Dec 30, 2023: 1,672, Dec 31, 2022: 141
+(In Millions) -- Dec 28, 2024: 874, Dec 30, 2023: 989, Dec 31, 2022: -
+Partner contributions -- Dec 28, 2024: 1,511, Dec 30, 2023: -, Dec 31, 2022: -
+Changes in equity of non-controlling interest holders -- Dec 28, 2024: -, Dec 30, 2023: 848, Dec 31, 2022: 167
+Net income (loss) attributable to non-controlling interests -- Dec 28, 2024: (26), Dec 30, 2023: 1, Dec 31, 2022: 11
+ -- Dec 28, 2024: 2,359, Dec 30, 2023: 1,838, Dec 31, 2022: 178
+
+================================================================================
+CHECK: Intel total assets (balance sheet)
+  company='Intel'  year=None  chunk_type='table'
+  required patterns: ['\\bTotal assets\\b']
+--------------------------------------------------------------------------------
+  RESULT: FOUND 5 matching chunk(s).
+  ==> Content exists. If retriever didn't surface it, that's a RETRIEVER/RANKING bug.
+
+  --- chunk index 7496 ---
+  company=Intel year=2016 chunk_type=table
+  section_path=FORM 10-K > ITEM 6. > SELECTED FINANCIAL DATA
+  FULL TEXT:
+  The following table shows SELECTED FINANCIAL DATA data for Intel 2016:
+Columns: 2016, 2015, 2014, 2013, 2012
+Property, plant and equipment, net -- 2016: 36,171, 2015: 31,858, 2014: 33,238, 2013: 31,428, 2012: 27,983
+Total assets 1 -- 2016: 113,327, 2015: 101,459, 2014: 90,012, 2013: 89,789, 2012: 82,228
+Debt -- 2016: 25,283, 2015: 22,670, 2014: 13,655, 2013: 13,385, 2012: 13,382
+Stockholders' equity -- 2016: 66,226, 2015: 61,085, 2014: 55,865, 2013: 58,256, 2012: 51,203
+Employees (in thousands) -- 2016: 106.0, 2015: 107.3, 2014: 106.7, 2013: 107.6, 2012: 105.0
+1 In Q1 2016, we elected to early adopt an amended standard requiring that we classify all deferred tax assets and
+
+  --- chunk index 7980 ---
+  company=Intel year=2017 chunk_type=table
+  section_path=SELECTED FINANCIAL DATA > Dec 27,
+  FULL TEXT:
+  The following table shows Dec 27, data for Intel 2017:
+Columns: 2013, 2014, 2015, 2016, 2017
+Property, plant and equipment, net -- 2013: 31,428, 2014: 33,238, 2015: 31,858, 2016: 36,171, 2017: 41,109
+Total assets -- 2013: 89,789, 2014: 90,012, 2015: 101,459, 2016: 113,327, 2017: 123,249
+Debt -- 2013: 13,385, 2014: 13,655, 2015: 22,670, 2016: 25,283, 2017: 26,813
+Stockholders' equity -- 2013: 58,256, 2014: 55,865, 2015: 61,085, 2016: 66,226, 2017: 69,019
+Employees (in thousands) -- 2013: 107.6, 2014: 106.7, 2015: 107.3, 2016: 106.0, 2017: 102.7
+1 In Q4 2017, we recognized a $5.4 billion higher income tax expense as a result of one-time impacts from Tax Reform.
+OTHER KEY INFORMATION
+
+  --- chunk index 8490 ---
+  company=Intel year=2018 chunk_type=table
+  section_path=SELECTED FINANCIAL DATA > Dec 27,
+  FULL TEXT:
+  The following table shows Dec 27, data for Intel 2018:
+Columns: 2018, 2017, 2016, 2015, 2014
+Property, plant and equipment, net -- 2018: 48,976, 2017: 41,109, 2016: 36,171, 2015: 31,858, 2014: 33,238
+Total assets -- 2018: 127,963, 2017: 123,249, 2016: 113,327, 2015: 101,459, 2014: 90,012
+Debt -- 2018: 26,359, 2017: 26,813, 2016: 25,283, 2015: 22,670, 2014: 13,655
+Stockholders' equity -- 2018: 74,563, 2017: 69,019, 2016: 66,226, 2015: 61,085, 2014: 55,865
+Employees (in thousands) -- 2018: 107.4, 2017: 102.7, 2016: 106.0, 2015: 107.3, 2014: 106.7
+1 In Q1 2018, we adopted "Retirement Benefits - Improving the Presentation of Net Periodic Pension Cost and Net Periodic Postretirement Benefit Cost" on a retrospective
+2 In Q4 2017, we recognized a $5.4 billion higher income tax expense as a result of one-time impacts from Tax Reform. In 2018, our effective tax rate benefited from the
+
+================================================================================
+CHECK: Meta Family of Apps revenue
+  company='META'  year=None  chunk_type='table'
+  required patterns: ['Family of Apps', '\\bRevenue\\b']
+--------------------------------------------------------------------------------
+  RESULT: FOUND 10 matching chunk(s).
+  ==> Content exists. If retriever didn't surface it, that's a RETRIEVER/RANKING bug.
+
+  --- chunk index 15201 ---
+  company=META year=2021 chunk_type=table
+  section_path=FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 2. Revenue
+  FULL TEXT:
+  The following table shows Note 2. Revenue data for META 2021:
+Columns: 2021, 2020, 2019
+Advertising -- 2021: 114,934, 2020: 84,169, 2019: 69,655
+Other revenue -- 2021: 721, 2020: 657, 2019: 541
+Family of Apps -- 2021: 115,655, 2020: 84,826, 2019: 70,196
+Reality Labs -- 2021: 2,274, 2020: 1,139, 2019: 501
+Total revenue -- 2021: 117,929, 2020: 85,965, 2019: 70,697
+93
+
+  --- chunk index 15265 ---
+  company=META year=2021 chunk_type=table
+  section_path=FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 15. Segment and Geographical Information
+  FULL TEXT:
+  The following table shows Note 15. Segment and Geographical Information data for META 2021:
+Columns: 2021, 2020, 2019
+Revenue:
+Family of Apps -- 2021: 115,655, 2020: 84,826, 2019: 70,196
+Reality Labs -- 2021: 2,274, 2020: 1,139, 2019: 501
+Total revenue -- 2021: 117,929, 2020: 85,965, 2019: 70,697
+Income (loss) from operations:
+Family of Apps -- 2021: 56,946, 2020: 39,294, 2019: 28,489
+Reality Labs -- 2021: (10,193), 2020: (6,623), 2019: (4,503)
+Total income from operations -- 2021: 46,753, 2020: 32,671, 2019: 23,986
+operating lease right-of-use assets (in millions):
+
+  --- chunk index 15775 ---
+  company=META year=2022 chunk_type=table
+  section_path=FORM 10-K > Item 8. Financial Statements and Supplementary Data > Note 2. Revenue
+  FULL TEXT:
+  The following table shows Note 2. Revenue data for META 2022:
+Columns: 2022, 2021, 2020
+Advertising -- 2022: 113,642, 2021: 114,934, 2020: 84,169
+Other revenue -- 2022: 808, 2021: 721, 2020: 657
+Family of Apps -- 2022: 114,450, 2021: 115,655, 2020: 84,826
+Reality Labs -- 2022: 2,159, 2021: 2,274, 2020: 1,139
+Total revenue -- 2022: 116,609, 2021: 117,929, 2020: 85,965
+
+================================================================================
+CHECK: Meta lease liability maturity schedule
+  company='META'  year=None  chunk_type=None
+  required patterns: ['[Ll]ease', '[Mm]aturit']
+--------------------------------------------------------------------------------
+  RESULT: FOUND 18 matching chunk(s).
+  ==> Content exists. If retriever didn't surface it, that's a RETRIEVER/RANKING bug.
+
+  --- chunk index 12798 ---
+  company=META year=2016 chunk_type=table
+  section_path=Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF CASH FLOWS
+  FULL TEXT:
+  The following table shows CONSOLIDATED STATEMENTS OF CASH FLOWS data for META 2016:
+Columns: 2016, 2015, 2014
+Net income -- 2016: 10,217, 2015: 3,688, 2014: 2,940
+Adjustments to reconcile net income to net cash provided by operating
+activities:
+Depreciation and amortization -- 2016: 2,342, 2015: 1,945, 2014: 1,243
+Share-based compensation -- 2016: 3,218, 2015: 2,960, 2014: 1,786
+Deferred income taxes -- 2016: (457), 2015: (795), 2014: (210)
+Tax benefit from share-based award activity -- 2016: -, 2015: 1,721, 2014: 1,853
+Other -- 2016: 30, 2015: 17, 2014: (24)
+Changes in assets and liabilities:
+Accounts receivable -- 2016: (1,489), 2015: (973), 2014: (610)
+Prepaid expenses and other current assets -- 2016: (159), 2015: (144), 2014: (123)
+Other assets -- 2016: 14, 2015: (3), 2014: (216)
+Accounts payable -- 2016: 14, 2015: 18, 2014: 31
+Partners payable -- 2016: 67, 2015: 17, 2014: (28)
+Accrued expenses and other current liabilities -- 2016: 1,014, 2015: 513, 2014: 328
+Deferred revenue and deposits -- 2016: 35, 2015: (9), 2014: 10
+Other liabilities -- 2016: 1,262, 2015: 1,365, 2014: 346
+ -- 2016: 16,108, 2015: 10,320, 2014: 7,326
+Purchases of property and equipment -- 2016: (4,491), 2015: (2,523), 2014: (1,831)
+Purchases of marketable securities -- 2016: (22,341), 2015: (15,938), 2014: (9,104)
+Sales of marketable securities -- 2016: 13,894, 2015: 6,928, 2014: 8,438
+Maturities of marketable securities -- 2016: 1,261, 2015: 2,310, 2014: 1,909
+Acquisitions of businesses, net of cash acquired, and purchases of intangible -- 2016: (123), 2015: (313), 2014: (4,975)
+Change in restricted cash and deposits assets -- 2016: 61, 2015: 102, 2014: (348)
+Other investing activities, net -- 2016: -, 2015: -, 2014: (2)
+ -- 2016: (11,739), 2015: (9,434), 2014: (5,913)
+Principal payments on capital lease and other financing obligations -- 2016: (312), 2015: (119), 2014: (243)
+Other financing activities, net -- 2016: 2, 2015: (20), 2014: (55)
+ -- 2016: (310), 2015: (139), 2014: (298)
+Effect of exchange rate changes on cash and cash equivalents -- 2016: (63), 2015: (155), 2014: (123)
+Net increase in cash and cash equivalents -- 2016: 3,996, 2015: 592, 2014: 992
+Cash and cash equivalents at beginning of period -- 2016: 4,907, 2015: 4,315, 2014: 3,323
+ -- 2016: 8,903, 2015: 4,907, 2014: 4,315
+
+  --- chunk index 13207 ---
+  company=META year=2017 chunk_type=table
+  section_path=Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF CASH FLOWS
+  FULL TEXT:
+  The following table shows CONSOLIDATED STATEMENTS OF CASH FLOWS data for META 2017:
+Columns: 2017, 2016, 2015
+Net income -- 2017: 15,934, 2016: 10,217, 2015: 3,688
+Adjustments to reconcile net income to net cash provided by operating
+activities:
+Depreciation and amortization -- 2017: 3,025, 2016: 2,342, 2015: 1,945
+Share-based compensation -- 2017: 3,723, 2016: 3,218, 2015: 2,960
+Deferred income taxes -- 2017: (377), 2016: (457), 2015: (795)
+Tax benefit from share-based award activity -- 2017: -, 2016: -, 2015: 1,721
+Other -- 2017: 24, 2016: 30, 2015: 17
+Changes in assets and liabilities:
+Accounts receivable -- 2017: (1,609), 2016: (1,489), 2015: (973)
+Prepaid expenses and other current assets -- 2017: (192), 2016: (159), 2015: (144)
+Other assets -- 2017: 154, 2016: 14, 2015: (3)
+Accounts payable -- 2017: 43, 2016: 14, 2015: 18
+Partners payable -- 2017: 95, 2016: 67, 2015: 17
+Accrued expenses and other current liabilities -- 2017: 309, 2016: 1,014, 2015: 513
+Deferred revenue and deposits -- 2017: 4, 2016: 35, 2015: (9)
+Other liabilities -- 2017: 3,083, 2016: 1,262, 2015: 1,365
+ -- 2017: 24,216, 2016: 16,108, 2015: 10,320
+Purchases of property and equipment -- 2017: (6,733), 2016: (4,491), 2015: (2,523)
+Purchases of marketable securities -- 2017: (25,682), 2016: (22,341), 2015: (15,938)
+Sales of marketable securities -- 2017: 9,444, 2016: 13,894, 2015: 6,928
+Maturities of marketable securities -- 2017: 2,988, 2016: 1,261, 2015: 2,310
+Acquisitions of businesses, net of cash acquired, and purchases of -- 2017: (122), 2016: (123), 2015: (313)
+Change in restricted cash and deposits intangible assets -- 2017: 67, 2016: 61, 2015: 102
+ -- 2017: (20,038), 2016: (11,739), 2015: (9,434)
+Taxes paid related to net share settlement of equity awards -- 2017: (3,246), 2016: (6), 2015: (20)
+Principal payments on capital lease and other financing obligations -- 2017: -, 2016: (312), 2015: (119)
+Repurchases of Class A common stock -- 2017: (1,976), 2016: -, 2015: -
+Other financing activities, net -- 2017: (13), 2016: 8, 2015: -
+ -- 2017: (5,235), 2016: (310), 2015: (139)
+Effect of exchange rate changes on cash and cash equivalents -- 2017: 233, 2016: (63), 2015: (155)
+Net (decrease) increase in cash and cash equivalents -- 2017: (824), 2016: 3,996, 2015: 592
+Cash and cash equivalents at beginning of period -- 2017: 8,903, 2016: 4,907, 2015: 4,315
+ -- 2017: 8,079, 2016: 8,903, 2015: 4,907
+
+  --- chunk index 13610 ---
+  company=META year=2018 chunk_type=table
+  section_path=Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF CASH FLOWS
+  FULL TEXT:
+  The following table shows CONSOLIDATED STATEMENTS OF CASH FLOWS data for META 2018:
+Columns: 2018, 2017, 2016
+Net income -- 2018: 22,112, 2017: 15,934, 2016: 10,217
+Adjustments to reconcile net income to net cash provided by operating
+activities:
+Depreciation and amortization -- 2018: 4,315, 2017: 3,025, 2016: 2,342
+Share-based compensation -- 2018: 4,152, 2017: 3,723, 2016: 3,218
+Deferred income taxes -- 2018: 286, 2017: (377), 2016: (457)
+Other -- 2018: (64), 2017: 24, 2016: 30
+Changes in assets and liabilities:
+Accounts receivable -- 2018: (1,892), 2017: (1,609), 2016: (1,489)
+Prepaid expenses and other current assets -- 2018: (690), 2017: (192), 2016: (159)
+Other assets -- 2018: (159), 2017: 154, 2016: 14
+Accounts payable -- 2018: 221, 2017: 43, 2016: 14
+Partners payable -- 2018: 157, 2017: 95, 2016: 67
+Accrued expenses and other current liabilities -- 2018: 1,417, 2017: 309, 2016: 1,014
+Deferred revenue and deposits -- 2018: 53, 2017: 4, 2016: 35
+Other liabilities -- 2018: (634), 2017: 3,083, 2016: 1,262
+ -- 2018: 29,274, 2017: 24,216, 2016: 16,108
+Purchases of property and equipment, net -- 2018: (13,915), 2017: (6,733), 2016: (4,491)
+Purchases of marketable securities -- 2018: (14,656), 2017: (25,682), 2016: (22,341)
+Sales of marketable securities -- 2018: 12,358, 2017: 9,444, 2016: 13,894
+Maturities of marketable securities -- 2018: 4,772, 2017: 2,988, 2016: 1,261
+Acquisitions of businesses, net of cash acquired, and purchases of -- 2018: (137), 2017: (122), 2016: (123)
+Other investing activities, net intangible assets -- 2018: (25), 2017: (13), 2016: 8
+ -- 2018: (11,603), 2017: (20,118), 2016: (11,792)
+Taxes paid related to net share settlement of equity awards -- 2018: (3,208), 2017: (3,246), 2016: (6)
+Principal payments on capital lease and other financing obligations -- 2018: -, 2017: -, 2016: (312)
+Repurchases of Class A common stock -- 2018: (12,879), 2017: (1,976), 2016: -
+Net change in overdraft in cash pooling entities -- 2018: 500, 2017: -, 2016: -
+Other financing activities, net -- 2018: 15, 2017: (13), 2016: 8
+ -- 2018: (15,572), 2017: (5,235), 2016: (310)
+Effect of exchange rate changes on cash, cash equivalents, and restricted cash -- 2018: (179), 2017: 232, 2016: (63)
+Net increase (decrease) in cash, cash equivalents, and restricted cash -- 2018: 1,920, 2017: (905), 2016: 3,943
+Cash, cash equivalents, and restricted cash at beginning of the period -- 2018: 8,204, 2017: 9,109, 2016: 5,166
+ -- 2018: 10,124, 2017: 8,204, 2016: 9,109
+Cash and cash equivalents -- 2018: 10,019, 2017: 8,079, 2016: 8,903
+Restricted cash, included in prepaid expenses and other current assets -- 2018: 10, 2017: 18, 2016: 106
+Restricted cash, included in other assets -- 2018: 95, 2017: 107, 2016: 100
+ -- 2018: 10,124, 2017: 8,204, 2016: 9,109
+
+================================================================================
+CHECK: Nvidia inventory valuation policy
+  company='Nvidia'  year=None  chunk_type='text'
+  required patterns: ['[Ii]nventor', '(valuation|first-in|FIFO|net realizable)']
+--------------------------------------------------------------------------------
+  RESULT: FOUND 35 matching chunk(s).
+  ==> Content exists. If retriever didn't surface it, that's a RETRIEVER/RANKING bug.
+
+  --- chunk index 17907 ---
+  company=Nvidia year=2017 chunk_type=text
+  section_path=ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS OF > Critical Accounting Policies and Estimates > Inventories
+  FULL TEXT:
+  Inventory cost is computed on an adjusted standard basis, which approximates actual cost on an average or first-in, first-out basis. We charge cost of sales for inventory provisions to write down our inventory to the lower of cost or estimated market value or to completely write off obsolete or excess inventory. Most of our inventory provisions relate to the write-off of excess quantities of products, based on our inventory levels and future product purchase commitments compared to assumptions about future demand and market conditions. Situations that may result in excess or obsolete inventory include changes in business and economic conditions, changes in market conditions, sudden and significant decreases in demand for our products, inventory obsolescence because of changing technology and customer requirements, failure to estimate customer demand properly, or unexpected competitive pricing actions by our competition. In addition, cancellation or deferral of customer purchase orders could result in our holding excess inventory. Also, we may not be able to reduce our inventory purchase commitments in a timely manner in response to customer cancellations or deferrals.
+
+  --- chunk index 18029 ---
+  company=Nvidia year=2017 chunk_type=text
+  section_path=ITEM 15. EXHIBITS, FINANCIAL STATEMENT SCHEDULE > Note 1 - Organization and Summary of Significant Accounting Policies > Inventories
+  FULL TEXT:
+  Inventory cost is computed on an adjusted standard basis, which approximates actual cost on an average or first-in, first-out basis. Inventory costs consist primarily of the cost of semiconductors purchased from subcontractors, including wafer fabrication, assembly, testing and packaging, manufacturing support costs, including labor and overhead associated with such purchases, final test yield fallout, and shipping costs, as well as the cost of purchased memory products and other component parts. We charge cost of sales for inventory provisions to write down our inventory to the lower of cost or estimated market value or to completely write off obsolete or excess inventory. Most of our inventory provisions relate to the write-off of excess quantities of products, based on our inventory levels and future product purchase commitments compared to assumptions about future demand and market conditions. Once inventory has been written-off or written-down, it creates a new cost basis for the inventory that is not subsequently written-up.
+
+  --- chunk index 18308 ---
+  company=Nvidia year=2018 chunk_type=text
+  section_path=ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS > Inventories
+  FULL TEXT:
+  Inventory cost is computed on an adjusted standard basis, which approximates actual cost on an average or first-in, first-out basis. We charge cost of sales for inventory provisions to write down our inventory to the lower of cost or net realizable value or to completely write off obsolete or excess inventory. Most of our inventory provisions relate to the write-off of excess quantities of products, based on our inventory levels and future product purchase commitments compared to assumptions about future demand and market conditions. Situations that may result in excess or obsolete inventory include changes in business and economic conditions, changes in market conditions, sudden and significant decreases in demand for our products, inventory obsolescence because of changing technology and customer requirements, failure to estimate customer demand properly, or unexpected competitive pricing actions by our competition. In addition, cancellation or deferral of customer purchase orders could result in our holding excess inventory.
+
+================================================================================
+CHECK: Intel manufacturing risk factors
+  company='Intel'  year=None  chunk_type='text'
+  required patterns: ['[Mm]anufactur', '[Rr]isk']
+--------------------------------------------------------------------------------
+  RESULT: FOUND 201 matching chunk(s).
+  ==> Content exists. If retriever didn't surface it, that's a RETRIEVER/RANKING bug.
+
+  --- chunk index 7387 ---
+  company=Intel year=2016 chunk_type=text
+  section_path=FORM 10-K > ITEM 1. > Virtuous Cycle of Growth
+  FULL TEXT:
+  with our leading-edge products and manufacturing process to enable new classes of products for the data center and Internet of Things market segments. - Corporate Responsibility. Throughout our history, Intel has expanded the reach, influence, and power of computing to improve people's everyday lives. We set ambitious goals and make strategic investments to drive improvements in environmental sustainability, supply chain responsibility, diversity and inclusion, and social impact that benefit the environment and society. We believe that our focus on corporate responsibility-built on a strong foundation of transparency, governance, and ethics-creates value for Intel and our stockholders by helping us mitigate risks, reduce costs, build brand value, and identify new market opportunities. To understand our performance and the progress we are making toward our corporate responsibility goals, refer to "Corporate Responsibility and Sustainability" below and our Corporate Responsibility Report on our website.
+
+  --- chunk index 7448 ---
+  company=Intel year=2016 chunk_type=text
+  section_path=FORM 10-K > ITEM 1A. > RISK FACTORS > We operate globally and are subject to significant risks in many jurisdictions.
+  FULL TEXT:
+  and financial condition. Catastrophic events or geopolitical conditions could have a material adverse effect on our operations and financial results. Our operations or systems could be disrupted by natural disasters; industrial accidents; geopolitical conditions; terrorist activity; public health issues; cybersecurity incidents; interruptions of service from utilities, transportation, or telecommunications providers; or other catastrophic events. Such events could make it difficult or impossible to manufacture or deliver products to our customers, receive production materials from our suppliers, or perform critical functions, which could adversely affect our revenue and require significant recovery time and expenditures to resume operations. While we maintain business recovery plans that are intended to enable us to recover from natural disasters or other events that can be disruptive to our business, some of our systems are not fully redundant and we cannot be sure that our plans will fully protect us from all such disruptions. We maintain a program of insurance coverage for a variety of property, casualty, and other risks. The types and amounts of insurance we obtain vary depending on availability, cost, and decisions with respect to risk retention. Some of our policies have large deductibles and broad exclusions.
+
+  --- chunk index 7451 ---
+  company=Intel year=2016 chunk_type=text
+  section_path=FORM 10-K > ITEM 1A. > RISK FACTORS > We are vulnerable to product and manufacturing-related risks.
+  FULL TEXT:
+  mand. Our revenue and gross margin can also be affected by the timing of our product introductions and related expenses, including marketing expenses. We are subject to risks associated with the development and implementation of new manufacturing process technology. We may not be successful or efficient in developing or implementing new production processes. Production of integrated circuits is a complex process. We are continually engaged in the transition from our existing process to the next-generation process technology. This consistent innovation involves significant expense and carries inherent risks, including difficulties in designing and developing next-generation process technologies, development and production timing delays, lower than anticipated manufacturing yields, and product defects and errata. Disruptions in the production process can also result from errors, defects in materials, delays in obtaining or revising operating permits and licenses, interruption in our supply of materials or resources, and disruptions at our fabrication and assembly and test facilities due to accidents, maintenance issues, or unsafe working conditions-all of which could affect the timing of production ramps and yields.
+
+================================================================================
+CHECK: Meta competitive risks
+  company='META'  year=None  chunk_type='text'
+  required patterns: ['[Cc]ompetit', '[Rr]isk']
+--------------------------------------------------------------------------------
+  RESULT: FOUND 57 matching chunk(s).
+  ==> Content exists. If retriever didn't surface it, that's a RETRIEVER/RANKING bug.
+
+  --- chunk index 12517 ---
+  company=META year=2016 chunk_type=text
+  section_path=PART IV > NOTE ABOUT FORWARD-LOOKING STATEMENTS
+  FULL TEXT:
+  This Annual Report on Form 10-K contains forward-looking statements within the meaning of the Private Securities Litigation Reform Act of 1995. All statements contained in this Annual Report on Form 10-K other than statements of historical fact, including statements regarding our future results of operations and financial position, our business strategy and plans, and our objectives for future operations, are forward-looking statements. The words "believe," "may," "will," "estimate," "continue," "anticipate," "intend," "expect," and similar expressions are intended to identify forward-looking statements. We have based these forward-looking statements largely on our current expectations and projections about future events and trends that we believe may affect our financial condition, results of operations, business strategy, short-term and long-term business operations and objectives, and financial needs. These forward-looking statements are subject to a number of risks, uncertainties and assumptions, including those described in Part I, Item 1A, "Risk Factors" in this Annual Report on Form 10-K. Moreover, we operate in a very competitive and rapidly changing environment.
+
+  --- chunk index 12518 ---
+  company=META year=2016 chunk_type=text
+  section_path=PART IV > NOTE ABOUT FORWARD-LOOKING STATEMENTS
+  FULL TEXT:
+  ed in Part I, Item 1A, "Risk Factors" in this Annual Report on Form 10-K. Moreover, we operate in a very competitive and rapidly changing environment. New risks emerge from time to time. It is not possible for our management to predict all risks, nor can we assess the impact of all factors on our business or the extent to which any factor, or combination of factors, may cause actual results to differ materially from those contained in any forward- looking statements we may make. In light of these risks, uncertainties and assumptions, the future events and trends discussed in this Annual Report on Form 10-K may not occur and actual results could differ materially and adversely from those anticipated or implied in the forward-looking statements. We undertake no obligation to revise or publicly release the results of any revision to these forward-looking statements, except as required by law. Given these risks and uncertainties, readers are cautioned not to place undue reliance on such forward-looking statements. Unless expressly indicated or the context requires otherwise, the terms "Facebook," "company," "we," "us," and "our" in this document refer to Facebook, Inc., a Delaware corporation, and, where appropriate, its wholly owned subsidiaries.
+
+  --- chunk index 12595 ---
+  company=META year=2016 chunk_type=text
+  section_path=Item 1A. Risk Factors > Risks Related to Our Business and Industry > If we are unable to protect our intellectual property, the value of our brands and other intangible assets may be diminished, and our business may be adversely affected.
+  FULL TEXT:
+  ired to license or disclose code and/or innovations that turn out to be material to our business and may also be exposed to increased litigation risk. If the protection of our proprietary rights is inadequate to prevent unauthorized use or appropriation by third parties, the value of our brands and other intangible assets may be diminished and competitors may be able to more effectively mimic our products, services, and methods of operations. Any of these events could have an adverse effect on our business and financial results.
+
+================================================================================
+CHECK: Google latest revenue (2025)
+  company='Google'  year=2025  chunk_type='table'
+  required patterns: ['\\bRevenue', '\\d{2,3},\\d{3}']
+--------------------------------------------------------------------------------
+  RESULT: FOUND 5 matching chunk(s).
+  ==> Content exists. If retriever didn't surface it, that's a RETRIEVER/RANKING bug.
+
+  --- chunk index 7106 ---
+  company=Google year=2025 chunk_type=table
+  section_path=FORM 10-K > ITEM 7. > Revenues
+  FULL TEXT:
+  The following table shows Revenues data for Google 2025:
+Columns: 2024, 2025
+Google Search & other -- 2024: 198,084, 2025: 224,532
+YouTube ads -- 2024: 36,147, 2025: 40,367
+Google Network -- 2024: 30,359, 2025: 29,792
+Google advertising -- 2024: 264,590, 2025: 294,691
+Google subscriptions, platforms, and devices -- 2024: 40,340, 2025: 48,030
+Google Services total -- 2024: 304,930, 2025: 342,721
+Google Cloud -- 2024: 43,229, 2025: 58,705
+Other Bets -- 2024: 1,648, 2025: 1,537
+Hedging gains (losses) -- 2024: 211, 2025: (127)
+Total revenues -- 2024: 350,018, 2025: 402,836
+
+  --- chunk index 7115 ---
+  company=Google year=2025 chunk_type=table
+  section_path=FORM 10-K > ITEM 7. > Cost of Revenues
+  FULL TEXT:
+  The following table shows Cost of Revenues data for Google 2025:
+Columns: 2024, 2025
+TAC -- 2024: 54,900, 2025: 59,926
+Other cost of revenues -- 2024: 91,406, 2025: 102,609
+Total cost of revenues -- 2024: 146,306, 2025: 162,535
+Total cost of revenues as a percentage of revenues -- 2024: 42 %, 2025: 40 %
+
+  --- chunk index 7185 ---
+  company=Google year=2025 chunk_type=table
+  section_path=FORM 10-K > ITEM 8. > CONSOLIDATED STATEMENTS OF INCOME
+  FULL TEXT:
+  The following table shows CONSOLIDATED STATEMENTS OF INCOME data for Google 2025:
+Columns: 2023, 2024, 2025
+Revenues -- 2023: 307,394, 2024: 350,018, 2025: 402,836
+Costs and expenses:
+Cost of revenues -- 2023: 133,332, 2024: 146,306, 2025: 162,535
+Research and development -- 2023: 45,427, 2024: 49,326, 2025: 61,087
+Sales and marketing -- 2023: 27,917, 2024: 27,808, 2025: 28,693
+General and administrative -- 2023: 16,425, 2024: 14,188, 2025: 21,482
+Total costs and expenses -- 2023: 223,101, 2024: 237,628, 2025: 273,797
+Income from operations -- 2023: 84,293, 2024: 112,390, 2025: 129,039
+Other income (expense), net -- 2023: 1,424, 2024: 7,425, 2025: 29,787
+Income before income taxes -- 2023: 85,717, 2024: 119,815, 2025: 158,826
+Provision for income taxes -- 2023: 11,922, 2024: 19,697, 2025: 26,656
+Net income -- 2023: 73,795, 2024: 100,118, 2025: 132,170
+Basic net income per share (Note 12) -- 2023: 5.84, 2024: 8.13, 2025: 10.91
+Diluted net income per share (Note 12) -- 2023: 5.80, 2024: 8.04, 2025: 10.81
+49.
+
+================================================================================
+CHECK: Nvidia most recent quarterly revenue
+  company='Nvidia'  year=None  chunk_type='table'
+  required patterns: ['[Qq]uarter', '[Rr]evenue']
+--------------------------------------------------------------------------------
+  RESULT: FOUND 1 matching chunk(s).
+  ==> Content exists. If retriever didn't surface it, that's a RETRIEVER/RANKING bug.
+
+  --- chunk index 18148 ---
+  company=Nvidia year=2017 chunk_type=table
+  section_path=ITEM 15. EXHIBITS, FINANCIAL STATEMENT SCHEDULE > Note 18 - Quarterly Summary (Unaudited) > Fiscal Year 2017
+  FULL TEXT:
+  The following table shows Fiscal Year 2017 data for Nvidia 2017:
+Columns: 2017, 2016, 2016, 2016
+Revenue -- 2017: 2,173, 2016: 1,305
+Cost of revenue -- 2017: 870, 2016: 554
+Gross profit -- 2017: 1,303
+Net income (1) -- 2017: 655, 2016: 208
+Net income per share (1):
+Basic -- 2017: 1.18, 2016: 0.39
+Diluted -- 2017: 0.99, 2016: 0.35
+(1) In the third quarter of fiscal year 2017, we adopted an accounting standard related to stock-based compensation, which
+previously reported quarterly results for fiscal year 2017 as follows:
+ -- 2017: July 31, 2016
+Income tax expense -- 2017: 64, 2016: adjusted
+Net income -- 2017: 253
+Basic net income per share -- 2017: 0.47
+Diluted net income per share -- 2017: 0.40
+Weighted average shares used in diluted net income per share computation -- 2017: 631
+Net cash provided by operating activities -- 2017: 184
+Net cash used in financing activities -- 2017: (35)
+ -- 2017: 91

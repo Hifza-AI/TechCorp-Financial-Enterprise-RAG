@@ -11,11 +11,21 @@ Apple-only test_apple_queries.py, extended to cover every company so
 Recall@3 / Precision@1 can be measured the same way for direct
 comparison against the original Apple-only baseline.
 
+NEW: ALL output is written to test_multi_company_results.txt as well
+as printed to the terminal -- long runs were getting cut off in the
+terminal window, so the file is now the reliable, complete copy to
+share for review. Chunk text is also no longer truncated to 250
+chars -- the full text is shown, so it's possible to tell whether an
+answer is genuinely absent vs just further down in a longer chunk.
+
 USAGE:
     python test_multi_company_queries.py
 """
 
 from retriever import Retriever
+
+
+OUTPUT_FILE = "test_multi_company_results.txt"
 
 
 TEST_QUERIES = [
@@ -101,29 +111,46 @@ def main():
 
     retriever = Retriever()
 
+    lines_out = []
+
+    def log(msg=""):
+        print(msg)
+        lines_out.append(msg)
+
     for i, query in enumerate(TEST_QUERIES, 1):
 
-        print("\n" + "=" * 80)
-        print(f"[{i}] Q: {query}")
-        print("=" * 80)
+        log("\n" + "=" * 80)
+        log(f"[{i}] Q: {query}")
+        log("=" * 80)
 
         response = retriever.search(query, top_k=3)
 
         if not response["matched"]:
-            print(f"    NO MATCH -- {response['reason']}")
+            log(f"    NO MATCH -- {response['reason']}")
             continue
 
         for rank, r in enumerate(response["results"], 1):
 
-            print(
+            log(
                 f"\n  #{rank}  dense={r['score']:.3f}  rrf={r['rrf_score']:.4f}  "
                 f"| {r['company']} {r['year']} | {r['chunk_type']}"
             )
-            print(f"      section: {r['section_path']}")
-            print(f"      pages  : {r['page_numbers']}")
+            log(f"      section: {r['section_path']}")
+            log(f"      pages  : {r['page_numbers']}")
 
-            preview = r["text"][:250].replace("\n", " ")
-            print(f"      text   : {preview}...")
+            # Full text, not truncated to 250 chars -- the earlier
+            # truncated preview made it impossible to tell whether
+            # the ACTUAL number/answer was further down in the
+            # chunk's text or genuinely absent.
+            log(f"      text   : {r['text']}")
+
+        # Flush to disk after EVERY query, not just at the end -- if
+        # the run gets interrupted partway through, whatever ran so
+        # far is still saved and reviewable.
+        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines_out))
+
+    print(f"\n\nFull results saved to: {OUTPUT_FILE}")
 
 
 if __name__ == "__main__":
