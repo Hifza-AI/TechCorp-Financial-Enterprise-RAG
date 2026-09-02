@@ -253,6 +253,10 @@ class HeadingDetector:
                             analysis["is_top_level_marker"] = (
                                 self._is_top_level_marker(combined_text)
                             )
+                            analysis["is_prominent_boundary"] = (
+                                "much_larger_than_body" in combined_reasons
+                                and "all_caps" in combined_reasons
+                            )
 
                         # If combined_score didn't qualify, we
                         # deliberately do NOT touch any buffered
@@ -383,6 +387,34 @@ class HeadingDetector:
             "is_italic": is_italic,
             "is_note_marker": is_heading and self._is_note_marker(text),
             "is_top_level_marker": is_heading and self._is_top_level_marker(text),
+            # NEW: a heading that is BOTH strongly-oversized relative
+            # to body text ("much_larger_than_body") AND fully
+            # ALL-CAPS is a distinctly MORE prominent styling tier
+            # than an ordinary bold sub-heading -- confirmed on Intel
+            # 2019, where every genuine Note-level section boundary
+            # ("BORROWINGS", "DERIVATIVE FINANCIAL INSTRUMENTS",
+            # "RETIREMENT BENEFIT PLANS", etc.) used this exact,
+            # consistent combination, while that same document's
+            # ordinary Note sub-topics did not. This matters because
+            # Intel's 2019 filing -- unlike its own 2025 filing, or
+            # any of Apple/Google/Nvidia/Meta's -- doesn't put a
+            # "Note N" prefix on the ACTUAL section-starting heading
+            # at all (the "Note N: Title" text only appears in the
+            # Index/cross-reference listing and in inline mentions
+            # elsewhere, never on the real heading line itself), so
+            # is_note_marker can never match it no matter which
+            # punctuation variant it looks for. Without recognizing
+            # this some other way, "CONSOLIDATED STATEMENTS OF
+            # STOCKHOLDERS' EQUITY" (a genuine note-marker via the
+            # CONSOLIDATED-title pattern) never gets closed out, and
+            # ends up swallowing EVERY subsequent Note and even the
+            # Exhibits section at the very end of the filing as its
+            # descendants.
+            "is_prominent_boundary": (
+                is_heading
+                and "much_larger_than_body" in reasons
+                and "all_caps" in reasons
+            ),
         }
 
     # =========================================================
@@ -402,6 +434,7 @@ class HeadingDetector:
             "is_italic": False,
             "is_note_marker": False,
             "is_top_level_marker": False,
+            "is_prominent_boundary": False,
         }
 
     # =========================================================
@@ -506,6 +539,30 @@ class HeadingDetector:
         if re.fullmatch(
             r"(Year|Years|Quarter|Quarters|Month|Months|Week|Weeks|"
             r"Three\s+Months|Six\s+Months|Nine\s+Months)\s+Ended",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+            return 0, ["table_column_header_date"]
+
+        # NEW: some companies combine the period-label AND the units-
+        # disclaimer onto ONE physical line -- "Years Ended (In
+        # Millions)", "Years Ended ($ In Millions)", "Years Ended (In
+        # Millions, Except Per Share Amounts)" -- rather than as two
+        # separate lines. Neither of the two exclusions above catches
+        # this combined form on its own (the first requires the line
+        # to be JUST "Year(s) Ended" with nothing else; the units-
+        # disclaimer check earlier in this function requires the line
+        # to be JUST the parenthetical). Confirmed on Intel 2025: this
+        # combined caption became its own heading 25 separate times
+        # across the filing -- above the Income Statement, Cash Flow
+        # Statement, Comprehensive Income Statement, and numerous Note
+        # tables -- causing the same header/first-data-row corruption
+        # already seen on Nvidia.
+        if re.fullmatch(
+            r"(Year|Years|Quarter|Quarters|Month|Months|Week|Weeks|"
+            r"Three\s+Months|Six\s+Months|Nine\s+Months)\s+Ended\s*"
+            r"\(\s*\$?\s*(dollars\s+|amounts\s+)?in\s+"
+            r"(millions|thousands|billions)(\s*,\s*[^)]*)?\)",
             text.strip(),
             re.IGNORECASE,
         ):
@@ -779,7 +836,24 @@ class HeadingDetector:
 
         stripped = text.strip()
 
-        if re.match(r"^Note\s+\d+\s*[-.\u2013\u2014]", stripped):
+        # Matches "Note N - Title" (Apple, hyphen), "Note N. Title"
+        # (Google/Nvidia/Meta, period), and "Note N : Title" (Intel,
+        # colon -- sometimes with a space before the colon, "Note 1
+        # :"). Confirmed on Intel 2025: this colon variant caused
+        # Notes 1-9 specifically to have their number-marker line
+        # ("Note 3 :") physically separated (as its own PDF line)
+        # from their real title line ("Operating Segments") -- unlike
+        # Notes 10-19, where both fit on one combined physical line.
+        # Recognizing "Note N :" as a note-marker on its own is
+        # enough to fix this correctly even when split: the existing
+        # note-marker exclusivity rule in hierarchy_builder means the
+        # marker line stays open (isn't closed by a same-level
+        # generic heading), so the very next heading ("Operating
+        # Segments") correctly nests as ITS CHILD rather than
+        # becoming an unrelated sibling -- not a single combined
+        # title, but the content ends up correctly grouped under the
+        # right Note either way.
+        if re.match(r"^Note\s+\d+\s*[-.:\u2013\u2014]", stripped):
             return True
 
         # "Report of Independent Registered Public Accounting Firm" is

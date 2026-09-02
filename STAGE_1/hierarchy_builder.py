@@ -121,6 +121,10 @@ class HierarchyBuilder:
 
                     is_top_level_marker = block.get("is_top_level_marker", False)
 
+                    is_prominent_boundary = block.get(
+                        "is_prominent_boundary", False
+                    )
+
                     # A level of 0 can occasionally slip through if a
                     # block was downgraded (e.g. by fix_paragraphs.py).
                     # Treat it as a normal paragraph instead of trying
@@ -173,12 +177,37 @@ class HierarchyBuilder:
                     # (the next Note, or an Item/Part boundary) --
                     # never by a same-level GENERIC heading, which
                     # instead becomes its child.
+                    # NEW EXCEPTION TO THE EXCEPTION: if the INCOMING
+                    # heading is itself a prominent, ALL-CAPS,
+                    # oversized standalone title -- the same styling
+                    # tier as genuine Note/statement boundaries, just
+                    # without any recognizable "Note N" text-pattern
+                    # on it -- it should ALSO be allowed to close out
+                    # a currently-open note-marker container, exactly
+                    # like a real is_note_marker would. Confirmed on
+                    # Intel 2019: unlike Intel's own 2025 filing, the
+                    # ACTUAL section-starting heading for each Note
+                    # has NO "Note N" prefix at all ("BORROWINGS",
+                    # "DERIVATIVE FINANCIAL INSTRUMENTS", etc. appear
+                    # bare -- the "Note N: Title" text only shows up
+                    # in the Index and in inline cross-references
+                    # elsewhere, never on the real heading line).
+                    # Without this, "CONSOLIDATED STATEMENTS OF
+                    # STOCKHOLDERS' EQUITY" never closes, and swallows
+                    # every subsequent Note plus the Exhibits section
+                    # at the very end of the filing as its children.
+                    # Ordinary Note sub-topics ("Cash Equivalents",
+                    # "Basis of Presentation") do NOT share this
+                    # specific much-larger+all-caps combination, so
+                    # this stays safe for the ORIGINAL exclusivity
+                    # rule's purpose.
                     while len(stack) > 1 and stack[-1]["level"] >= level:
 
                         if (
                             stack[-1].get("is_note_marker")
                             and not is_note_marker
                             and not is_top_level_marker
+                            and not is_prominent_boundary
                         ):
                             break
 
@@ -356,4 +385,3 @@ if __name__ == "__main__":
         print("====================================")
         print("\nOutput:")
         print("STAGE_1/hierarchy")
-        

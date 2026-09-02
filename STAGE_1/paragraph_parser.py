@@ -102,6 +102,8 @@ class ParagraphParser:
         parsed_pages,
         min_repeat_ratio=0.3,
         min_occurrences=5,
+        min_occurrences_short=3,
+        short_word_limit=2,
     ):
         """
         NEW: now checks HEADING blocks too, not just paragraphs.
@@ -121,6 +123,35 @@ class ParagraphParser:
         definition -- it's only page-header-style boilerplate
         (company name, repeated filing captions) that could
         realistically repeat across 30%+ of pages or 5+ times.
+
+        NEW: VERY SHORT (<= 2 word) heading text gets its own, much
+        LOWER occurrence-floor (default 3) instead of the standard
+        threshold. Confirmed on Intel 2025 (139 pages): generic
+        table row/column-labels -- "Total", "Revenue", "Assets",
+        "Liabilities" -- are short, bold text sitting inside segment
+        and financial-statement tables, so they score as genuine
+        headings the same way "NVIDIA Corporation..." did. But
+        because these are individually much SHORTER, more
+        common/generic phrases, they don't need anywhere near the
+        same repetition count to be confidently recognized as
+        recurring table-labels rather than a genuine, unique
+        section title -- "Total" appeared as a heading on 14 of
+        Intel's 139 pages, comfortably below the standard threshold
+        (capped at 20 for a document this long) but still an
+        unambiguous, non-coincidental repeat for a 1-word candidate.
+        A longer, more specific phrase needs the higher bar precisely
+        because it's inherently less likely to repeat by coincidence
+        -- a short generic word doesn't carry that same protection,
+        so it's safe to flag it sooner.
+
+        This does NOT catch every recurring table-label -- some
+        (e.g. Intel's segment names "CCG", "DCAI") appear as a
+        heading-candidate only on the 1-2 specific pages containing
+        that particular segment-summary table, never crossing even
+        this lower floor. That narrower pattern needs a different,
+        context-based fix (recognizing table-adjacency directly)
+        rather than a frequency-count approach, and is intentionally
+        NOT addressed by this change.
         """
 
         total_pages = len(parsed_pages)
@@ -164,16 +195,25 @@ class ParagraphParser:
         # meaningful for short documents while preventing the
         # percentage rule from becoming impossibly strict for long
         # ones.
-        threshold = max(
+        standard_threshold = max(
             min_occurrences,
             min(total_pages * min_repeat_ratio, 20),
         )
 
-        boilerplate_texts = {
-            text
-            for text, count in text_page_counts.items()
-            if count >= threshold
-        }
+        boilerplate_texts = set()
+
+        for text, count in text_page_counts.items():
+
+            word_count = len(text.split())
+
+            threshold = (
+                min_occurrences_short
+                if word_count <= short_word_limit
+                else standard_threshold
+            )
+
+            if count >= threshold:
+                boilerplate_texts.add(text)
 
         if not boilerplate_texts:
             return parsed_pages
@@ -345,6 +385,9 @@ class ParagraphParser:
                     "is_note_marker": heading_info.get("is_note_marker", False),
                     "is_top_level_marker": heading_info.get(
                         "is_top_level_marker", False
+                    ),
+                    "is_prominent_boundary": heading_info.get(
+                        "is_prominent_boundary", False
                     ),
                 })
 
