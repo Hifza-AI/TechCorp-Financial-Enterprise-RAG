@@ -1036,6 +1036,50 @@ class TableParser:
         (not header-labels). A row is treated as DATA once this is
         high -- everything above it, in the region, is candidate
         header material.
+
+        NEW (Nvidia 2026, confirmed via real table_analysis.json
+        output): standalone currency-symbol tokens ("$") are now
+        EXCLUDED from the denominator entirely, not just from the
+        numerator. Many 10-K tables repeat a "$" before EVERY value
+        column -- not just the first -- e.g. a 3-year Income
+        Statement row literally extracts as 7 separate cells:
+        "Revenue", "$", "215,938", "$", "130,497", "$", "60,922".
+        Counting those three "$" symbols in the denominator (they
+        were already correctly excluded from the numerator) drags a
+        genuinely all-numeric DATA row's fraction down to 3/7 = 0.43
+        -- just under the 0.5 threshold this function's only caller
+        (_find_text_header's data-start-index search) requires.
+
+        Confirmed real-world impact: on EVERY one of Nvidia's core
+        financial statements and most Notes tables (Income Statement,
+        Comprehensive Income, Cash Flows, and 19 other tables --
+        practically half of the filing's tables), this caused
+        data_start_index to NEVER be found, so the "header zone"
+        scan never stopped -- it kept extending through the ENTIRE
+        table, sweeping real data rows (including the Revenue row's
+        own dollar figures, e.g. 215,938 / 130,497 / 60,922) into the
+        x-position clustering that builds column NAMES. The result:
+        actual revenue/net-income figures ended up embedded inside
+        bogus column-header strings like "Jan 25, 2026, 215,938,
+        Year Ended Jan 26, 2025, 130,497" instead of ever becoming
+        real column names or real row values.
+
+        Root cause this was hiding behind: Nvidia's column headers
+        are full DATES ("Jan 25, 2026"), which never match _is_year()
+        (that requires a bare 4-digit token) -- so Nvidia's tables
+        always fall through to this TEXT-LABEL header path instead of
+        the simpler year-column path the other 5 companies' bare-year
+        ("2025", "2024", "2023") tables use successfully. This bug
+        was therefore invisible on every other company checked so
+        far, and only surfaces for a date-style (not bare-year)
+        column-header convention.
+
+        Excluding "$" (and the other already-established non-data
+        symbol tokens -- "-", "--", "—", "%", "(", ")") from the
+        denominator as well fixes this cleanly: a row's fraction now
+        reflects only the ratio among cells that could plausibly be
+        either a real label or a real value, which is what this
+        function's docstring already promised.
         """
 
         cells = self._extract_cells(row)
@@ -1043,12 +1087,20 @@ class TableParser:
         if not cells:
             return 0.0
 
+        relevant_cells = [
+            cell for cell in cells
+            if cell["text"].strip() not in self.NON_LABEL_TOKENS
+        ]
+
+        if not relevant_cells:
+            return 0.0
+
         numeric_count = sum(
-            1 for cell in cells
+            1 for cell in relevant_cells
             if self._looks_numeric_cell(cell["text"])
         )
 
-        return numeric_count / len(cells)
+        return numeric_count / len(relevant_cells)
 
     def _looks_numeric_cell(self, text):
 
