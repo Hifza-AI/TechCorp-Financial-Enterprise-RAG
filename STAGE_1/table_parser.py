@@ -1061,6 +1061,123 @@ class TableParser:
 
         return bool(cleaned) and cleaned.isdigit()
 
+    def _looks_like_value_cell(self, text):
+        """
+        NEW (Adobe 2025, confirmed via real chunks.json output):
+        True for any cell that represents a genuine VALUE slot in a
+        financial-statement row -- either a real number (see
+        _looks_numeric_cell) OR an explicit dash/em-dash placeholder
+        for zero/not-applicable ("-", "--", "—"). Financial tables
+        use a bare dash as a real, meaningful VALUE (e.g. "Common
+        Stock Amount: -"), not as label punctuation -- this is the
+        exact same exception _parse_data_row's value-matching logic
+        already makes for NON_LABEL_TOKENS (see the
+        `text not in ("-", "--", "—")` check there).
+
+        Used only by _consolidate_raw_label_fragments() below, to
+        find where a headerless/raw row's LABEL ends and its VALUES
+        begin. Every other numeric/value check in this file is
+        completely untouched.
+        """
+
+        cleaned = text.strip()
+
+        if cleaned in ("-", "--", "—"):
+            return True
+
+        return self._looks_numeric_cell(text)
+
+    def _consolidate_raw_label_fragments(self, cells):
+        """
+        NEW (Adobe 2025, confirmed via real chunks.json output): a
+        row-label that wraps across 2+ physical PDF lines (e.g.
+        "Other comprehensive income" / "(loss), net of taxes",
+        "Re-issuance of treasury stock" / "under stock compensation"
+        / "plans", "Value of shares in deferred" / "compensation
+        plan") reaches this HEADERLESS/raw fallback path as SEVERAL
+        separate leading cells instead of one merged label.
+
+        Root cause: _merge_wrapped_continuation_labels() (see above)
+        already correctly merges the underlying PHYSICAL LINES of
+        such a row together -- but it only guarantees those lines
+        end up grouped into one ROW; it does not merge their TEXT
+        into a single CELL. When _extract_cells() then re-splits
+        that combined row back out cell-by-cell (one cell per
+        physical line/span), the wrapped label re-fragments into N
+        separate leading cells.
+
+        For a table with a DETECTED header (year/text-label/grouped),
+        this is already handled correctly downstream -- see
+        _parse_data_row(), which joins every cell to the LEFT of the
+        first real column position into one `label` string. But a
+        table that falls all the way through to THIS raw fallback
+        (e.g. because its header is a compound, multi-row, non-year
+        grouped header -- like Adobe's Consolidated Statements of
+        Stockholders' Equity, whose "Common Stock"/"Treasury Stock"
+        group headers each span 2 sub-columns, a pattern none of the
+        structured header-detectors above recognize yet) never went
+        through that label-consolidation step at all.
+
+        Confirmed real symptom on Adobe's Stockholders' Equity
+        table: rows rendered downstream as
+            "Other comprehensive income | (loss), net of taxes | - | ... | 8"
+        instead of
+            "Other comprehensive income (loss), net of taxes | - | ... | 8"
+        -- silently shifting every subsequent value's apparent
+        column position by one cell.
+
+        Fix: merge every LEADING cell up to (but not including) the
+        first cell that looks like a genuine value slot (per
+        _looks_like_value_cell -- a real number, or an explicit
+        "-"/"--"/"—" placeholder) into ONE cell. A standalone "$"
+        immediately before that first value is dropped, matching the
+        exact same convention already used everywhere else in this
+        file (NON_LABEL_TOKENS).
+
+        This never changes the return shape (still a list of
+        {"text", "x"} cells, same as before) and never touches any
+        row where label-wrapping doesn't apply (a row with no value
+        cells at all, or one that already starts with a value, is
+        returned completely untouched) -- so no other table's output
+        is affected.
+        """
+
+        first_value_index = None
+
+        for index, cell in enumerate(cells):
+
+            text = cell["text"].strip()
+
+            if text == "$":
+                continue
+
+            if self._looks_like_value_cell(text):
+                first_value_index = index
+                break
+
+        if first_value_index is None or first_value_index == 0:
+            # No value cells at all, or the row already starts with
+            # a value (nothing to consolidate) -- leave untouched.
+            return cells
+
+        label_cells = cells[:first_value_index]
+        value_cells = cells[first_value_index:]
+
+        label_parts = [
+            c["text"].strip() for c in label_cells
+            if c["text"].strip() and c["text"].strip() != "$"
+        ]
+
+        if not label_parts:
+            return cells
+
+        merged_label_cell = {
+            "text": " ".join(label_parts),
+            "x": label_cells[0]["x"],
+        }
+
+        return [merged_label_cell] + value_cells
+
     def _find_text_header(self, rows, max_header_rows=14, x_cluster_tolerance=None):
         """
         Detects wrapped, multi-line TEXT-LABEL column headers (e.g.
@@ -1577,10 +1694,19 @@ class TableParser:
             if not cells:
                 continue
 
+            # NEW: consolidate any wrapped-label fragments BEFORE
+            # emitting this row -- see _consolidate_raw_label_fragments()
+            # docstring for the full rationale (confirmed on Adobe
+            # 2025's Consolidated Statements of Stockholders' Equity
+            # table). Output shape is unchanged (still a list of
+            # {"text", "x"} cells) -- only rows that actually had a
+            # wrapped leading label are affected.
+            consolidated_cells = self._consolidate_raw_label_fragments(cells)
+
             parsed_rows.append({
                 "cells": [
                     {"text": cell["text"], "x": cell["x"]}
-                    for cell in cells
+                    for cell in consolidated_cells
                 ]
             })
 

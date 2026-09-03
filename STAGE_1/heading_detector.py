@@ -915,6 +915,46 @@ class HeadingDetector:
         ):
             return True
 
+        # NEW (Adobe 2025, confirmed via real hierarchy_outline.txt +
+        # chunks.json output): the bare divider heading "NOTES TO
+        # CONSOLIDATED FINANCIAL STATEMENTS" -- the section title
+        # that introduces the whole Notes section, sitting directly
+        # after the last core financial statement (Cash Flows) and
+        # directly before "NOTE 1." -- carries NO "Note N" number
+        # itself, so none of the regexes above ever match it. It also
+        # isn't a PART/Item marker.
+        #
+        # Without recognizing it, it fails every check in the
+        # exclusivity rule (not note_marker, not top_level_marker,
+        # not prominent_boundary), so the previously-open note-marker
+        # container right before it -- "CONSOLIDATED STATEMENTS OF
+        # CASH FLOWS" -- never gets closed. Confirmed on real output:
+        # this single miss caused ALL of Notes 1 through 18 (the
+        # entire Notes section of the filing) to nest as descendants
+        # of "CONSOLIDATED STATEMENTS OF CASH FLOWS" instead of being
+        # its siblings, e.g. real section_path values coming out as
+        # "...CASH FLOWS > NOTE 8. GOODWILL AND OTHER INTANGIBLES"
+        # instead of "...NOTES TO CONSOLIDATED FINANCIAL STATEMENTS >
+        # NOTE 8. GOODWILL AND OTHER INTANGIBLES".
+        #
+        # The repeated "(Continued)" variant that appears at the top
+        # of every subsequent Notes page is already correctly removed
+        # by the boilerplate-repetition fix elsewhere in the pipeline
+        # (confirmed: 0 chunks contain "Continued" in their
+        # section_path), so it never reaches heading_detector as a
+        # real candidate -- but the optional suffix is still matched
+        # here defensively in case a filing's boilerplate threshold
+        # doesn't happen to catch it (e.g. a very short filing where
+        # the page-repetition count falls under the boilerplate
+        # floor).
+        if re.match(
+            r"^NOTES?\s+TO\s+CONSOLIDATED\s+FINANCIAL\s+STATEMENTS"
+            r"\s*(\(Continued\))?\s*$",
+            stripped,
+            re.IGNORECASE,
+        ):
+            return True
+
         return False
 
 
