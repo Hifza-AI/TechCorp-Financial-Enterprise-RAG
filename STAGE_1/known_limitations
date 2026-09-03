@@ -137,3 +137,5 @@ Nvidia — 3 complex raw-fallback tables (Segment Info year-blocks, Leases sched
 
 Chipotle — "Income Taxes Paid" table (Note 6) mein intro-sentence column-name ban jaati hai, 2024/2023 data incomplete lagta hai (2025 values sahi hain). Tier-3, narrow (1 table). NOT fixed (deferred).
 Chipotle — "Provision for Income Taxes" (MD&A) mein ek garbage caption-row hai, asli values sahi hain. Tier-3, cosmetic. NOT fixed (deferred).
+
+Netflix — Stockholders' Equity table mein "Common Stock and Additional Paid-in Capital" group-title x-clustering tolerance (20pt) se thoda bahar (24.8pt gap) reh gaya, is liye "Amount" column standalone ban gaya aur Treasury Stock ki value uske neeche chali gayi. Shares value sahi hai, dollar-values present hain bas 1 label (Treasury Stock ka "Amount" ke neeche) confusing hai. Tier-1 lekin narrow (1 table). NOT fixed (deferred — x-clustering tolerance tuning risky hai, doosri companies ko regress kar sakta hai).
