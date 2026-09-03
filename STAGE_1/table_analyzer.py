@@ -373,6 +373,61 @@ class TableAnalyzer:
                 "_y": y,
             }
 
+        # NEW (Netflix 2025, confirmed via real table_analysis.json
+        # output): a company's own INTERNAL page-numbering footer --
+        # a bare, standalone number ("41", "42") with absolutely
+        # nothing else on its own physical line -- sits near the
+        # bottom of nearly every page, close enough (within the
+        # nearby-numeric-lines window below) to a real table's last
+        # data row that it was passing Pass 1's numeric-candidate
+        # check on its own: numeric_ratio=1.0 (it's 100% numeric,
+        # being just digits), token_count=1, and
+        # nearby_numeric_lines>=1 (satisfied by the genuine table
+        # rows sitting just above it).
+        #
+        # This is the SAME underlying convention already handled for
+        # PARAGRAPH-type blocks by fix_paragraphs.py's
+        # _is_standalone_page_footer_number() (built for Google's
+        # "53." style footers) -- but that function requires a
+        # trailing PERIOD, and Netflix's own page-footer convention
+        # is a bare number with NO period ("41", not "41."). Since
+        # this line was already being swept up as a TABLE candidate
+        # (not just a stray paragraph) before ever reaching that
+        # paragraph-level cleanup, the existing fix never got a
+        # chance to catch it here.
+        #
+        # Confirmed real-world impact: this stray page number ends up
+        # appended as trailing garbage on 9 of Netflix's core
+        # financial-statement tables (Income Statement, Comprehensive
+        # Income, Cash Flows, Balance Sheet, and others) -- e.g. "...
+        # Interest paid -- 2025: 718,611 ... 41" instead of ending
+        # cleanly at the real last row. It never corrupts any actual
+        # value (it's purely trailing, isolated text), but it's
+        # unconditionally wrong table content on Tier-1 statements.
+        #
+        # A genuine table VALUE is essentially never a fully isolated
+        # single token with nothing else at all on its own physical
+        # line (real data rows always carry a row-label alongside
+        # their value, or multiple values together) -- so requiring
+        # BOTH "bare 1-3 digit text" AND "exactly one token on this
+        # line" (checked just below, once token_count is known) keeps
+        # this narrowly scoped to the page-footer pattern specifically,
+        # without risking any genuine lone-number table cell that
+        # happens to also carry a real row-label on the same line.
+        if re.fullmatch(r"\d{1,3}", text) and len(spans) <= 1:
+
+            return {
+                "line_index": index,
+                "text": text,
+                "is_candidate": False,
+                "numeric_ratio": 0.0,
+                "numeric_count": 0,
+                "token_count": 0,
+                "x_positions": [],
+                "y_positions": [],
+                "_y": y,
+            }
+
         numeric_count = 0
         token_count = 0
 

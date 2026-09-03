@@ -169,10 +169,109 @@ class HeadingDetector:
         # doesn't recognize.
         bold_run_buffer = []
 
+        # NEW (Netflix 2025, confirmed via real cleaned.json output):
+        # holds a bare Note-number marker ("1.", "7.", "14.") that was
+        # just seen sitting completely alone on its own line-object,
+        # waiting to be prepended onto the NEXT line's text before
+        # that next line is analyzed. See the docstring on
+        # _looks_like_orphaned_number_marker() below for the full
+        # root-cause explanation.
+        pending_number_prefix = None
+
         for index, line in enumerate(lines):
 
+            raw_text = (line.get("text") or "").strip()
+
+            # NEW: detect a bare Note-number marker sitting alone on
+            # its own line, immediately followed by its real title
+            # text at the SAME visual row (matching y-coordinate) but
+            # a different line-object due to a wide tab/gap in the
+            # original PDF between the number and the title.
+            #
+            # Confirmed on Netflix 2025: "1." (bbox x=34) and
+            # "Organization and Summary of Significant Accounting
+            # Policies" (bbox x=55, IDENTICAL y=105.02 top/bottom) are
+            # two SEPARATE line-objects, not two physically stacked
+            # lines. The same pattern recurred for "7." + "Debt", "9."
+            # + "Commitments and Contingencies", "10." + "Stockholders'
+            # Equity", and others -- 9 of Netflix's 14 numbered Notes
+            # in total. The one Note that happened to survive with its
+            # number intact, "6. Acquisitions", did so only because
+            # ITS number and title were already a single combined
+            # line-object ("6. Acquisitions") in the raw extraction --
+            # confirming the bug is about this specific PDF-extraction
+            # inconsistency, not about the Note-numbering convention
+            # itself (which heading_detector already otherwise
+            # handles fine, per the Chipotle bare-number fix above).
+            #
+            # Without this fix, a standalone "1." has ZERO alphabetic
+            # characters, so it hits the "no_letters" hard-reject in
+            # _score_line() below and is NEVER classified as a
+            # heading at all -- it falls through as an ordinary
+            # paragraph, where fix_paragraphs.py's page-footer-number
+            # cleanup (built for Google's "53." style footer
+            # artifacts) then silently deletes it entirely. Meanwhile
+            # the title text on its own ("Organization and Summary of
+            # Significant Accounting Policies", "Debt", "Stockholders'
+            # Equity") DOES become its own heading -- but with no
+            # number prefix, is_note_marker() can never recognize it,
+            # so the Note loses its container protection completely:
+            # real output showed "Debt" (Note 7), "Commitments and
+            # Contingencies" (Note 9), and "Stockholders' Equity"
+            # (Note 10) all collapsing as CHILDREN of whichever
+            # earlier Note-marker happened to still be open ("6.
+            # Acquisitions"), instead of being correct top-level
+            # siblings.
+            #
+            # Fix: when this exact pattern is detected, DON'T analyze
+            # the bare-number line as its own candidate at all --
+            # instead remember its text, and prepend it onto the very
+            # next line's text before that line is analyzed. This
+            # keeps every line's own `line_index` perfectly aligned
+            # with the untouched original `lines` list (paragraph_
+            # parser.py and fix_paragraphs.py need no changes at all),
+            # while letting every existing downstream signal (bold,
+            # size, is_note_marker, the whole scoring pipeline) see
+            # the complete, correct "N. Title" text exactly as if it
+            # had always been one line.
+            if pending_number_prefix is None and re.fullmatch(r"\d{1,3}\.", raw_text):
+
+                next_line = lines[index + 1] if index + 1 < len(lines) else None
+
+                if next_line is not None:
+
+                    next_text = (next_line.get("text") or "").strip()
+                    bbox = line.get("bbox")
+                    next_bbox = next_line.get("bbox")
+
+                    if (
+                        bbox and next_bbox and next_text
+                        and any(c.isalpha() for c in next_text)
+                        and abs(bbox[1] - next_bbox[1]) <= 2.0
+                    ):
+
+                        pending_number_prefix = raw_text
+
+                        inert_analysis = self._empty_result(raw_text)
+                        inert_analysis["line_index"] = index
+                        inert_analysis["in_bold_run"] = False
+                        heading_candidates.append(inert_analysis)
+
+                        continue
+
+            effective_line = line
+
+            if pending_number_prefix is not None:
+
+                effective_line = dict(line)
+                effective_line["text"] = (
+                    f"{pending_number_prefix} {raw_text}"
+                )
+
+                pending_number_prefix = None
+
             analysis = self._analyze_line(
-                line,
+                effective_line,
                 baseline_size,
             )
 

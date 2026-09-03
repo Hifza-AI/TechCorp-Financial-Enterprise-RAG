@@ -134,3 +134,6 @@ Decision: proceeding to next company (IBM). No blocking issues.
 Amazon — RSU/Stock Award Activity table (Note 8) — false year-header detection. Row-labels jaise "Outstanding as of January 1, 2023" mein embedded "2023" token standalone-year jaisa match ho jata hai, is liye table (jo asal mein Units/Fair-Value 2-column structure hai, year-comparison nahi) galat year-header detect karti hai — values garbled/incomplete. Tier-3 (equity-comp footnote detail, kam-query hoti hai). NOT fixed (deferred — narrow, low-query-frequency scope).
 
 Nvidia — 3 complex raw-fallback tables (Segment Info year-blocks, Leases schedule, valuation-allowance rollforward) mein "(In millions)" caption row ke beech mein leak hoti hai. Values traceable hain, sirf presentation messy hai. Tier-3, narrow-scope (3/41 tables). NOT fixed (deferred).
+
+Chipotle — "Income Taxes Paid" table (Note 6) mein intro-sentence column-name ban jaati hai, 2024/2023 data incomplete lagta hai (2025 values sahi hain). Tier-3, narrow (1 table). NOT fixed (deferred).
+Chipotle — "Provision for Income Taxes" (MD&A) mein ek garbage caption-row hai, asli values sahi hain. Tier-3, cosmetic. NOT fixed (deferred).
