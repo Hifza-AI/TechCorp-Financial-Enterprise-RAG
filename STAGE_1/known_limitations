@@ -132,3 +132,5 @@ GOOGLE 2025 — TIER-2 AUDIT RESULT (verified vs real PDF)
 Decision: proceeding to next company (IBM). No blocking issues.
 
 Amazon — RSU/Stock Award Activity table (Note 8) — false year-header detection. Row-labels jaise "Outstanding as of January 1, 2023" mein embedded "2023" token standalone-year jaisa match ho jata hai, is liye table (jo asal mein Units/Fair-Value 2-column structure hai, year-comparison nahi) galat year-header detect karti hai — values garbled/incomplete. Tier-3 (equity-comp footnote detail, kam-query hoti hai). NOT fixed (deferred — narrow, low-query-frequency scope).
+
+Nvidia — 3 complex raw-fallback tables (Segment Info year-blocks, Leases schedule, valuation-allowance rollforward) mein "(In millions)" caption row ke beech mein leak hoti hai. Values traceable hain, sirf presentation messy hai. Tier-3, narrow-scope (3/41 tables). NOT fixed (deferred).

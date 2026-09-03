@@ -437,6 +437,40 @@ class TableParser:
                 # continues into ANOTHER bold row. So only treat a
                 # bold row as a hard stop if the row right after it
                 # is NOT also bold.
+                #
+                # NEW (Chipotle 2025, confirmed via real
+                # table_analysis.json output): checking "is ANY cell
+                # in the peek row bold" is too broad -- it conflates
+                # two different real patterns:
+                #   - Costco's "EQUIVALENTS" row: the label AND its
+                #     numeric values are ALL bold (one continuous
+                #     bold wrapped line-item) -> genuinely a
+                #     continuation, should merge.
+                #   - Chipotle's "Balance, December 31, 2022" row: the
+                #     LABEL is bold (a stylistic emphasis convention
+                #     for balance/subtotal lines), but its own numeric
+                #     VALUES are plain weight. This is an ordinary
+                #     DATA row, not a continuation of the preceding
+                #     bold header text -- but "any cell bold" sees the
+                #     bold label and wrongly treats it as bold-matching
+                #     the run above.
+                #
+                # Confirmed real-world impact: this let a 5-line-tall
+                # grouped column header ("Common Stock" / "Treasury
+                # Stock" / "Shares" / "Amount" / "Additional Paid-In
+                # Capital" / ...) merge straight into Chipotle's very
+                # FIRST DATA ROW ("Balance, December 31, 2022" + its 8
+                # values), fusing header words and data values into
+                # one scrambled line -- e.g. real output came out as
+                # "Shares 1,865,992 Common Stock, Amount 18,660, ...".
+                #
+                # Fix: only look at the peek row's NUMERIC-VALUE
+                # cells when deciding "is this bold like the run
+                # above" -- a row's own label styling is irrelevant to
+                # whether it's a wrapped-bold-VALUE continuation or a
+                # normal data row. If a row has no numeric cells at
+                # all, fall back to the original any-cell check (safe
+                # default for genuinely all-text rows).
                 is_bold_row = any(cell.get("bold") for cell in cells)
 
                 if is_bold_row:
@@ -448,9 +482,19 @@ class TableParser:
 
                     peek_cells = self._extract_cells(rows[peek_index])
 
-                    peek_is_bold = any(
-                        cell.get("bold") for cell in peek_cells
-                    )
+                    peek_numeric_cells = [
+                        cell for cell in peek_cells
+                        if self._looks_numeric_cell(cell["text"])
+                    ]
+
+                    if peek_numeric_cells:
+                        peek_is_bold = any(
+                            cell.get("bold") for cell in peek_numeric_cells
+                        )
+                    else:
+                        peek_is_bold = any(
+                            cell.get("bold") for cell in peek_cells
+                        )
 
                     if not peek_is_bold:
                         break  # bold title -> non-bold data: genuine standalone header
@@ -512,7 +556,28 @@ class TableParser:
                     for cell in self._extract_cells(r)
                 )
 
-                next_is_bold = any(cell.get("bold") for cell in next_cells)
+                # NEW (Chipotle 2025, same root cause as the
+                # peek-check above): use next_row's NUMERIC cells to
+                # judge its bold-ness here too, not just any cell --
+                # otherwise a data row with a merely-bold LABEL (but
+                # plain-weight values), like Chipotle's "Balance,
+                # December 31, 2022" line, wrongly satisfies
+                # `run_is_bold == next_is_bold` (both True) and lets
+                # an entire multi-line grouped column header merge
+                # straight into that first data row.
+                next_numeric_cells = [
+                    cell for cell in next_cells
+                    if self._looks_numeric_cell(cell["text"])
+                ]
+
+                if next_numeric_cells:
+                    next_is_bold = any(
+                        cell.get("bold") for cell in next_numeric_cells
+                    )
+                else:
+                    next_is_bold = any(
+                        cell.get("bold") for cell in next_cells
+                    )
 
                 if (
                     next_has_numeric
@@ -1469,6 +1534,91 @@ class TableParser:
         # this narrow label-header, not to the left of it.
         if len(columns) > 2 and columns[0]["x"] < 100:
             columns = columns[1:]
+
+        # NEW (Chipotle 2025, confirmed via real table_analysis.json
+        # output): a genuinely 2-LEVEL grouped header where the SAME
+        # sub-column label repeats under multiple different group
+        # titles -- e.g. Chipotle's Stockholders' Equity statement has
+        # "Common Stock" -> Shares/Amount AND "Treasury Stock" ->
+        # Shares/Amount, so the x-clustering above produces TWO
+        # separate columns both literally named "Amount" (each one
+        # only clustered with its own immediate "Shares" neighbor,
+        # never with its wider group title several columns away).
+        #
+        # This is silently destructive downstream: _parse_data_row
+        # builds a `values` dict keyed by column NAME, so the second
+        # "Amount" column's value overwrites the first one for every
+        # row -- Common Stock's Amount (e.g. 18,660) was being
+        # permanently lost, replaced by Treasury Stock's Amount
+        # (e.g. (4,282,014)) under the single surviving "Amount" key.
+        #
+        # Fix: whenever a column name repeats, disambiguate it using
+        # the nearest group-title label to its left. The group-title
+        # row is identified as the header-zone row with the FEWEST
+        # cells (a wide label like "Common Stock" spanning several
+        # narrower sub-columns beneath it naturally has fewer cells
+        # than the sub-column row itself). This only ever changes a
+        # column's NAME string -- it never touches which values get
+        # matched to which column position, so tables with no
+        # duplicate names (the overwhelming majority already
+        # confirmed working on Apple/Adobe/Amazon/Nvidia) are
+        # completely unaffected.
+        name_counts = {}
+
+        for column in columns:
+            name_counts[column["name"]] = name_counts.get(column["name"], 0) + 1
+
+        duplicate_names = {
+            name for name, count in name_counts.items() if count > 1
+        }
+
+        if duplicate_names:
+
+            candidate_group_rows = []
+
+            for row_index in sorted(header_row_indices):
+
+                if row_index in title_row_indices:
+                    continue
+
+                row_cells = self._extract_cells(rows[row_index])
+
+                if 1 < len(row_cells) < len(columns):
+                    candidate_group_rows.append(row_cells)
+
+            if candidate_group_rows:
+
+                group_row = min(candidate_group_rows, key=len)
+
+                group_labels = sorted(
+                    (
+                        (cell["x"], cell["text"].strip())
+                        for cell in group_row
+                        if cell["text"].strip()
+                    ),
+                    key=lambda item: item[0],
+                )
+
+                for column in columns:
+
+                    if column["name"] not in duplicate_names:
+                        continue
+
+                    best_label = None
+                    best_distance = None
+
+                    for group_x, group_text in group_labels:
+
+                        distance = column["x"] - group_x
+
+                        if distance >= -5 and (
+                            best_distance is None or distance < best_distance
+                        ):
+                            best_distance = distance
+                            best_label = group_text
+
+                    if best_label:
+                        column["name"] = f"{best_label} {column['name']}"
 
         return header_row_indices, columns
 

@@ -495,12 +495,38 @@ class HeadingDetector:
         # is not company-specific -- it's the standard way SEC
         # filings caption their statements -- so it will recur for
         # any company.
+        #
+        # NEW (Chipotle 2025, confirmed via real hierarchy_outline.txt
+        # output): the ORIGINAL pattern only allowed a fixed lead-in
+        # of "dollars "/"amounts " (or nothing) right before "in
+        # millions/thousands/billions". Chipotle's caption --
+        # "(dollar and share amounts in thousands, unless otherwise
+        # specified)" -- has a longer, differently-worded lead-in
+        # ("dollar and share amounts"), which didn't match either
+        # fixed alternative, so it slipped through and became its own
+        # spurious heading node (a sibling of "1. Description of
+        # Business...", sitting directly under "NOTES TO CONSOLIDATED
+        # FINANCIAL STATEMENTS").
+        #
+        # Since a real statement/section title is never itself
+        # wrapped in parentheses, ANY parenthetical whose content
+        # contains "in millions/thousands/billions" as a substring
+        # -- regardless of what other words surround it inside the
+        # parens -- is safe to treat as this same units-disclaimer
+        # convention. Matching on that anchor phrase (rather than a
+        # fixed, enumerated set of lead-in phrases) generalizes to
+        # any company's own wording of this caption without needing
+        # to special-case each new variant as it's discovered.
         if re.fullmatch(
             r"\(\s*(dollars\s+|amounts\s+)?in\s+(millions|thousands|billions)"
             r"(\s*,\s*[^)]*)?\)",
             text.strip(),
             re.IGNORECASE,
-        ):
+        ) or re.search(
+            r"\bin\s+(millions|thousands|billions)\b",
+            text.strip(),
+            re.IGNORECASE,
+        ) and text.strip().startswith("(") and text.strip().endswith(")"):
             return 0, ["units_disclaimer_caption"]
 
         # A bare column-header DATE ("Jan 25, 2026", "December 31,
@@ -953,6 +979,57 @@ class HeadingDetector:
             stripped,
             re.IGNORECASE,
         ):
+            return True
+
+        # NEW (Chipotle 2025, confirmed via real hierarchy_outline.txt
+        # + chunks.json output): some companies number their Notes
+        # WITHOUT the word "Note" on the actual heading line at all --
+        # just a bare "N. Title", e.g. "1. Description of Business and
+        # Summary of Significant Accounting Policies", "3. Revenue
+        # Recognition", "9. Leases", "14. Segment Reporting". Chipotle
+        # still says "Note 14" in its own inline cross-references
+        # elsewhere in the document ('...included in Note 14.
+        # "Segment Reporting"'), but the real section-starting heading
+        # line itself never carries that word -- so none of the
+        # "Note N ..." regex variants above can ever match it, no
+        # matter which punctuation/case variant they check for.
+        #
+        # This is the SAME underlying failure mode already documented
+        # for Intel 2019 (a Note heading with no recognizable "Note N"
+        # text on the line itself) -- but there it was solved by
+        # is_prominent_boundary, because Intel's real boundaries were
+        # ALSO distinctly oversized/all-caps. Chipotle's Note headings
+        # are NOT distinctly larger or all-caps -- they're styled
+        # IDENTICALLY (same bold weight, same size, same non-italic)
+        # to their own topic sub-headings ("Cash and Cash
+        # Equivalents", "Fair Value Measurements", etc.), so
+        # is_prominent_boundary can't distinguish them either.
+        #
+        # Confirmed real-world impact: every one of Note 1's 15
+        # sub-topics (Principles of Consolidation, Management
+        # Estimates, Cash and Cash Equivalents, ... Income Taxes)
+        # flattened out as SIBLINGS of "1. Description of Business..."
+        # -- and of "NOTES TO CONSOLIDATED FINANCIAL STATEMENTS"
+        # itself -- instead of nesting under it, e.g. real
+        # section_path values coming out as "...NOTES TO CONSOLIDATED
+        # FINANCIAL STATEMENTS > Cash and Cash Equivalents" with no
+        # trace that this was ever part of Note 1's accounting-policy
+        # discussion. This is exactly the original Apple-2024 bug
+        # (same-level sub-topic prematurely closing its own Note),
+        # just resurfacing through a different root cause (a missing
+        # "Note" word instead of a missing punctuation variant).
+        #
+        # Matching is deliberately narrow to minimize any risk of
+        # false-triggering on unrelated bold numbered text elsewhere
+        # in a filing: the number must be 1-2 digits (Notes are never
+        # numbered in the hundreds), immediately followed by a literal
+        # period and at least one space, then a real multi-letter
+        # capitalized word (excludes bare fragments like "1. A" or
+        # "1. I", and excludes anything already covered above by
+        # "Item N." / "PART N" / "Note N", which all require their own
+        # distinct leading word and are matched separately before this
+        # point is ever reached).
+        if re.match(r"^\d{1,2}\.\s+[A-Z][a-z]+", stripped):
             return True
 
         return False
