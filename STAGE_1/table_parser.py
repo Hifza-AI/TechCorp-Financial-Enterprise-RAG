@@ -1282,9 +1282,61 @@ class TableParser:
 
         title_row_indices = set()
 
+        # NEW (Amazon 2025, confirmed via real chunks.json output): a
+        # SHORT units-disclaimer caption -- "(in millions)", "(in
+        # thousands)" -- sitting alone on its own header-zone line
+        # was NOT being excluded by the width-based check below, even
+        # though it's the exact same kind of caption the width-check
+        # was originally built to catch (Apple 2016's wider "(In
+        # millions, except number of shares which are reflected in
+        # thousands)"). The width heuristic only fires at >=40% of
+        # the table's width -- "(in millions)" alone is short enough
+        # to fall well under that on a wide multi-column statement
+        # like Stockholders' Equity, so it slipped through and became
+        # its own bogus column.
+        #
+        # Confirmed real symptom on Amazon's Consolidated Statements
+        # of Stockholders' Equity: "(in millions)" became a phantom
+        # column between "Common Stock Amount" and "Treasury Stock",
+        # shifting every value one slot to the right from that point
+        # on -- e.g. the real Treasury Stock figure ((7,837)) was
+        # recorded under the bogus "(in millions)" key, and the real
+        # Additional Paid-In Capital figure (75,066) was recorded
+        # under the "Treasury Stock" key instead. This is a genuine
+        # value-misattribution (not just a cosmetic label issue): a
+        # query for Amazon's Treasury Stock would return the wrong
+        # number.
+        #
+        # Fix: also recognize this specific caption pattern directly
+        # by CONTENT, independent of width -- reusing the same
+        # units-disclaimer wording heading_detector.py already
+        # recognizes elsewhere in the pipeline for the identical
+        # reason. A content match is actually a MORE reliable signal
+        # than width for this exact case (a units caption is never
+        # mistaken for a real column name), so this runs regardless
+        # of table_width being available at all.
+        _units_disclaimer_re = re.compile(
+            r"^\(\s*(dollars\s+|amounts\s+)?in\s+(millions|thousands|billions)"
+            r"(\s*,\s*[^)]*)?\)$",
+            re.IGNORECASE,
+        )
+
+        for row_index in header_row_indices:
+
+            row_cells = self._extract_cells(rows[row_index])
+
+            if len(row_cells) != 1:
+                continue  # a real grouped header fragment can share a row
+
+            if _units_disclaimer_re.match(row_cells[0]["text"].strip()):
+                title_row_indices.add(row_index)
+
         if table_width and table_width > 0:
 
             for row_index in header_row_indices:
+
+                if row_index in title_row_indices:
+                    continue  # already excluded by the content match above
 
                 row_cells = self._extract_cells(rows[row_index])
 
