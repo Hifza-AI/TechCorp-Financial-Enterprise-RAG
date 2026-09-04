@@ -2,7 +2,6 @@ import json
 import re
 from pathlib import Path
 
-
 class ChunkBuilder:
     """
     Walks the nested hierarchy tree (headings -> paragraphs/tables ->

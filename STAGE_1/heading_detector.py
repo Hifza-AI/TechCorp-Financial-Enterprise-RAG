@@ -133,6 +133,18 @@ class HeadingDetector:
     # PAGE
     # =========================================================
 
+    def _line_y(self, line):
+
+        bbox = line.get("bbox")
+
+        if not bbox or len(bbox) < 2:
+            return None
+
+        try:
+            return float(bbox[1])
+        except (TypeError, ValueError):
+            return None
+
     def _detect_page(self, page, baseline_size):
 
         detected_page = deepcopy(page)
@@ -401,16 +413,157 @@ class HeadingDetector:
                 # on a specific reason string existing) catches both
                 # the "too_long" bucket AND this in-between "neutral"
                 # bucket, since both exceed max_heading_words.
+                #
+                # NEW (Starbucks 2025, confirmed via real cleaned.json
+                # output): a long bold CAPTION line -- e.g. "Fiscal
+                # Years ended September 28, 2025, September 29, 2024,
+                # and October 1, 2023" (13 words, no ending period,
+                # sitting right at the top of the Notes section, once,
+                # right before Note 1) -- can ALSO cross this same
+                # word-count threshold, even though it is structurally
+                # nothing like an unfinished wrapping sentence. It's a
+                # complete, self-contained date-range caption that
+                # just happens to be long and lacks terminal
+                # punctuation (dates and commas, not a sentence).
+                #
+                # Confirmed real-world impact: this incorrectly opened
+                # a bold-run right before "Note 1: Summary of
+                # Significant Accounting Policies and Estimates" --
+                # so Note 1's own title, AND its very first sub-topic
+                # "Description of Business", were both swallowed as
+                # if they were trailing FRAGMENTS of the fiscal-year
+                # caption's sentence, rather than being recognized as
+                # their own real headings. Because this caption only
+                # ever appears ONCE, right before Note 1 specifically
+                # (Notes 2-19 don't have it immediately above them),
+                # only Note 1 lost its heading status this way --
+                # every other Note title on the page was unaffected.
+                #
+                # Fix: recognize this specific "Fiscal Year(s) ended
+                # <dates>" caption shape and exclude it from ever
+                # opening a bold-run, the same way the existing
+                # units-disclaimer caption ("(in millions)") is
+                # already excluded elsewhere from being mistaken for
+                # real heading/sentence content. This is narrowly
+                # scoped to the fiscal-year-caption phrasing
+                # specifically, so it cannot affect any genuine long
+                # bold sentence-opener elsewhere (which is exactly
+                # what this mechanism still needs to keep catching).
+                is_fiscal_year_caption = bool(
+                    re.match(
+                        r"^Fiscal\s+Years?\s+Ended\b",
+                        text.strip(),
+                        re.IGNORECASE,
+                    )
+                )
+
                 if (
                     is_bold
                     and not analysis["is_heading"]
                     and word_count > self.max_heading_words
                     and not text.endswith(".")
+                    and not is_fiscal_year_caption
                 ):
                     bold_run_open = True
                     bold_run_buffer = [(index, analysis, text)]
 
             heading_candidates.append(analysis)
+
+        # NEW (ServiceNow 2016, confirmed via real cleaned.json
+        # output): a genuine grouped-column table header -- e.g. a
+        # Stockholders' Equity statement's "Common Stock" / "Treasury
+        # Stock" / "Additional Paid-In Capital" / "Accumulated Other
+        # Comprehensive Loss" / "Total Stockholders' Equity" group
+        # titles, wrapped across several physical lines and packed
+        # into a tight vertical band -- is made of MANY short, bold
+        # text fragments that individually satisfy every signal
+        # _score_line() looks for (bold, short, often all-caps or
+        # title-case), so each one independently crosses the heading
+        # threshold on its own.
+        #
+        # This didn't matter for the ORIGINAL case this heading-over-
+        # table priority rule was built for (Apple 2016's "iPhone" /
+        # "Mac" / "Services" section titles, which sit ALONE, with
+        # normal paragraph text before and after -- never surrounded
+        # by a cluster of other short-bold fragments). But confirmed
+        # here on ServiceNow 2016: 13 separate short fragments ("Common
+        # Stock", "Additional", "Paid-in", "Capital", "Accumulated",
+        # "Deficit", "Accumulated", "Other", "Comprehensive", "Loss",
+        # "Total", "Stockholders'", "Equity", "Shares", "Amount") all
+        # independently scored as genuine headings, packed into a
+        # ~26pt-tall vertical band across 6 distinct x-positions --
+        # the unmistakable shape of a multi-row, multi-column table
+        # header, not a sequence of real section titles.
+        #
+        # Because paragraph_parser.py checks is_heading_line BEFORE
+        # is_table_line (deliberately, for the Apple 2016 fix above),
+        # every one of these words got pulled out as its own spurious
+        # heading -- leaving the table with NONE of its real header
+        # words to build clean column names from. table_parser then
+        # had nothing to work with except the first data row, which
+        # is why the table's own real title ("CONSOLIDATED STATEMENTS
+        # OF STOCKHOLDERS' EQUITY" -- which DOES still correctly
+        # become its own heading, unaffected by this bug) ended up
+        # with a lone, raw, unlabeled pipe-separated table under it
+        # instead of a properly parsed one.
+        #
+        # Fix: a SHORT (<= 3 words) heading candidate that is NOT
+        # itself a known structural marker (Item/PART/Note/
+        # CONSOLIDATED-title/etc -- those are never demoted, no
+        # matter how densely packed the surrounding page is) gets
+        # DEMOTED back to a non-heading if it has at least 3 OTHER
+        # short heading-candidates within a tight +/-30pt vertical
+        # band. A genuine standalone short heading (Apple's "iPhone")
+        # never has this many short-bold neighbors immediately
+        # surrounding it -- normal paragraph text (long, non-bold)
+        # sits before and after it instead. Only candidates that
+        # would otherwise become headings are ever considered here,
+        # so this can only ever correct a false-positive heading back
+        # into (correctly) falling through to table detection --  it
+        # never removes a heading that had no realistic table-header
+        # explanation to begin with.
+        DEMOTE_MAX_WORDS = 3
+        DEMOTE_Y_WINDOW = 30
+        DEMOTE_MIN_NEIGHBORS = 3
+
+        short_heading_ys = [
+            (item["line_index"], self._line_y(lines[item["line_index"]]))
+            for item in heading_candidates
+            if item["is_heading"]
+            and len(item["text"].split()) <= DEMOTE_MAX_WORDS
+            and not item.get("is_note_marker")
+            and not item.get("is_top_level_marker")
+        ]
+
+        for item in heading_candidates:
+
+            if not item["is_heading"]:
+                continue
+
+            if len(item["text"].split()) > DEMOTE_MAX_WORDS:
+                continue
+
+            if item.get("is_note_marker") or item.get("is_top_level_marker"):
+                continue
+
+            this_y = self._line_y(lines[item["line_index"]])
+
+            if this_y is None:
+                continue
+
+            neighbor_count = sum(
+                1
+                for other_index, other_y in short_heading_ys
+                if other_index != item["line_index"]
+                and other_y is not None
+                and abs(other_y - this_y) <= DEMOTE_Y_WINDOW
+            )
+
+            if neighbor_count >= DEMOTE_MIN_NEIGHBORS:
+                item["is_heading"] = False
+                item["reasons"] = item.get("reasons", []) + [
+                    "demoted_table_header_zone"
+                ]
 
         detected_page["heading_analysis"] = {
             "candidates": heading_candidates,
