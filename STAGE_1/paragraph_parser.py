@@ -72,11 +72,39 @@ class ParagraphParser:
 
     def _parse_report(self, report):
 
+        # NEW (Chipotle 2016, confirmed via real chunks.json output):
+        # computed ONCE per report, before any page is parsed. See
+        # _find_page_repeated_boilerplate()'s docstring for the full
+        # rationale -- this is the SAME per-page-watermark detection
+        # added to table_analyzer.py, but applied here too because a
+        # repeated watermark line does NOT need to be its own,
+        # exactly-matching paragraph block to cause damage: it just
+        # needs to sit close enough to real body text (by the normal
+        # y-gap/indent-shift rules below) to get silently GLUED into
+        # the middle of an otherwise-real, uniquely-worded paragraph
+        # -- e.g. real confirmed output: "...tried to increase, 5
+        # 20161231 10K FY_Taxonomy2015 where necessary, the number
+        # of suppliers..." -- with the watermark text spliced
+        # directly into a genuine sentence.
+        #
+        # Because the SURROUNDING text differs on every page, each
+        # resulting merged paragraph is a UNIQUE string globally --
+        # so the existing _remove_repeated_boilerplate() below (which
+        # only catches an entire block's text repeating VERBATIM
+        # across many pages) can never catch this: it only ever sees
+        # 83 different, one-off-looking paragraphs, never noticing
+        # they all share one common repeated substring. The fix has
+        # to happen earlier, at the per-LINE level, before the
+        # watermark line is ever allowed to merge into anything.
+        page_repeated_boilerplate = self._find_page_repeated_boilerplate(
+            report
+        )
+
         parsed_pages = []
 
         for page in report["pages"]:
 
-            blocks = self._parse_page(page)
+            blocks = self._parse_page(page, page_repeated_boilerplate)
 
             parsed_pages.append({
                 "page_number": page["page_number"],
@@ -91,6 +119,75 @@ class ParagraphParser:
             "file_path": report.get("file_path"),
             "total_pages": report.get("total_pages"),
             "pages": parsed_pages,
+        }
+
+    # =========================================================
+    # PAGE-LEVEL REPEATED WATERMARK DETECTION
+    # =========================================================
+
+    def _find_page_repeated_boilerplate(
+        self,
+        report,
+        min_page_ratio=0.5,
+        min_pages=10,
+    ):
+        """
+        NEW (Chipotle 2016, confirmed via real cleaned.json /
+        chunks.json output): some SEC-filing PDF conversions stamp
+        EVERY page with an identical per-page watermark/metadata
+        line -- confirmed here as the literal text "20161231 10K
+        FY_Taxonomy2015" (a filing-date + form-type +
+        XBRL-taxonomy-version stamp), appearing as its own standalone
+        line on essentially all of this filing's pages.
+
+        This is the SAME detection added to table_analyzer.py (see
+        that file's identical method for the fuller rationale) --
+        duplicated here as a plain, self-contained method (rather
+        than importing table_analyzer.py) since paragraph_parser.py
+        doesn't otherwise depend on that module. Both copies use the
+        exact same frequency-based logic already proven safe by
+        paragraph_parser's own _remove_repeated_boilerplate() for
+        whole-block text; this just applies it one level earlier, at
+        individual LINES, before they ever get a chance to merge into
+        a paragraph.
+
+        A genuine, one-off table value, row-label, or sentence
+        fragment is never identical, word-for-word, across half or
+        more of an entire filing's pages -- real content varies page
+        to page by definition -- so this frequency threshold is safe.
+        """
+
+        pages = report.get("pages", [])
+
+        page_count = len(pages)
+
+        if page_count == 0:
+            return set()
+
+        text_page_counts = {}
+
+        for page in pages:
+
+            seen_on_this_page = set()
+
+            for line in page.get("lines", []):
+
+                text = (line.get("text") or "").strip()
+
+                if not text or text in seen_on_this_page:
+                    continue
+
+                seen_on_this_page.add(text)
+
+                text_page_counts[text] = (
+                    text_page_counts.get(text, 0) + 1
+                )
+
+        threshold = max(min_pages, page_count * min_page_ratio)
+
+        return {
+            text for text, count in text_page_counts.items()
+            if count >= threshold
         }
 
     # =========================================================
@@ -235,7 +332,9 @@ class ParagraphParser:
     # PAGE
     # =========================================================
 
-    def _parse_page(self, page):
+    def _parse_page(self, page, page_repeated_boilerplate=None):
+
+        page_repeated_boilerplate = page_repeated_boilerplate or set()
 
         lines = page["lines"]
 
@@ -280,6 +379,22 @@ class ParagraphParser:
             # regardless of whether it would otherwise be a heading,
             # table line, or plain paragraph text.
             if _is_browser_print_artifact(text):
+                continue
+
+            # NEW (Chipotle 2016, confirmed via real chunks.json
+            # output): a line whose exact text repeats across a
+            # large share of this report's pages (computed once per
+            # report by _find_page_repeated_boilerplate(), see that
+            # method's docstring for the full rationale) is a
+            # page-level watermark/stamp, never genuine 10-K content
+            # -- exactly like the browser-print-artifact check just
+            # above. Skipped here, at the very same point in the
+            # per-line loop, so it can never be glued into the
+            # middle of a real paragraph via the normal
+            # paragraph-continuation logic below, regardless of how
+            # close it happens to sit (by y-gap or indent) to
+            # genuine body text on that page.
+            if text in page_repeated_boilerplate:
                 continue
 
             is_table_line = table_flags.get(index, {}).get(

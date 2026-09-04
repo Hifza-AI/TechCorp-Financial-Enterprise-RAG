@@ -80,6 +80,20 @@ class TableAnalyzer:
                     if c.get("is_heading")
                 }
 
+        # NEW (Chipotle 2016, confirmed via real table_analysis.json
+        # output): computed ONCE per report, BEFORE any per-page
+        # analysis. See _find_page_repeated_boilerplate()'s own
+        # docstring for the full rationale -- this catches a
+        # per-page watermark/stamp line (here, the literal text
+        # "20161231 10K FY_Taxonomy2015", repeated identically on
+        # ALL 74 pages of this specific filing) BEFORE it ever gets
+        # a chance to be promoted as a table candidate by any of the
+        # 4 passes below, regardless of which one would otherwise
+        # catch it.
+        page_repeated_boilerplate = self._find_page_repeated_boilerplate(
+            report
+        )
+
         analyzed_pages = []
 
         for page in report.get("pages", []):
@@ -88,7 +102,11 @@ class TableAnalyzer:
                 page.get("page_number"), set()
             )
 
-            analyzed_page = self._analyze_page(page, heading_line_indices)
+            analyzed_page = self._analyze_page(
+                page,
+                heading_line_indices,
+                page_repeated_boilerplate,
+            )
 
             analyzed_pages.append(analyzed_page)
 
@@ -96,9 +114,104 @@ class TableAnalyzer:
 
         return analyzed_report
 
-    def _analyze_page(self, page, heading_line_indices=None):
+    def _find_page_repeated_boilerplate(
+        self,
+        report,
+        min_page_ratio=0.5,
+        min_pages=10,
+    ):
+        """
+        NEW (Chipotle 2016, confirmed via real table_analysis.json
+        output): some SEC-filing PDF conversions stamp EVERY page
+        with an identical per-page watermark/metadata line --
+        confirmed here as the literal text "20161231 10K
+        FY_Taxonomy2015" (a filing-date + form-type +
+        XBRL-taxonomy-version stamp), appearing as its own
+        standalone line on ALL 74 pages of this specific filing,
+        always sitting right at the very top of the page.
+
+        Unlike the two ALREADY-handled artifact patterns --
+        _is_browser_print_artifact() (a specific timestamp/"Document"
+        format) and the bare page-footer-number check in
+        _analyze_line() -- both of which match by a FIXED text
+        pattern, this watermark's exact wording is filing-specific
+        and won't literally recur for other companies or even for
+        this same company's other fiscal years. A frequency-based
+        check generalizes to ANY such per-page stamp, regardless of
+        its specific wording, using the exact same "does this text
+        repeat across a large share of pages" signal
+        paragraph_parser.py's _remove_repeated_boilerplate() already
+        uses safely for paragraph/heading content -- just applied
+        one stage EARLIER here, before a repeated watermark ever
+        gets a chance to be promoted as TABLE content in the first
+        place. Without this, paragraph_parser's existing safety net
+        never gets a chance to run at all: once table_analyzer marks
+        a line as a table candidate, it's routed to table_parser
+        instead of ever reaching paragraph-level boilerplate
+        cleanup.
+
+        Confirmed real-world impact: this watermark text was being
+        swept into 83 of 331 (25%) of this filing's retrieval
+        chunks -- including actual VALUE-level corruption in the
+        Consolidated Statement of Shareholders' Equity, where two
+        unrelated numbers were concatenated into a single field once
+        the watermark's own line got merged into a real data row by
+        table_parser's wrapped-label-continuation logic.
+
+        A genuine, one-off table value or row-label is never
+        identical, word-for-word, across half or more of an entire
+        filing's pages -- real content varies page to page by
+        definition -- so this frequency threshold is safe: it only
+        catches text that is structurally a page-level stamp, never
+        genuine, page-specific table or paragraph content. The
+        default 50%-of-pages threshold (with a 10-page absolute
+        floor for very short reports) deliberately mirrors
+        paragraph_parser.py's own established convention for the
+        same kind of judgment call.
+        """
+
+        pages = report.get("pages", [])
+
+        page_count = len(pages)
+
+        if page_count == 0:
+            return set()
+
+        text_page_counts = {}
+
+        for page in pages:
+
+            seen_on_this_page = set()
+
+            for line in page.get("lines", []):
+
+                text = (line.get("text") or "").strip()
+
+                if not text or text in seen_on_this_page:
+                    continue
+
+                seen_on_this_page.add(text)
+
+                text_page_counts[text] = (
+                    text_page_counts.get(text, 0) + 1
+                )
+
+        threshold = max(min_pages, page_count * min_page_ratio)
+
+        return {
+            text for text, count in text_page_counts.items()
+            if count >= threshold
+        }
+
+    def _analyze_page(
+        self,
+        page,
+        heading_line_indices=None,
+        page_repeated_boilerplate=None,
+    ):
 
         heading_line_indices = heading_line_indices or set()
+        page_repeated_boilerplate = page_repeated_boilerplate or set()
 
         analyzed_page = deepcopy(page)
 
@@ -112,6 +225,7 @@ class TableAnalyzer:
                 line,
                 index,
                 lines,
+                page_repeated_boilerplate,
             )
 
             line_analysis.append(analysis)
@@ -315,7 +429,9 @@ class TableAnalyzer:
 
         return analyzed_page
 
-    def _analyze_line(self, line, index, lines):
+    def _analyze_line(self, line, index, lines, page_repeated_boilerplate=None):
+
+        page_repeated_boilerplate = page_repeated_boilerplate or set()
 
         text = line.get("text", "").strip()
 
@@ -324,6 +440,28 @@ class TableAnalyzer:
         y = self._line_y(line)
 
         if not text:
+
+            return {
+                "line_index": index,
+                "text": text,
+                "is_candidate": False,
+                "numeric_ratio": 0.0,
+                "numeric_count": 0,
+                "token_count": 0,
+                "x_positions": [],
+                "y_positions": [],
+                "_y": y,
+            }
+
+        # NEW: a line whose exact text repeats across a large share
+        # of this report's pages (computed once per report by
+        # _find_page_repeated_boilerplate() and passed in here) is a
+        # page-level watermark/stamp, never genuine table content.
+        # See that method's docstring for the full Chipotle 2016
+        # rationale. Checked before every other pass, same as the
+        # browser-print-artifact check just below, so it can never
+        # be promoted as a table candidate through ANY route.
+        if text in page_repeated_boilerplate:
 
             return {
                 "line_index": index,
