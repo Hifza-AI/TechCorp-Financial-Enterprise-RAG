@@ -705,6 +705,18 @@ class HeadingDetector:
             score += 2
             reasons.append("italic")
 
+        # NEW (Palo Alto Networks 2025, confirmed via real
+        # cleaned.json output): computed here, ahead of where it
+        # used to be (down in the length-signals section below),
+        # purely so the size-scoring step right after can also make
+        # use of it -- see the "smaller_than_body" branch below for
+        # the full rationale. The length-signals section further
+        # down still uses this exact same value; nothing else about
+        # it changes.
+        is_structural_marker = (
+            self._is_top_level_marker(text) or self._is_note_marker(text)
+        )
+
         # ---------------------------------------------------
         # Size relative to THIS document's own body baseline
         # ---------------------------------------------------
@@ -723,6 +735,46 @@ class HeadingDetector:
             # case: same size as body, bold is what makes it a heading)
             score += 1
             reasons.append("body_size_but_styled")
+
+        elif is_structural_marker:
+            # NEW (Palo Alto Networks 2025, confirmed via real
+            # cleaned.json output): a line whose TEXT independently
+            # matches a known, SEC-mandated structural-marker pattern
+            # (a core financial-statement title like "CONSOLIDATED
+            # STATEMENTS OF OPERATIONS", a "Note N" marker, an "Item
+            # N."/"PART N" marker, "Report of Independent Registered
+            # Public Accounting Firm", the bare "NOTES TO CONSOLIDATED
+            # FINANCIAL STATEMENTS" divider, etc.) is DEFINITELY meant
+            # to be a heading by its content alone, regardless of how
+            # small its specific font happens to render relative to
+            # THIS document's own body-text baseline.
+            #
+            # Confirmed real-world impact: PANW's 4 core financial
+            # statement titles are all bold, ALL-CAPS, and
+            # unambiguously match the CONSOLIDATED-title is_note_marker
+            # pattern -- yet render at size 7.99, SMALLER than this
+            # filing's own body-paragraph baseline of 9.0
+            # (relative_size=0.888). The unconditional -2
+            # "smaller_than_body" penalty here was dragging their
+            # total score (bold +3, smaller -2, short +2, all_caps +1
+            # = 4) just under the heading_score_threshold of 5 -- so
+            # NONE of "CONSOLIDATED STATEMENTS OF OPERATIONS",
+            # "...COMPREHENSIVE INCOME", "...STOCKHOLDERS' EQUITY", or
+            # "...CASH FLOWS" ever became a heading at all. Every one
+            # of their tables then silently attached to whichever
+            # heading was still open from earlier in the document
+            # (here, "Liabilities and stockholders' equity" -- an
+            # internal Balance-Sheet sub-item), completely losing
+            # their real section identity for retrieval even though
+            # the underlying numbers were still correct.
+            #
+            # Waiving the penalty (staying neutral, +0) ONLY when the
+            # text independently matches a known structural-marker
+            # pattern keeps this narrowly scoped and safe: ordinary
+            # small text that ISN'T one of these mandated patterns
+            # (footnote markers, stray small-font captions, page
+            # numbers) is still penalized exactly as before.
+            reasons.append("smaller_than_body_but_structural_marker")
 
         else:
             # Smaller than body text -- footnote markers, page
@@ -755,9 +807,10 @@ class HeadingDetector:
         # [Reserved]" instead -- a systemic, high-impact bug, since
         # Item 7 (MD&A) is one of the most commonly retrieved
         # sections in any 10-K.
-        is_structural_marker = (
-            self._is_top_level_marker(text) or self._is_note_marker(text)
-        )
+        #
+        # (is_structural_marker itself is now computed earlier, up in
+        # the size-scoring section above, so the exact same value is
+        # simply reused here.)
 
         if word_count <= self.max_heading_words or is_structural_marker:
             score += 2
