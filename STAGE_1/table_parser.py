@@ -323,6 +323,37 @@ class TableParser:
                 if self._looks_numeric_cell(text):
                     return True
 
+                # NEW (Palo Alto Networks 2025, confirmed via real
+                # cleaned.json output): a standalone dash/em-dash
+                # ("-", "--", "\u2014") is a genuine, complete
+                # financial VALUE in these tables -- SEC filings use
+                # it as the standard "zero" or "not applicable"
+                # placeholder (e.g. "Contingent consideration
+                # liability at the beginning of the period: $ -").
+                # _parse_data_row() and _looks_like_value_cell()
+                # elsewhere in this file already treat a bare dash
+                # this way -- but this function didn't, so a row
+                # whose ONLY value is a dash (nothing else numeric on
+                # the line) was being treated as an INCOMPLETE label
+                # fragment still needing another line's values to
+                # complete it, rather than the complete, standalone
+                # row it actually is.
+                #
+                # Confirmed real-world impact: PANW's Contingent
+                # Consideration Liability rollforward table has a
+                # genuine "beginning of period: $ -" row (the
+                # liability was zero at the start). Because "-" alone
+                # didn't count as "real numeric" here, this complete
+                # row was incorrectly merged with the FOLLOWING row
+                # ("Initial valuation on the acquisition date:
+                # 648.9") by the run-collection logic below -- fusing
+                # two unrelated rows into one, and leaving "648.9"
+                # (a real value) to be misread as a bogus column name
+                # downstream instead of the "Initial valuation..."
+                # row's own clean value.
+                if text in ("-", "--", "\u2014"):
+                    return True
+
         return False
 
     def _is_undersized_footnote_marker(
@@ -1245,9 +1276,30 @@ class TableParser:
         if not cells:
             return 0.0
 
+        # NEW (Palo Alto Networks 2025, confirmed via real
+        # cleaned.json output): a standalone dash/em-dash is kept in
+        # the relevant-cells set here (not filtered out along with
+        # the other NON_LABEL_TOKENS like "$"/"%"/parens), and
+        # counted as a genuine VALUE below -- consistent with how
+        # _parse_data_row() and _row_has_real_numeric() already treat
+        # a bare dash as the standard SEC-filing "zero" placeholder,
+        # not a meaningless symbol to discard.
+        #
+        # Without this, a row whose ONLY real content is a dash value
+        # (e.g. "Contingent consideration liability at the beginning
+        # of the period" | "$" | "-") had its "$" AND "-" both
+        # stripped out of `relevant_cells` entirely (both are in
+        # NON_LABEL_TOKENS), leaving just the label text as the
+        # row's ONLY relevant cell -- so its numeric fraction was
+        # ALWAYS 0.0, no matter what. That meant this genuinely
+        # complete row could never be recognized as "real data" by
+        # _find_text_header's data_start_index search, so it (and
+        # its entire long label) got swept into the header zone and
+        # clustered into a bogus column name instead.
         relevant_cells = [
             cell for cell in cells
             if cell["text"].strip() not in self.NON_LABEL_TOKENS
+            or cell["text"].strip() in ("-", "--", "—")
         ]
 
         if not relevant_cells:
@@ -1256,6 +1308,7 @@ class TableParser:
         numeric_count = sum(
             1 for cell in relevant_cells
             if self._looks_numeric_cell(cell["text"])
+            or cell["text"].strip() in ("-", "--", "—")
         )
 
         return numeric_count / len(relevant_cells)
@@ -1615,6 +1668,85 @@ class TableParser:
         ]
 
         columns.sort(key=lambda item: item["x"])
+
+        # NEW (Palo Alto Networks 2025, confirmed via real
+        # cleaned.json output): a genuine multi-word group title can
+        # get split across a marginally-too-wide x-gap during the
+        # clustering above, leaving a single bare CONNECTOR word
+        # stranded as its own fake column. Confirmed here: "Common
+        # Stock" (x=258), "and" (x=280), and "Additional Paid-In
+        # Capital" (x=239) are ALL meant to be one combined title
+        # ("Common Stock and Additional Paid-In Capital"), but "and"
+        # sits 22.2pt from "Common Stock" -- just OVER the 20pt
+        # x_cluster_tolerance -- so it formed its own isolated
+        # one-word column.
+        #
+        # This is silently destructive downstream in the exact same
+        # way as the duplicate-column-name bug below: _parse_data_row
+        # still finds a real value at that x-position and assigns it
+        # to whatever column sits there -- so a real number ends up
+        # keyed under the meaningless name "and".
+        #
+        # Fix is deliberately narrow: only a FIXED, SHORT list of
+        # grammatical connector words (never a legitimate standalone
+        # financial-statement column header on its own, regardless of
+        # company or table) gets folded into its nearest neighbor,
+        # using a second, WIDER-tolerance pass (roughly double the
+        # normal x_cluster_tolerance).
+        #
+        # An EARLIER version of this fix tried to catch ANY single
+        # bare alphabetic word this way -- but that's too broad:
+        # genuine SEC-standard sub-column headers ("Amount", "Shares",
+        # "Total") are ALSO frequently single words, and confirmed
+        # testing showed this wrongly absorbing PANW's own legitimate
+        # "Amount" sub-column into the "Common Stock..." group title
+        # too, silently losing that column entirely. Restricting to
+        # only true grammatical connectors keeps this safe: it can
+        # only ever help ("and" is never a real column), never harm.
+        _ORPHAN_CONNECTOR_WORDS = {
+            "and", "or", "of", "the", "in", "for", "to", "with", "&",
+        }
+
+        rescue_tolerance = self.x_tolerance * 2
+
+        for column in columns:
+
+            if column["name"].strip().lower() not in _ORPHAN_CONNECTOR_WORDS:
+                continue
+
+            best_neighbor = None
+            best_distance = None
+
+            for other in columns:
+
+                if other is column:
+                    continue
+
+                distance = abs(column["x"] - other["x"])
+
+                if distance <= rescue_tolerance and (
+                    best_distance is None or distance < best_distance
+                ):
+                    best_distance = distance
+                    best_neighbor = other
+
+            if best_neighbor is None:
+                continue
+
+            if column["x"] < best_neighbor["x"]:
+                best_neighbor["name"] = (
+                    f"{column['name']} {best_neighbor['name']}"
+                )
+            else:
+                best_neighbor["name"] = (
+                    f"{best_neighbor['name']} {column['name']}"
+                )
+
+            column["_absorbed"] = True
+
+        columns = [
+            column for column in columns if not column.get("_absorbed")
+        ]
 
         # The LEFTMOST cluster in these tables is consistently the
         # row-LABEL column's own header (e.g. "Periods"), not a real
