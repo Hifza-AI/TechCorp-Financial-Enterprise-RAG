@@ -403,10 +403,25 @@ class TableParser:
         merged_rows = []
         index = 0
 
+        # NEW (ServiceNow 2025): the same "is this plausibly one
+        # label" word-count ceiling used elsewhere in this file (see
+        # _parse_table_region / label-boundary logic), reused here as
+        # a cap on the CUMULATIVE word count across an entire
+        # multi-row run -- see the full rationale where it's applied
+        # below.
+        MAX_LABEL_WORDS = 15
+
         while index < len(rows):
 
             run_rows = []
             run_index = index
+
+            # NEW (ServiceNow 2025, confirmed via real
+            # table_analysis.json output): tracks the CUMULATIVE word
+            # count across every row collected into this run so far.
+            # See the guard added below (right after this inner while
+            # loop starts) for the full rationale.
+            run_word_count = 0
 
             while run_index < len(rows):
 
@@ -423,6 +438,84 @@ class TableParser:
 
                 if not row_text or row_text.endswith(":"):
                     break  # genuine section-header or blank -- stop the run
+
+                # NEW (ServiceNow 2025, confirmed via real
+                # table_analysis.json output): a genuine wrapped ROW
+                # LABEL -- even a long one, like Apple's "Adjustment
+                # for net (gains)/losses realized and included in net
+                # income, net of tax..." -- is still fundamentally
+                # ONE narrow phrase describing ONE row, so its total
+                # word count across however many physical lines it
+                # wraps onto stays modest. A genuine multi-COLUMN
+                # table header -- e.g. ServiceNow's Stockholders'
+                # Equity statement, whose "Common Stock" / "Treasury
+                # Stock" / "Additional Paid-in Capital" / "Retained
+                # Earnings" / "Accumulated Other Comprehensive (Loss)
+                # Income" / "Total Stockholders' Equity" group titles
+                # plus their own "Shares" / "Amount" sub-headers span
+                # FIVE separate physical header rows and 20+ words
+                # total -- is structurally nothing like a single
+                # wrapped label, even though every individual row
+                # within it is short enough to pass the per-row
+                # MAX_LABEL_WORDS check below on its own.
+                #
+                # Confirmed real-world impact: because ServiceNow
+                # bolds BOTH the label AND the values of its "Balance
+                # as of [date]" rows specifically (for visual
+                # emphasis) -- unlike Chipotle/Netflix, which bold
+                # only the label -- the bold-matching check further
+                # below (which correctly distinguishes those two
+                # companies' cases) could not tell this apart from a
+                # genuine Costco-style all-bold wrapped continuation.
+                # The result: this entire 5-row, 20+-word grouped
+                # header was merging straight into the very first
+                # "Balance as of December 31, 2022" data row, mixing
+                # column-header words with that row's own real values
+                # (e.g. real output showed "1,014,411 Shares Common
+                # Stock, Amount, 1 Shares, Treasury Stock, Amount,
+                # Additional Paid-in Capital 4,795, ..." instead of
+                # clean column names with clean values underneath).
+                #
+                # A hard cap on the run's CUMULATIVE word count (using
+                # the same MAX_LABEL_WORDS=15 threshold already
+                # established elsewhere in this file for "is this
+                # plausibly one label") stops the run from growing
+                # past what a genuine single wrapped label could ever
+                # need, regardless of how many individual rows or how
+                # their bold-styling happens to compare -- without
+                # requiring any changes to the bold-matching logic
+                # itself, which stays correct for the genuine
+                # Costco/Chipotle/Netflix cases it already handles.
+                if run_word_count + len(row_text.split()) > MAX_LABEL_WORDS:
+                    break
+
+                # NEW (ServiceNow 2025): a genuine wrapped row-label
+                # is structurally NARROW -- it extracts as just one
+                # or two distinct cells/x-positions per physical line
+                # (the whole phrase, or occasionally two neighbouring
+                # words that got split into separate spans). A
+                # multi-COLUMN table header row, by contrast, ALWAYS
+                # has many distinct cells side by side (one per
+                # column). Confirmed on ServiceNow: the row
+                # "Capital | Earnings | (Loss) Income | Equity |
+                # Shares | Amount | Shares | Amount" -- the tail end
+                # of the grouped column header, sitting at the same y
+                # as the sub-column labels -- has 8 distinct cells,
+                # yet its OWN cumulative word count (9) still fell
+                # under the MAX_LABEL_WORDS cap above, so it slipped
+                # through that guard alone and kept merging into the
+                # very next (data) row -- e.g. real output still
+                # showed "Shares"/"Amount" spliced into the "Balance
+                # as of December 31, 2022" row's own values. A hard
+                # cap on cell count per row catches this even when
+                # the word-count alone doesn't: it targets the
+                # STRUCTURAL shape of a real multi-column header
+                # (many short, disconnected labels side by side)
+                # rather than raw word count.
+                if len(cells) > 3:
+                    break
+
+                run_word_count += len(row_text.split())
 
                 # Bold needs nuance: Costco bolds BOTH its section-
                 # titles ("REVENUE") AND individual line-items whose
@@ -1553,16 +1646,7 @@ class TableParser:
         # (e.g. (4,282,014)) under the single surviving "Amount" key.
         #
         # Fix: whenever a column name repeats, disambiguate it using
-        # the nearest group-title label to its left. The group-title
-        # row is identified as the header-zone row with the FEWEST
-        # cells (a wide label like "Common Stock" spanning several
-        # narrower sub-columns beneath it naturally has fewer cells
-        # than the sub-column row itself). This only ever changes a
-        # column's NAME string -- it never touches which values get
-        # matched to which column position, so tables with no
-        # duplicate names (the overwhelming majority already
-        # confirmed working on Apple/Adobe/Amazon/Nvidia) are
-        # completely unaffected.
+        # the nearest group-title label to its left.
         name_counts = {}
 
         for column in columns:
@@ -1574,51 +1658,78 @@ class TableParser:
 
         if duplicate_names:
 
-            candidate_group_rows = []
+            # NEW (ServiceNow 2025, confirmed via real
+            # table_analysis.json output): the ORIGINAL version of
+            # this fix picked a single designated "group-title row"
+            # (the header-zone row with the fewest cells) and only
+            # ever looked there. That breaks whenever a table's
+            # header zone has MORE than 2 distinct row-levels:
+            # ServiceNow's Stockholders' Equity statement has THREE
+            # -- a 5-cell row holding the real "Common Stock" /
+            # "Treasury Stock" group titles, a 4-cell row holding
+            # unrelated single-column labels ("Paid-in", "Retained",
+            # "Comprehensive", "Stockholders'"), and the final 8-cell
+            # sub-header row itself. Picking by fewest cells selected
+            # the 4-cell row -- the WRONG one -- so "Amount" never
+            # found its real group title and both duplicate "Amount"
+            # columns stayed ambiguous, silently losing Common
+            # Stock's own Amount value exactly like the original
+            # Chipotle bug.
+            #
+            # Fix: instead of trusting one designated row, pool cells
+            # from EVERY header-zone row together and, independently
+            # for each duplicate column, pick whichever single
+            # candidate sits CLOSEST (smallest positive x-distance)
+            # across the WHOLE pooled set. This naturally finds the
+            # right group title regardless of which specific physical
+            # row it happens to sit on -- "Common Stock" (closest to
+            # the left-hand "Amount") and "Treasury Stock" (closest to
+            # the right-hand "Amount") both win correctly this way --
+            # while unrelated labels sitting further away (or to the
+            # right, which the distance>=-5 check excludes) are never
+            # mistakenly picked.
+            all_header_cells = []
 
             for row_index in sorted(header_row_indices):
 
                 if row_index in title_row_indices:
                     continue
 
-                row_cells = self._extract_cells(rows[row_index])
+                for cell in self._extract_cells(rows[row_index]):
 
-                if 1 < len(row_cells) < len(columns):
-                    candidate_group_rows.append(row_cells)
+                    text = cell["text"].strip()
 
-            if candidate_group_rows:
-
-                group_row = min(candidate_group_rows, key=len)
-
-                group_labels = sorted(
-                    (
-                        (cell["x"], cell["text"].strip())
-                        for cell in group_row
-                        if cell["text"].strip()
-                    ),
-                    key=lambda item: item[0],
-                )
-
-                for column in columns:
-
-                    if column["name"] not in duplicate_names:
+                    if not text:
                         continue
 
-                    best_label = None
-                    best_distance = None
+                    all_header_cells.append((cell["x"], text))
 
-                    for group_x, group_text in group_labels:
+            for column in columns:
 
-                        distance = column["x"] - group_x
+                if column["name"] not in duplicate_names:
+                    continue
 
-                        if distance >= -5 and (
-                            best_distance is None or distance < best_distance
-                        ):
-                            best_distance = distance
-                            best_label = group_text
+                best_label = None
+                best_distance = None
 
-                    if best_label:
-                        column["name"] = f"{best_label} {column['name']}"
+                for label_x, label_text in all_header_cells:
+
+                    # Never let a duplicate match one of its OWN
+                    # constituent words as if it were a separate
+                    # group-title candidate.
+                    if label_text in column["name"].split():
+                        continue
+
+                    distance = column["x"] - label_x
+
+                    if distance >= -5 and (
+                        best_distance is None or distance < best_distance
+                    ):
+                        best_distance = distance
+                        best_label = label_text
+
+                if best_label:
+                    column["name"] = f"{best_label} {column['name']}"
 
         return header_row_indices, columns
 

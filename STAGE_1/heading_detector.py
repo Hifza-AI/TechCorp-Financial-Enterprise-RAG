@@ -1131,6 +1131,39 @@ class HeadingDetector:
         if re.match(r"^\d{1,2}\.\s+[A-Z][a-z]+", stripped):
             return True
 
+        # NEW (ServiceNow 2025, confirmed via real hierarchy_outline.txt
+        # output): a THIRD distinct Note-numbering convention -- the
+        # number wrapped in PARENTHESES, with no "Note" word and no
+        # trailing period at all, e.g. "(1) Description of the
+        # Business", "(2) Summary of Significant Accounting Policies",
+        # "(14) Stockholders' Equity". All 19 of ServiceNow's numbered
+        # Notes use this exact style consistently.
+        #
+        # This is the SAME underlying failure mode already fixed twice
+        # before (Chipotle's bare "N." and, before that, Adobe's
+        # missing-"Note"-word divider) -- a Note heading whose own text
+        # carries no recognizable marker for any of the regexes above,
+        # so is_note_marker() could never protect it from being closed
+        # by its own same-level, identically-styled sub-topics.
+        # Confirmed real-world impact: EVERY one of "(2) Summary of
+        # Significant Accounting Policies"'s sub-topics (Principles of
+        # Consolidation, Common Stock Split, Use of Estimates, Foreign
+        # Currency Translation and Transactions, Revenue Recognition,
+        # and more) flattened out as siblings of the Note instead of
+        # nesting under it -- real hierarchy_outline.txt showed all of
+        # them at the identical indentation level as "(2) Summary..."
+        # itself.
+        #
+        # Matching is scoped the same way as the bare "N." fix above:
+        # the number must be 1-2 digits immediately inside the
+        # parentheses, followed by a space and a real multi-letter
+        # capitalized word -- so a bare, isolated footnote-reference
+        # marker like "(1)" on its own (with nothing else on that
+        # heading candidate's text) never matches, since there's no
+        # trailing word for "\s+[A-Z][a-z]+" to find.
+        if re.match(r"^\(\d{1,2}\)\s+[A-Z][a-z]+", stripped):
+            return True
+
         return False
 
 

@@ -1,57 +1,22 @@
 import asyncio
 from playwright.async_api import async_playwright
 
-# Microsoft (MSFT) 2017 se lekar 2026 tak ki filings
+# Salesforce (CRM) 2020, 2021, aur 2022 ki filings
 TARGET_FILINGS = [
     {
-        "company": "MSFT",
-        "year": "2017",
-        "url": "https://www.sec.gov/Archives/edgar/data/789019/000156459017014900/msft-10k_20170630.htm"
-    },
-    {
-        "company": "MSFT",
-        "year": "2018",
-        "url": "https://www.sec.gov/Archives/edgar/data/789019/000156459018019062/msft-10k_20180630.htm"
-    },
-    {
-        "company": "MSFT",
-        "year": "2019",
-        "url": "https://www.sec.gov/Archives/edgar/data/789019/000156459019027952/msft-10k_20190630.htm"
-    },
-    {
-        "company": "MSFT",
+        "company": "CRM",
         "year": "2020",
-        "url": "https://www.sec.gov/Archives/edgar/data/789019/000156459020034944/msft-10k_20200630.htm"
+        "url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852420000014/crm-20200131.htm"
     },
     {
-        "company": "MSFT",
+        "company": "CRM",
         "year": "2021",
-        "url": "https://www.sec.gov/Archives/edgar/data/789019/000156459021039151/msft-10k_20210630.htm"
+        "url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852422000008/crm-20210131.htm"
     },
     {
-        "company": "MSFT",
+        "company": "CRM",
         "year": "2022",
-        "url": "https://www.sec.gov/Archives/edgar/data/789019/000156459022026876/msft-10k_20220630.htm"
-    },
-    {
-        "company": "MSFT",
-        "year": "2023",
-        "url": "https://www.sec.gov/Archives/edgar/data/789019/000095017023035122/msft-20230630.htm"
-    },
-    {
-        "company": "MSFT",
-        "year": "2024",
-        "url": "https://www.sec.gov/Archives/edgar/data/789019/000095017024087843/msft-20240630.htm"
-    },
-    {
-        "company": "MSFT",
-        "year": "2025",
-        "url": "https://www.sec.gov/Archives/edgar/data/789019/000095017025100235/msft-20250630.htm"
-    },
-    {
-        "company": "MSFT",
-        "year": "2026",
-        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm"
+        "url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852422000013/crm-20220131.htm"
     }
 ]
 
