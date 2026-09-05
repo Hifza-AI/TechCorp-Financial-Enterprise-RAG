@@ -552,19 +552,89 @@ class TableAnalyzer:
         # this narrowly scoped to the page-footer pattern specifically,
         # without risking any genuine lone-number table cell that
         # happens to also carry a real row-label on the same line.
+        #
+        # NEW (Workday 2025, confirmed via real table_analysis.json
+        # output): the check above alone is still too broad -- a
+        # genuine, repeating table COLUMN of small values (crucially,
+        # including the value "0" itself) is ALSO frequently rendered
+        # as a bare 1-3-digit single-span line, once per row, with
+        # nothing else on that physical line either. Confirmed on
+        # Workday's Stockholders' Equity statement: the entire
+        # "Common stock:" section reports literal "$0" amounts for
+        # every single row (its $0.001 par value rounds to zero in
+        # millions), so EVERY value in that column is a bare "0" --
+        # and the very LAST row's three "0" values ("Balance, end of
+        # period") had no other already-confirmed numeric anchor
+        # nearby to be rescued by (every other "0" in the same column
+        # happened to sit close enough to a genuinely-confirmed
+        # neighbor elsewhere to get rescued, but this last row did
+        # not), so they were excluded outright -- silently losing
+        # Common Stock's own ending balance and corrupting the row
+        # structure around it.
+        #
+        # The real distinguishing signal between "isolated page-
+        # footer stamp" and "a real, repeating table column" is
+        # whether OTHER rows, above or below, have content sitting at
+        # this SAME x-position: a genuine column repeats vertically
+        # (every row in that column lines up at the same x), while a
+        # one-off page-footer number never has anything else stacked
+        # directly above or below it at that exact x. Checking for
+        # at least one other line within a generous vertical window
+        # that shares this x-position (within the same tolerance used
+        # for column-clustering elsewhere) keeps Netflix's genuinely
+        # isolated "41" excluded (nothing else in the document sits at
+        # that exact x) while correctly protecting Workday's "0"
+        # column (many other rows share that same x).
         if re.fullmatch(r"\d{1,3}", text) and len(spans) <= 1:
 
-            return {
-                "line_index": index,
-                "text": text,
-                "is_candidate": False,
-                "numeric_ratio": 0.0,
-                "numeric_count": 0,
-                "token_count": 0,
-                "x_positions": [],
-                "y_positions": [],
-                "_y": y,
-            }
+            this_x = None
+
+            if spans and spans[0].get("bbox"):
+                this_x = round(float(spans[0]["bbox"][0]), 1)
+
+            has_column_mate = False
+
+            if this_x is not None and y is not None:
+
+                for other_index, other_line in enumerate(lines):
+
+                    if other_index == index:
+                        continue
+
+                    other_y = self._line_y(other_line)
+
+                    if other_y is None or abs(other_y - y) > 150:
+                        continue
+
+                    for other_span in other_line.get("spans", []):
+
+                        other_bbox = other_span.get("bbox")
+
+                        if not other_bbox:
+                            continue
+
+                        other_x = round(float(other_bbox[0]), 1)
+
+                        if abs(other_x - this_x) <= 3.0:
+                            has_column_mate = True
+                            break
+
+                    if has_column_mate:
+                        break
+
+            if not has_column_mate:
+
+                return {
+                    "line_index": index,
+                    "text": text,
+                    "is_candidate": False,
+                    "numeric_ratio": 0.0,
+                    "numeric_count": 0,
+                    "token_count": 0,
+                    "x_positions": [],
+                    "y_positions": [],
+                    "_y": y,
+                }
 
         numeric_count = 0
         token_count = 0

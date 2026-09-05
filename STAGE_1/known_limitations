@@ -139,3 +139,5 @@ Chipotle — "Income Taxes Paid" table (Note 6) mein intro-sentence column-name 
 Chipotle — "Provision for Income Taxes" (MD&A) mein ek garbage caption-row hai, asli values sahi hain. Tier-3, cosmetic. NOT fixed (deferred).
 
 Netflix — Stockholders' Equity table mein "Common Stock and Additional Paid-in Capital" group-title x-clustering tolerance (20pt) se thoda bahar (24.8pt gap) reh gaya, is liye "Amount" column standalone ban gaya aur Treasury Stock ki value uske neeche chali gayi. Shares value sahi hai, dollar-values present hain bas 1 label (Treasury Stock ka "Amount" ke neeche) confusing hai. Tier-1 lekin narrow (1 table). NOT fixed (deferred — x-clustering tolerance tuning risky hai, doosri companies ko regress kar sakta hai).
+
+Walmart 2026 — Note 8 (Taxes) Effective Income Tax Rate Reconciliation table (FY2026-specific sub-table) mein "U.S. statutory tax rate" pehli row apne column-header mein sweep ho gayi hai. Values ($6,188M/21.0%) column-name mein visible hain lekin apni row mein nahi. Baaki sab rows clean hain, comparison-table (2025/2024) bhi clean hai. Tier-2, narrow (1 row, 1 sub-table). NOT fixed (deferred).
