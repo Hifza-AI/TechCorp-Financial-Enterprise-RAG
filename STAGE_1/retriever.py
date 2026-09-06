@@ -98,8 +98,8 @@ class Retriever:
     def _mentions_unknown_company(self, query):
 
         WELL_KNOWN_COMPANIES = [
-            "tesla", "amazon", "google", "microsoft", "meta", "nvidia",
-            "netflix", "walmart", "jpmorgan", "citigroup", "pfizer",
+            "tesla", "microsoft", "jpmorgan", "citigroup", "pfizer",
+            "coca-cola", "costco", "cvs", "boeing", "disney",
         ]
 
         query_lower = query.lower()
@@ -110,6 +110,47 @@ class Retriever:
                     return name
 
         return None
+
+    # =========================================================
+    # NEW: DEDUPLICATION KEY FOR SPLIT-CHUNK WINDOWS
+    #
+    # build_embeddings.py's EmbeddingIndexBuilder now splits any
+    # chunk longer than BGE's 512-token limit into multiple
+    # overlapping windows (confirmed on real data: ~2% of chunks,
+    # almost all large financial tables like Segment Information
+    # breakdowns and multi-year Stockholders' Equity rollforwards).
+    # Each window becomes its OWN row in the FAISS index and its OWN
+    # entry in metadata.pkl -- but every window's metadata entry
+    # carries the SAME full "text", "section_path", "company", and
+    # "year" as its siblings (only window_index/window_count differ),
+    # since metadata is built from the ORIGINAL chunk dict, not the
+    # sliced window text.
+    #
+    # Without deduplicating on this before truncating to top_k, a
+    # single large table can occupy 2-3 of a caller's requested
+    # top_k slots simultaneously whenever several of its windows
+    # independently rank well (very plausible, since they're
+    # overlapping slices of the same semantic content) -- crowding
+    # out genuinely different, relevant chunks and silently reducing
+    # both the diversity and the effective recall of every top-k
+    # result, specifically for the long, information-dense tables
+    # this project cares most about getting right.
+    # =========================================================
+
+    def _dedupe_key(self, chunk):
+
+        section_path = chunk.get("section_path")
+
+        if isinstance(section_path, list):
+            section_path = tuple(section_path)
+
+        return (
+            chunk.get("company"),
+            chunk.get("year"),
+            chunk.get("chunk_type"),
+            section_path,
+            chunk.get("text"),
+        )
 
     # =========================================================
     # DENSE RETRIEVAL (whole corpus, so every chunk gets a rank)
@@ -157,23 +198,13 @@ class Retriever:
     # =========================================================
     # RECIPROCAL RANK FUSION
     #
-    # NEW: this is the piece that was MISSING -- self.bm25 was being
-    # built in __init__, and RRF_K was defined, but search() never
-    # actually queried BM25 or used RRF_K anywhere; retrieval was
-    # still 100% pure dense. This wires both indexes into an actual
-    # combined ranking.
-    #
     # RRF combines two (or more) different ranked lists WITHOUT
     # needing their raw scores to be on comparable scales -- each
     # method only contributes 1/(k + rank) for however it ranked a
     # given chunk, so a chunk that ranks well in EITHER method (exact
     # keyword match via BM25, OR semantic similarity via dense) gets
     # pulled up, and a chunk that ranks well in BOTH gets pulled up
-    # even further. This directly addresses the accuracy gap already
-    # observed: queries whose exact wording (numbers, section names,
-    # specific terms) doesn't come through strongly in the dense
-    # embedding can still surface the right chunk via BM25's
-    # keyword-overlap signal.
+    # even further.
     # =========================================================
 
     def _reciprocal_rank_fusion(self, dense_rank_by_idx, bm25_rank_by_idx):
@@ -243,13 +274,27 @@ class Retriever:
             dense_rank_by_idx, bm25_rank_by_idx
         )
 
-        candidates = []
+        # NEW: dedupe by ORIGINAL source chunk while building
+        # candidates, keeping only the highest-rrf-scoring window for
+        # any chunk that got split into multiple windows by
+        # build_embeddings.py. See _dedupe_key()'s docstring above
+        # for the full rationale -- this is what stops one large
+        # table's several windows from occupying multiple slots in
+        # the same top-k result list.
+        candidates_by_key = {}
 
         for idx, rrf_score in rrf_scores.items():
 
             chunk = self.metadata[idx]
 
-            candidates.append({
+            key = self._dedupe_key(chunk)
+
+            existing = candidates_by_key.get(key)
+
+            if existing is not None and existing["rrf_score"] >= rrf_score:
+                continue
+
+            candidates_by_key[key] = {
                 "score": dense_score_by_idx.get(idx, 0.0),
                 "rrf_score": rrf_score,
                 "company": chunk.get("company"),
@@ -258,7 +303,9 @@ class Retriever:
                 "page_numbers": chunk.get("page_numbers"),
                 "chunk_type": chunk.get("chunk_type"),
                 "text": chunk.get("text"),
-            })
+            }
+
+        candidates = list(candidates_by_key.values())
 
         # Hard filter without silent fallbacks
         if wanted_company:
@@ -293,27 +340,12 @@ class Retriever:
         # topics, irrelevant queries) exactly as it worked before
         # hybrid retrieval was wired in.
         #
-        # NEW: skip the numeric threshold ENTIRELY when a hard
-        # company/year filter was applied. Confirmed on real queries:
-        # a 0.7x-relaxed threshold (0.406) helped "most recent total
-        # net sales" (top dense score 0.544) but still failed "latest
-        # reported net income" (its best year-filtered candidate
-        # apparently scored even lower) -- there's no single relaxed
-        # multiplier that reliably covers every metric/phrasing
-        # combination, because different metrics naturally embed with
-        # different strength against a given query, especially once
-        # STRICTLY filtered to one specific year.
-        #
-        # The numeric threshold's actual PURPOSE is to catch queries
-        # about things not in the corpus at all (weather, a stock
-        # price today, an unindexed company) -- but once we've
-        # already deterministically confirmed via metadata (not
-        # fuzzy/semantic matching) that this exact company+year
-        # combination IS in the corpus, that specific risk is fully
-        # ruled out. Any content that survived the hard filter is, by
-        # definition, real disclosed content for that company/year --
-        # for an ordinary financial-metric question, that's enough to
-        # return an answer rather than a false "no match".
+        # Skip the numeric threshold ENTIRELY when a hard company/year
+        # filter was applied -- once we've already deterministically
+        # confirmed via metadata (not fuzzy/semantic matching) that
+        # this exact company+year combination IS in the corpus, the
+        # threshold's actual purpose (catching queries about things
+        # not in the corpus at all) is already ruled out.
         if needs_hard_filter:
             if not results:
                 return {
