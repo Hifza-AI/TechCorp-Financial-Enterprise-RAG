@@ -89,8 +89,39 @@ class Retriever:
 
         query_lower = query.lower()
 
+        # NEW (confirmed via real test_multi_company_results.txt output):
+        # requiring the FULL stored company name to appear in the query
+        # silently fails for any company whose stored name has extra
+        # words beyond what people actually type. Confirmed concretely:
+        # "Chipotle Mexican Grill" is the stored name, but real queries
+        # just say "Chipotle" -- "chipotle mexican grill" is NOT a
+        # substring of "what was chipotle's revenue", so _detect_company
+        # returned None every single time a query used the short form.
+        # With no company filter applied, the query then searched the
+        # ENTIRE corpus unfiltered, and three separate real test queries
+        # ("Chipotle's most recent total revenue", "...net income",
+        # "...latest reported revenue") all confidently returned
+        # Salesforce or Walmart data instead -- a severe, silent
+        # cross-company contamination bug. "Palo Alto Networks" queries
+        # were unaffected only because people happen to type that
+        # company's full name in practice.
+        #
+        # Fix: also match on just the company's FIRST WORD (e.g.
+        # "Chipotle", "Palo"), not only the complete stored name. This
+        # keeps the existing full-name match as the first, more precise
+        # check (so "Palo Alto Networks" still can't accidentally match
+        # on some unrelated company that also starts with a shared first
+        # word), and only falls back to the short form when the full
+        # name genuinely isn't present.
         for company in self.known_companies:
             if company.lower() in query_lower:
+                return company
+
+        for company in self.known_companies:
+            first_word = company.split()[0].lower()
+            if len(first_word) >= 4 and re.search(
+                r"\b" + re.escape(first_word) + r"\b", query_lower
+            ):
                 return company
 
         return None
