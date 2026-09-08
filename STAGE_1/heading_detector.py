@@ -846,9 +846,103 @@ class HeadingDetector:
         ):
             return 0, ["table_column_header_date"]
 
+        # NEW (Microsoft 2026, confirmed via real hierarchy_outline.txt
+        # + video-frame output): a standalone table-cell VALUE that
+        # expresses a weighted-average duration -- "10 years", "5
+        # years", "9 years", "0 years" -- appears bold (financial
+        # tables commonly bold their numeric values) inside the
+        # "Weighted Average Life" column of Note 9 - Intangible
+        # Assets' second sub-table. Bold + short + doesn't end in a
+        # period was enough to independently cross the heading
+        # threshold, producing spurious sibling nodes "[SECTION L3]
+        # 10 years $" and "[SECTION L3] 5 years $" instead of these
+        # being read as ordinary table cell values under Note 9.
+        #
+        # A genuine section heading is never JUST a bare number
+        # followed by the word "year"/"years" (with an optional
+        # trailing "$" symbol that leaked in from an adjacent
+        # column) -- this phrasing only ever occurs as a table VALUE
+        # in these filings -- so it's safe to hard-reject regardless
+        # of styling, the same way the date/units captions above are.
+        if re.fullmatch(
+            r"\d+(\.\d+)?\s+years?(\s*\$)?",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+            return 0, ["table_duration_value"]
+
+        # NEW (Microsoft 2026, confirmed via real hierarchy_outline.txt
+        # output): a small, fixed set of SEC-standard financial-
+        # statement SECTION-DIVIDER labels -- "Assets" and
+        # "Liabilities and stockholders'/shareholders' equity" on the
+        # Balance Sheet; "Operations", "Financing", "Investing" on the
+        # Statement of Cash Flows; "Common stock and paid-in capital",
+        # "Retained earnings", "Accumulated other comprehensive
+        # (loss)/income" on the Statement of Stockholders' Equity --
+        # are bold, short, title-case lines that independently score
+        # as genuine headings, exactly like the ServiceNow 2016
+        # table-header-zone words already handled above. Unlike that
+        # case, these dividers are NOT densely clustered (each sits
+        # alone, spaced out through its own statement), so the
+        # existing neighbor-count demotion pass does not catch them.
+        #
+        # Confirmed real-world impact on Microsoft's Balance Sheet:
+        # pulling "Assets" and "Liabilities and stockholders' equity"
+        # out as their own standalone headings corrupted the
+        # surrounding table's bbox enough that the ENTIRE 38-row
+        # Balance Sheet table (Total assets: 758,376; Total
+        # liabilities and stockholders' equity: 758,376) ended up
+        # attached under the PRECEDING heading ("COMPREHENSIVE INCOME
+        # STATEMENTS") instead of under "BALANCE SHEETS" -- a genuine
+        # value-level retrieval failure, not just a cosmetic one.
+        # Cash Flows' "Operations"/"Financing"/"Investing" similarly
+        # became three empty orphan sibling nodes.
+        #
+        # This list is deliberately narrow and matched as a FULL,
+        # exact line (case-insensitive) -- these exact phrases are
+        # never used as genuine standalone narrative section titles
+        # elsewhere in a 10-K, so this cannot misfire on real content
+        # the way a broader heuristic might.
+        _FINANCIAL_STATEMENT_DIVIDERS = {
+            "assets",
+            "liabilities and stockholders' equity",
+            "liabilities and shareholders' equity",
+            "liabilities and stockholders equity",
+            "liabilities and shareholders equity",
+            "operations",
+            "financing",
+            "investing",
+            "common stock and paid-in capital",
+            "retained earnings",
+            "accumulated other comprehensive loss",
+            "accumulated other comprehensive income",
+            "accumulated other comprehensive income (loss)",
+            "accumulated other comprehensive (loss) income",
+        }
+
+        if text.strip().lower() in _FINANCIAL_STATEMENT_DIVIDERS:
+            return 0, ["financial_statement_section_divider"]
+
         # ---------------------------------------------------
         # Style signals (strongest predictors, per real data)
         # ---------------------------------------------------
+
+        # NEW (Microsoft 2026, confirmed via real hierarchy_outline.txt
+        # + video-frame output): computed HERE, ahead of the bold/
+        # italic check right below, so that check can also grant a
+        # style-equivalent bonus to a known structural marker that
+        # ISN'T rendered bold or italic at all. See the new
+        # "structural_marker_unstyled" branch immediately below for
+        # the full rationale (Microsoft underlines its "NOTE N --
+        # Title" headings and its "PART II"/"Item 8" running-header
+        # caption instead of bolding them). This is the same
+        # is_structural_marker value already used further down for
+        # the smaller_than_body waiver and the length-bonus -- moving
+        # its computation earlier changes nothing else about how it's
+        # used, it's simply needed sooner now.
+        is_structural_marker = (
+            self._is_top_level_marker(text) or self._is_note_marker(text)
+        )
 
         if is_bold:
             score += 3
@@ -858,17 +952,56 @@ class HeadingDetector:
             score += 2
             reasons.append("italic")
 
-        # NEW (Palo Alto Networks 2025, confirmed via real
-        # cleaned.json output): computed here, ahead of where it
-        # used to be (down in the length-signals section below),
-        # purely so the size-scoring step right after can also make
-        # use of it -- see the "smaller_than_body" branch below for
-        # the full rationale. The length-signals section further
-        # down still uses this exact same value; nothing else about
-        # it changes.
-        is_structural_marker = (
-            self._is_top_level_marker(text) or self._is_note_marker(text)
-        )
+        elif is_structural_marker:
+            # NEW (Microsoft 2026, confirmed via real video-frame
+            # output): Microsoft renders its numbered Note titles
+            # ("NOTE 1 -- ACCOUNTING POLICIES", "NOTE 9 -- INTANGIBLE
+            # ASSETS", etc.) UNDERLINED, in REGULAR (non-bold) weight
+            # -- a styling convention never seen in the first 15
+            # verified companies, all of which bold their Note
+            # titles. The same is true of Microsoft's small "PART
+            # II" / running-header captions repeated at the top of
+            # every page.
+            #
+            # PyMuPDF's span flags (BOLD_FLAG/ITALIC_FLAG) do not
+            # expose underline decoration at all, so this can't be
+            # detected via styling -- but the TEXT itself already,
+            # independently, matches a known, universal SEC-filing
+            # structural-marker pattern (is_note_marker /
+            # is_top_level_marker), which is a completely reliable
+            # signal on its own regardless of the font used to render
+            # it.
+            #
+            # Confirmed real-world impact: without this, "NOTE 1 --
+            # ACCOUNTING POLICIES" (not bold) scored only 4 points
+            # (body_size_but_styled +1, short +2, all_caps +1) --
+            # exactly one point under the heading_score_threshold of
+            # 5 -- so it never became a heading at all, and its text
+            # silently merged into the middle of the PRECEDING
+            # paragraph ("Refer to accompanying notes. NOTE 1 --
+            # ACCOUNTING POLICIES Our consolidated financial
+            # statements..."). Every one of Note 1's real sub-topics
+            # then flattened out as siblings of "NOTES TO FINANCIAL
+            # STATEMENTS" instead of nesting under Note 1. The same
+            # scoring gap affected the "PART II"/"Item 8" running
+            # header, letting it leak into TABLE candidacy instead of
+            # being excluded as a heading (see the Note 3 fix in
+            # _is_top_level_marker for that side of this bug).
+            #
+            # Granting the SAME style-tier credit bold text gets (not
+            # italic's lesser +2) -- but ONLY when the text
+            # independently matches a known structural-marker pattern
+            # -- fixes this without touching how any non-structural-
+            # marker text is scored. The full +3 (matching "bold",
+            # not "italic"'s +2) is needed, not just +2: Microsoft's
+            # bare "Item 8" running-header caption is mixed-case (no
+            # all_caps +1 bonus available, unlike "PART II" or
+            # "NOTE 1 -- ..."), so with only +2 here it still lands
+            # one point under threshold (structural +2, size-neutral
+            # +0, short +2 = 4). +3 closes that gap (3+0+2=5) without
+            # over-crediting any of the other, already-passing cases.
+            score += 3
+            reasons.append("structural_marker_unstyled")
 
         # ---------------------------------------------------
         # Size relative to THIS document's own body baseline
@@ -1135,6 +1268,42 @@ class HeadingDetector:
         if re.match(r"^Item\s+\d+[A-Za-z]?\.", stripped, re.IGNORECASE):
             return True
 
+        # NEW (Microsoft 2026, confirmed via real video-frame output):
+        # every content page of Item 8 repeats a small, two-line
+        # running header at the very top -- "PART II" (matches the
+        # PART pattern above) immediately followed by a BARE "Item 8"
+        # on its own physical line, with NO trailing period. This is
+        # a plain running-header CAPTION, not the actual "Item 8.
+        # Financial Statements and Supplementary Data" section title
+        # (which appears once, elsewhere, WITH its period and full
+        # title text, and already matches the pattern above just
+        # fine).
+        #
+        # The existing "Item N." pattern requires a period, so this
+        # bare caption never matched it -- and since it also isn't
+        # bold in this filing, it scored too low to become a heading
+        # on style/size grounds alone either (see the new
+        # "structural_marker_unstyled" branch in _score_line, which
+        # this fix works together with). Left undetected, it was
+        # free to leak into TABLE candidacy on every single page of
+        # Item 8, corrupting table bboxes and column names --
+        # confirmed real damage: "PART II Item 8" became a literal
+        # bogus COLUMN NAME in at least two different Note tables, a
+        # bogus "section_title" on another, and -- most severely --
+        # dragged the entire 38-row Balance Sheet table's bbox up
+        # far enough that it mis-attached to the PRECEDING heading
+        # ("COMPREHENSIVE INCOME STATEMENTS") instead of "BALANCE
+        # SHEETS".
+        #
+        # Matching is deliberately narrow: the ENTIRE line (not just
+        # its start) must be nothing but "Item N[Letter]" with an
+        # OPTIONAL trailing period -- this can never accidentally
+        # match a real sentence that happens to START with "Item 8"
+        # followed by more words, since re.fullmatch requires the
+        # whole line to be just this short caption.
+        if re.fullmatch(r"Item\s+\d+[A-Za-z]?\.?", stripped, re.IGNORECASE):
+            return True
+
         return False
 
     def _is_note_marker(self, text):
@@ -1184,7 +1353,24 @@ class HeadingDetector:
         # becoming an unrelated sibling -- not a single combined
         # title, but the content ends up correctly grouped under the
         # right Note either way.
-        if re.match(r"^Note\s+\d+\s*[-.:\u2013\u2014]", stripped):
+        #
+        # NEW (Microsoft 2026, confirmed via real video-frame output):
+        # added re.IGNORECASE. Microsoft renders this marker
+        # completely in ALL CAPS -- "NOTE 1 -- ACCOUNTING POLICIES",
+        # using an em-dash separator -- which the character class
+        # here already covered, but the literal word "Note" in the
+        # pattern was being matched case-SENSITIVELY, so "NOTE" (all
+        # caps) never matched at all. Confirmed real-world impact:
+        # EVERY numbered Note in this filing (1, 6, 7, 8, 9, 10, 11,
+        # 12, 13, 14, 15, 17, 18) failed is_note_marker, which also
+        # meant none of them qualified for the "smaller_than_body_
+        # but_structural_marker" size-penalty waiver or the new
+        # "structural_marker_unstyled" style credit below -- see
+        # those two branches in _score_line for how this combined
+        # with Microsoft's underlined (non-bold) Note-title styling
+        # to keep every single Note title's score one point under
+        # threshold, so none of them became headings at all.
+        if re.match(r"^Note\s+\d+\s*[-.:\u2013\u2014]", stripped, re.IGNORECASE):
             return True
 
         # "Report of Independent Registered Public Accounting Firm" is
@@ -1246,6 +1432,43 @@ class HeadingDetector:
         ):
             return True
 
+        # NEW (Microsoft 2026, confirmed via real video-frame output):
+        # Microsoft titles its 5 core financial statements WITHOUT
+        # the word "CONSOLIDATED" and without "STATEMENTS OF" -- just
+        # "INCOME STATEMENTS", "COMPREHENSIVE INCOME STATEMENTS",
+        # "BALANCE SHEETS", "CASH FLOWS STATEMENTS", "STOCKHOLDERS'
+        # EQUITY STATEMENTS". None of these match the CONSOLIDATED-
+        # prefixed pattern immediately above, so none of them were
+        # recognized as note-markers.
+        #
+        # Confirmed real-world impact: without note-marker status,
+        # these titles have no protection from hierarchy_builder's
+        # same-level-sibling exclusivity rule, so their own internal
+        # sub-items -- "Assets" / "Liabilities and stockholders'
+        # equity" under Balance Sheets; "Operations" / "Financing" /
+        # "Investing" under Cash Flows; "Common stock and paid-in
+        # capital" / "Retained earnings" / "Accumulated other
+        # comprehensive loss" under Stockholders' Equity -- all
+        # popped their parent statement off the stack and became its
+        # SIBLINGS instead of its children the moment they arrived.
+        #
+        # Matching requires the ENTIRE line (case-insensitive,
+        # optional leading "CONSOLIDATED") to be exactly one of these
+        # 5 known statement-title phrases, so this cannot misfire on
+        # unrelated text that merely mentions "balance sheet" or
+        # "cash flow" in passing -- it only recognizes the standalone
+        # title line itself.
+        if re.match(
+            r"^(CONSOLIDATED\s+)?"
+            r"(BALANCE\s+SHEETS?|INCOME\s+STATEMENTS?|"
+            r"COMPREHENSIVE\s+INCOME\s+STATEMENTS?|"
+            r"CASH\s+FLOWS?\s+STATEMENTS?|"
+            r"STOCKHOLDERS'?\s+EQUITY\s+STATEMENTS?)\s*$",
+            stripped,
+            re.IGNORECASE,
+        ):
+            return True
+
         # NEW (Adobe 2025, confirmed via real hierarchy_outline.txt +
         # chunks.json output): the bare divider heading "NOTES TO
         # CONSOLIDATED FINANCIAL STATEMENTS" -- the section title
@@ -1279,7 +1502,7 @@ class HeadingDetector:
         # the page-repetition count falls under the boilerplate
         # floor).
         if re.match(
-            r"^NOTES?\s+TO\s+CONSOLIDATED\s+FINANCIAL\s+STATEMENTS"
+            r"^NOTES?\s+TO\s+(CONSOLIDATED\s+)?FINANCIAL\s+STATEMENTS"
             r"\s*(\(Continued\))?\s*$",
             stripped,
             re.IGNORECASE,
