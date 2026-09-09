@@ -123,7 +123,7 @@ class TableAnalyzer:
         """
         NEW (Chipotle 2016, confirmed via real table_analysis.json
         output): some SEC-filing PDF conversions stamp EVERY page
-        with an identical per-page watermark/metadata line --
+        with an identical per-page watermark/metadata line -- 
         confirmed here as the literal text "20161231 10K
         FY_Taxonomy2015" (a filing-date + form-type +
         XBRL-taxonomy-version stamp), appearing as its own
@@ -401,6 +401,58 @@ class TableAnalyzer:
             # swept in as if it were a wrapped label for the price-
             # range table's own header row directly below it.
             if item["text"].strip().endswith("."):
+                continue
+
+            # NEW (Costco 2025, confirmed via real table_analysis.json
+            # output): a line ending in ":" is JUST as reliably a
+            # complete, standalone sentence as one ending in "." --
+            # specifically, it's the universal SEC-filing convention
+            # for a sentence that INTRODUCES the table sitting right
+            # below it ("...the fair value of the Company's long-term
+            # debt, including the current portion, was approximately
+            # $5,370 and $5,412. The carrying value of long-term debt
+            # consisted of the following:", "Information regarding
+            # the Company's lease assets and liabilities were as
+            # follows:"). table_parser.py's own
+            # _merge_wrapped_continuation_labels() already excludes a
+            # colon-ending row from its equivalent row-level merge
+            # (`if not row_text or row_text.endswith(":"): break`) --
+            # but this page-level rescue pass here had no matching
+            # exclusion, so it could still promote a colon-ending
+            # INTRO SENTENCE as if it were a wrapped row-label
+            # fragment, purely because it sits within
+            # ADJACENT_Y_WINDOW of the table's own year-header row
+            # ("2025"/"2024") immediately below it.
+            #
+            # Confirmed real-world impact (two separate instances,
+            # same root cause): (1) on Note 4-Debt's Long-Term Debt
+            # table, "approximately $5,370 and $5,412. The carrying
+            # value of long-term debt consisted of the following:"
+            # was swept into the table -- silently deleting the
+            # fair-value dollar figures ($5,370 and $5,412) from
+            # every chunk, since paragraph_parser only sees the
+            # PRECEDING fragment ("...the fair value of the
+            # Company's long-term debt, including the current
+            # portion, was") and then glues it directly onto the
+            # NEXT surviving paragraph line, which happened to be an
+            # unrelated footnote several rows below the table. (2) on
+            # Note 5-Leases, "Information regarding the Company's
+            # lease assets and liabilities were as follows:" was
+            # swept into the PRECEDING Note 4 maturities table
+            # instead of surfacing as Note 5's own intro paragraph --
+            # even though the real "Note 5-Leases" heading in between
+            # them was correctly excluded from table candidacy, its
+            # exclusion doesn't create a hard region-boundary here,
+            # so the colon-ending sentence on the OTHER side of it
+            # still cascaded across.
+            #
+            # A genuine wrapped row-label fragment is never a
+            # complete, colon-terminated sentence introducing a table
+            # -- so this exclusion is exactly as safe as the existing
+            # period-based one, and uses the identical convention
+            # table_parser.py already relies on for the same
+            # distinction.
+            if item["text"].strip().endswith(":"):
                 continue
 
             if _looks_like_copyright_notice(item["text"]):
