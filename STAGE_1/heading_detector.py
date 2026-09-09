@@ -1218,7 +1218,42 @@ class HeadingDetector:
         if is_italic and relative_size < 1.15:
             return 4
 
-        if is_bold:
+        # NEW (Microsoft 2026, confirmed via real hierarchy_outline.txt
+        # output): a known structural marker (is_note_marker /
+        # is_top_level_marker) must get the SAME level-3 treatment a
+        # bold heading gets, even when it isn't actually bold or
+        # italic. Microsoft underlines its "NOTE N -- Title" headings
+        # instead of bolding them (see the "structural_marker_unstyled"
+        # scoring fix), so without this, is_bold is False for every
+        # Note title and _estimate_level() fell all the way through to
+        # the final "return 4" default -- the SAME level as (or deeper
+        # than) that Note's own bold sub-topics ("Accounting
+        # Principles", "Principles of Consolidation", level 3).
+        #
+        # Confirmed real-world impact: because a Note title (level 4)
+        # was NOT shallower than its own sub-topics (level 3), the
+        # hierarchy_builder stack-popping loop (`stack[-1]["level"] >=
+        # level`) never found a reason to pop back up to sibling depth
+        # when the NEXT Note arrived -- 3 >= 4 is false, so NOTE 2
+        # attached as a CHILD of whatever sub-topic NOTE 1 had left on
+        # top of the stack, NOTE 3 nested even deeper under NOTE 2's
+        # own last sub-topic, and so on -- 18 Notes cascading into one
+        # continuously deepening chain instead of 18 siblings under
+        # "NOTES TO FINANCIAL STATEMENTS".
+        #
+        # Granting level 3 here (the same depth a bold Note title
+        # already gets in every other verified company) fixes this:
+        # a Note is now guaranteed to be shallower than or equal to
+        # its own sub-topics, so the existing is_note_marker
+        # exclusivity exception in hierarchy_builder (which already
+        # correctly keeps a Note open against same-level, non-marker
+        # sub-topics, but lets a same-level INCOMING Note marker pop
+        # it) can do its job correctly.
+        is_structural_marker = (
+            self._is_top_level_marker(text) or self._is_note_marker(text)
+        )
+
+        if is_bold or is_structural_marker:
 
             # NEW: a bold heading that's a COMPLETE SENTENCE (ends in
             # a period, reasonably long) is far more likely to be a
