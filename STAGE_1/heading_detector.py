@@ -923,6 +923,128 @@ class HeadingDetector:
         if text.strip().lower() in _FINANCIAL_STATEMENT_DIVIDERS:
             return 0, ["financial_statement_section_divider"]
 
+        # NEW (Costco 2016, confirmed via real chunks.json output): a
+        # heading whose text ENDS with "(Continued)" (any case, with
+        # or without a space before the parenthesis) is a page-
+        # pagination artifact, NEVER a genuine new section -- it is
+        # the SAME heading text repeated verbatim at the top of the
+        # next physical page, for whatever multi-page section was
+        # already open (Item 1-Business, Item 1A-Risk Factors, Note
+        # 1, Note 4, Note 7, Note 8, Note 10, Note 12, and more --
+        # confirmed via real hierarchy output on Costco's 2016 10-K,
+        # where this fragmented AT LEAST 9 different sections/Notes
+        # each into two disconnected sibling nodes instead of one
+        # continuous section).
+        #
+        # This is a DIFFERENT root cause from the already-existing
+        # frequency-based boilerplate removal in paragraph_parser.py
+        # (_remove_repeated_boilerplate): that mechanism only catches
+        # a string that repeats identically many times across the
+        # WHOLE document -- but each section's own "(Continued)"
+        # variant is DIFFERENT text ("Item 1-Business (Continued)"
+        # vs "Note 4-Debt (Continued)"), so no single variant ever
+        # repeats often enough to cross that frequency threshold.
+        # Recognizing the "(Continued)" SUFFIX PATTERN directly, at
+        # the individual-heading level, catches every variant at
+        # once regardless of what precedes it or how many times its
+        # own specific wording happens to recur.
+        #
+        # A genuine, substantive SEC-filing section title is never
+        # itself named "... (Continued)" -- that phrase is exclusively
+        # a PDF-pagination convention -- so hard-rejecting it here
+        # (rather than letting it score normally and then trying to
+        # suppress it later) is safe for every company: this can only
+        # ever stop a page-continuation repeat from fragmenting an
+        # already-open section, it can never demote or discard a
+        # genuine, unique heading.
+        if re.search(r"\(\s*continued\s*\)\s*$", text.strip(), re.IGNORECASE):
+            return 0, ["continued_pagination_artifact"]
+
+        # NEW (MSFT 2017 / Costco, confirmed via real chunks.json
+        # output): a short, bold table-VALUE fragment that leaked
+        # through as its own heading candidate -- e.g. "$ 17,072
+        # (a)" (a Goodwill total with its footnote-reference marker),
+        # "$ 16,667 (b) $" (an Intangible Assets total sitting
+        # between two "$" column markers), "2,148 19 years" (a
+        # weighted-average-life value glued to its own duration
+        # figure). Each of these independently scored as a heading
+        # (bold + short + body-size) purely because it happens to sit
+        # alone on its own physical PDF line, exactly like a genuine
+        # short title would -- but unlike a real title, its content
+        # is almost ENTIRELY digits, currency symbols, commas, and
+        # single-letter/single-digit footnote markers, with at most
+        # one incidental unit-word ("years") and no real, substantive
+        # wording of its own.
+        #
+        # This is the SAME underlying failure already fixed narrowly
+        # for ONE specific recurring shape ("table_duration_value",
+        # e.g. "10 years $") -- but confirmed on a DIFFERENT company/
+        # year (MSFT 2017's own Goodwill and Intangible Assets notes,
+        # with completely different dollar figures than MSFT 2026's
+        # case), proving the narrow fix doesn't generalize: every
+        # filing's own specific numbers are different, so a fix
+        # tied to one exact numeric shape can never cover the next
+        # company's own table-value leak.
+        #
+        # General, robust test: strip out every token that is PURELY
+        # a currency symbol, a number (with commas/periods), or a
+        # short parenthetical footnote marker ("(a)", "(b)", "(1)",
+        # "(12)") from the text, then count what's left. A genuine
+        # heading -- "iPhone", "PART II", "NOTE 1 - ACCOUNTING
+        # POLICIES", "Debt" -- always has substantial REAL wording of
+        # its own once this furniture is removed. A leaked table
+        # value has, at most, ONE short generic unit-word left over
+        # ("years", "months", etc.) and nothing else -- confirmed
+        # this is true for every example found so far, on two
+        # different companies' filings five years apart.
+        #
+        # Scoped to SHORT lines only (<=6 words) so this can never
+        # touch a genuine longer sentence that merely happens to
+        # contain some numbers (e.g. a real narrative line quoting a
+        # dollar figure) -- those already have plenty of real words
+        # of their own and would never reduce to zero or one leftover
+        # word by this stripping process.
+        if word_count <= 6:
+
+            # NEW: operate per-TOKEN rather than stripping digits out
+            # of the whole line -- a mixed alphanumeric token like
+            # "3M" or "COVID-19" must be counted as a real word AS
+            # A WHOLE, not have its digits stripped out from inside
+            # it (which would wrongly reduce "3M" down to a bare "M"
+            # and reject it as if it were numeric-only furniture).
+            # Only a token that is PURELY a currency symbol, a pure
+            # number (with commas/periods), or a short parenthetical
+            # footnote marker ("(a)", "(12)") on its own is treated
+            # as furniture to discard; anything else that contains
+            # at least one letter counts as real wording, however
+            # short.
+            _real_words = []
+
+            for _w in text.split():
+
+                if re.fullmatch(r"\$", _w):
+                    continue
+
+                if re.fullmatch(r"\(\s*[A-Za-z0-9]{1,3}\s*\)", _w):
+                    continue
+
+                if re.fullmatch(r"[\d,\.]+", _w):
+                    continue
+
+                if re.search(r"[A-Za-z]", _w):
+                    _real_words.append(_w)
+
+            _GENERIC_UNIT_WORDS = {
+                "year", "years", "month", "months",
+                "day", "days", "week", "weeks",
+            }
+
+            if not _real_words or (
+                len(_real_words) == 1
+                and _real_words[0].lower() in _GENERIC_UNIT_WORDS
+            ):
+                return 0, ["numeric_table_value_fragment"]
+
         # ---------------------------------------------------
         # Style signals (strongest predictors, per real data)
         # ---------------------------------------------------
