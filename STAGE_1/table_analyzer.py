@@ -563,6 +563,62 @@ class TableAnalyzer:
                 "_y": y,
             }
 
+        # NEW (PayPal 2025, confirmed via real hierarchy_outline.txt +
+        # chunks.json output + video-frame verification): a "...
+        # -(Continued)" / "...--(Continued)" page-header caption --
+        # e.g. "NOTES TO CONSOLIDATED FINANCIAL STATEMENTS--
+        # (Continued)" -- reprints at the TOP of every continuation
+        # page throughout an entire multi-page section (confirmed via
+        # video: this exact caption repeats on dozens of pages across
+        # PayPal's ~60-page Notes section).
+        #
+        # heading_detector.py already has a matching hard-reject so
+        # this text can never become its own spurious HEADING (which
+        # would otherwise fragment a Note into disconnected sibling
+        # nodes, the same bug already fixed for Costco 2016's
+        # per-Note "(Continued)" repeats) -- but stopping it from
+        # being a HEADING does not stop it from being swept into a
+        # nearby TABLE by this file's own rescue passes, since only
+        # lines already confirmed as headings are excluded from table
+        # candidacy. Confirmed real-world impact on PayPal: this
+        # caption leaked into two different tables -- once as a
+        # stray text line prefixing Note 8's Investments table, and
+        # far more seriously, as a literal bogus COLUMN NAME on Note
+        # 16's Income Taxes table (columns rendered as
+        # "NOTES TO CONSOLIDATED FINANCIAL STATEMENTS-(Continued)",
+        # "Year Ended December", "31, 2025" instead of a single clean
+        # "Year Ended December 31, 2025" column), which risks
+        # shuffling real tax figures under the wrong column entirely.
+        #
+        # This is the SAME "page repeats a caption more often than a
+        # genuine one-off table label ever would" signal already
+        # used by _find_page_repeated_boilerplate() -- but that
+        # frequency-based check requires the phrase to repeat across
+        # at least 50% of the WHOLE report's pages, and this caption
+        # only spans PayPal's Notes section specifically (roughly
+        # 39% of the total 154-page filing), narrowly missing that
+        # threshold. Matching the "(Continued)" SUFFIX directly, the
+        # same way heading_detector.py already does, catches this
+        # regardless of what fraction of the total document it
+        # happens to cover, and regardless of what exact dash/en-dash/
+        # em-dash character precedes it or what section it belongs
+        # to -- so this generalizes to any company's own multi-page
+        # Note/Item/statement whose continuation pages repeat this
+        # SEC-filing-standard pagination convention.
+        if re.search(r"\(\s*continued\s*\)\s*$", text.strip(), re.IGNORECASE):
+
+            return {
+                "line_index": index,
+                "text": text,
+                "is_candidate": False,
+                "numeric_ratio": 0.0,
+                "numeric_count": 0,
+                "token_count": 0,
+                "x_positions": [],
+                "y_positions": [],
+                "_y": y,
+            }
+
         # NEW (Netflix 2025, confirmed via real table_analysis.json
         # output): a company's own INTERNAL page-numbering footer --
         # a bare, standalone number ("41", "42") with absolutely

@@ -822,6 +822,38 @@ class HeadingDetector:
         ):
             return 0, ["table_column_header_date"]
 
+        # NEW (PayPal 2025, confirmed via real hierarchy_outline.txt
+        # output): some companies combine the period-label AND the
+        # actual month/day directly onto ONE physical line -- "Year
+        # Ended December 31," -- rather than as two fully separate
+        # lines ("Year Ended" alone, then a bare date below it, as
+        # already handled by the two exclusions just above). The
+        # YEAR itself is often left off this combined caption
+        # (appearing instead as each column's own repeated header
+        # value further down, once per year-column), so it can't be
+        # matched by the bare-date pattern above either.
+        #
+        # Confirmed real-world impact: "Year Ended December 31,"
+        # became its own heading FOUR separate times -- directly
+        # above the Income Statement, Comprehensive Income, and (twice)
+        # the Cash Flow Statement -- each one swallowing that
+        # statement's own short boilerplate closing line ("The
+        # accompanying notes are an integral part of these
+        # consolidated financial statements.") as if it were genuine,
+        # unique heading content, and fragmenting what should be a
+        # single clean statement into a statement-title node plus a
+        # near-empty "Year Ended December 31," child node.
+        if re.fullmatch(
+            r"(Year|Years|Quarter|Quarters|Month|Months|Week|Weeks|"
+            r"Three\s+Months|Six\s+Months|Nine\s+Months)\s+Ended\s+"
+            r"(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|"
+            r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|"
+            r"Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2},?\s*(\d{4})?",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+            return 0, ["table_column_header_date"]
+
         # NEW: some companies combine the period-label AND the units-
         # disclaimer onto ONE physical line -- "Years Ended (In
         # Millions)", "Years Ended ($ In Millions)", "Years Ended (In
@@ -909,6 +941,7 @@ class HeadingDetector:
             "liabilities and shareholders' equity",
             "liabilities and stockholders equity",
             "liabilities and shareholders equity",
+            "liabilities and equity",
             "operations",
             "financing",
             "investing",
@@ -1626,7 +1659,40 @@ class HeadingDetector:
         # statements that follow it on the same page-run) all nested
         # as children of that audit-opinion section instead of being
         # its siblings.
-        if re.match(
+        # NEW (PayPal 2025, confirmed via real cleaned.json +
+        # heading_detection JSON output): this regex has no END
+        # anchor, so it only checks that the text STARTS WITH
+        # "CONSOLIDATED BALANCE SHEETS" or "CONSOLIDATED STATEMENTS
+        # OF" -- it was never a problem for the first 17 verified
+        # companies because none of them happened to have a random
+        # NARRATIVE SENTENCE that starts with those exact words. But
+        # PayPal's Cash Flow statement has a genuine, wrapped,
+        # non-bold 3-line sentence -- "The table below reconciles
+        # cash, cash equivalents, and restricted cash as reported in
+        # the / consolidated balance sheets to the total of the same
+        # amounts shown in the consolidated / statements of cash
+        # flows:" -- whose SECOND physical line happens to begin with
+        # "consolidated balance sheets to the total...", which this
+        # regex matched purely from its opening words, ignoring the
+        # 14-word narrative tail that follows.
+        #
+        # Confirmed real-world impact: with is_note_marker() firing,
+        # is_structural_marker became True for this ordinary sentence
+        # fragment, which (via the "structural_marker_unstyled" and
+        # "smaller_than_body_but_structural_marker" credits added for
+        # Microsoft's underlined Note titles) pushed its score to
+        # exactly the heading_score_threshold of 5 -- turning a plain
+        # narrative sentence fragment into its own spurious heading.
+        #
+        # A genuine core-statement title is always SHORT (the longest
+        # real variant, "CONSOLIDATED STATEMENTS OF COMPREHENSIVE
+        # INCOME", is 5 words) -- so requiring the overall line to be
+        # no longer than 8 words (a safety margin above that) before
+        # even trying this specific regex keeps it working exactly as
+        # before for every genuine statement title, while refusing to
+        # match a long sentence that merely happens to start with the
+        # same opening words.
+        if len(stripped.split()) <= 8 and re.match(
             r"^CONSOLIDATED\s+(BALANCE\s+SHEETS?|STATEMENTS?\s+OF\s+)",
             stripped,
             re.IGNORECASE,
