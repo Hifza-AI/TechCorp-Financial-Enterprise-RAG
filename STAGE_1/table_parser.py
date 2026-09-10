@@ -832,6 +832,67 @@ class TableParser:
             if len(year_cells) >= 2:
                 split_points.append(index)
 
+        # NEW (PayPal 2016, confirmed via real cleaned.json output): the
+        # existing split-point search above only looks for a row with
+        # >=2 REPEATED BARE-YEAR cells ("2025", "2024") -- but some
+        # tables place TWO (or more) back-to-back sub-tables that each
+        # use a TEXT-LABEL header ("As Reported" / "Adjustments" /
+        # "Revised") instead of bare years, with only a short "Year Ended
+        # <Month Day, Year>" or "As of <Month Day, Year>" CAPTION line
+        # marking where each new sub-table begins.
+        #
+        # Confirmed real-world impact: PayPal's Note 1 has an expense-
+        # recast reconciliation table for "Year Ended December 31, 2015"
+        # immediately followed by an IDENTICALLY-structured one for
+        # "Year Ended December 31, 2014" -- since neither table's own
+        # header row is a bare year cell, the existing split-point search
+        # above never fires between them, so both get treated as ONE
+        # continuous region. `_find_text_header()` then only recognizes
+        # the FIRST sub-table's header zone, and misreads the SECOND
+        # sub-table's entire header ("Year Ended December 31, 2014",
+        # "As Reported", "Adjustments", "Revised") plus its first data
+        # rows as if they were more data rows of the first sub-table --
+        # confirmed real symptom: "Restructuring" and "Total operating
+        # expenses" (the 2014 sub-table's own rows) ending up as garbled
+        # fragments merged into surrounding PARAGRAPH text instead of a
+        # clean second table ("- - - Restructuring 6,757 - $ 6,757 Total
+        # operating expenses").
+        #
+        # A "Year Ended <date>" / "As of <date>" caption sitting on its
+        # own, mid-region, is exactly as reliable a "a NEW sub-table
+        # starts here" signal as a repeated bare-year cell -- SEC filings
+        # use one or the other to caption each sub-table, never neither.
+        # Detecting this TEXT shape directly, independent of whether the
+        # table happens to use year-columns or text-label-columns
+        # downstream, generalizes this splitter to both conventions.
+        _period_caption_re = re.compile(
+            r"^(Year|Years|Quarter|Quarters|Month|Months|Week|Weeks|"
+            r"Three\s+Months|Six\s+Months|Nine\s+Months|As\s+of)\s+"
+            r"(Ended\s+)?"
+            r"(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|"
+            r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|"
+            r"Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2},?\s*\d{4}",
+            re.IGNORECASE,
+        )
+
+        for index, row in enumerate(region):
+
+            if index == 0:
+                continue
+
+            if index in split_points:
+                continue
+
+            cells = self._extract_cells(row)
+
+            if len(cells) != 1:
+                continue  # a real caption sits alone on its own row
+
+            if _period_caption_re.match(cells[0]["text"].strip()):
+                split_points.append(index)
+
+        split_points.sort()
+
         if not split_points:
             return [region]
 

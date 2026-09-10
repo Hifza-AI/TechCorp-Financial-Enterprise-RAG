@@ -862,6 +862,46 @@ class TableAnalyzer:
 
             return False
 
+        # NEW (PayPal 2016, confirmed via real table_analysis.json
+        # output): a bare dash/em-dash ("-", "--", "\u2014") is the
+        # standard SEC-filing placeholder for a zero or not-
+        # applicable VALUE (e.g. a whole "Restructuring: -, -, -"
+        # row when a line-item was zero across every column) --
+        # table_parser.py's own numeric-value checks (_looks_numeric_
+        # cell's caller logic, _row_has_real_numeric, etc.) already
+        # treat a bare dash as a genuine value for this exact reason.
+        # This file's OWN numeric-token check did not, which meant a
+        # dash-only row's numeric_ratio was always 0.0 here, and --
+        # more importantly -- a GENUINELY numeric neighboring line
+        # (e.g. "6,757" on the very next row) could not count that
+        # dash-only row as a "nearby numeric line" either, since
+        # _count_nearby_numeric_lines() calls this same function via
+        # _line_numeric_ratio() to judge each neighbor.
+        #
+        # Confirmed real-world impact: PayPal's Note 1 has a second
+        # "Year Ended December 31, 2014" expense-recast table whose
+        # own "Restructuring" row is entirely dashes ("-", "-", "-")
+        # and whose "Total operating expenses" row's own "$" cells
+        # sit as bare, isolated single-token lines too. With every
+        # immediate neighbor of "6,757" (the label, "$", and the
+        # all-dash Restructuring row) scoring 0.0 numeric_ratio, the
+        # nearby_numeric_lines count for "6,757" itself came out to
+        # 0 -- just under the >=1 threshold Pass 1 requires -- so
+        # neither the Restructuring row nor the Total row ever became
+        # table candidates at all, and both were silently dropped
+        # entirely (not even merged into wrong content -- just gone).
+        #
+        # Treating a bare dash as numeric here is safe and narrow:
+        # the regex-strip below already reduces any token CONTAINING
+        # a dash as ordinary punctuation (e.g. "well-known" -> strips
+        # to "wellknown", still correctly non-numeric) -- this new
+        # check only fires for a token that IS, in its entirety,
+        # just "-", "--", or an em-dash, which never occurs as
+        # genuine prose content outside of this exact SEC-filing
+        # zero-value convention.
+        if cleaned in ("-", "--", "\u2014"):
+            return True
+
         cleaned = re.sub(r"[\$,\.\-\+\(\)%\s]", "", cleaned)
 
         if not cleaned:
