@@ -843,9 +843,19 @@ class HeadingDetector:
         # unique heading content, and fragmenting what should be a
         # single clean statement into a statement-title node plus a
         # near-empty "Year Ended December 31," child node.
+        # NEW (PayPal 2016, confirmed via real chunks.json output):
+        # the Balance Sheet uses a POINT-IN-TIME caption ("As of
+        # December 31,") rather than the PERIOD caption ("Year Ended
+        # December 31,") the Income/Cash-Flow statements use. Same
+        # underlying convention (a table column-header caption with
+        # the year itself often omitted, appearing separately per
+        # column below), same fix shape: recognize "As of <Month
+        # Day>[,][<year>]" as an additional alternative alongside the
+        # "<Period> Ended <date>" pattern already handled above.
         if re.fullmatch(
-            r"(Year|Years|Quarter|Quarters|Month|Months|Week|Weeks|"
-            r"Three\s+Months|Six\s+Months|Nine\s+Months)\s+Ended\s+"
+            r"(?:As\s+of\s+|(?:Year|Years|Quarter|Quarters|Month|Months|"
+            r"Week|Weeks|Three\s+Months|Six\s+Months|Nine\s+Months)\s+"
+            r"Ended\s+)"
             r"(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|"
             r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|"
             r"Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2},?\s*(\d{4})?",
@@ -955,6 +965,41 @@ class HeadingDetector:
 
         if text.strip().lower() in _FINANCIAL_STATEMENT_DIVIDERS:
             return 0, ["financial_statement_section_divider"]
+
+        # NEW (PayPal 2016, confirmed via real chunks.json output): a
+        # short, colon-ending phrase that merely REFERENCES a
+        # consolidated financial statement -- "consolidated statement
+        # of income:", "consolidated balance sheets:" -- is a
+        # narrative cross-reference or table-intro caption, never a
+        # genuine standalone heading, regardless of whether it uses
+        # the singular or plural form of "statement(s)". This is
+        # broader than (and independent of) the is_note_marker()
+        # tightening above: even after that fix correctly stops this
+        # exact phrase from being treated as a NOTE-level structural
+        # marker, it was STILL independently scoring high enough via
+        # ordinary bold+short-heading criteria (bold +3, body-size
+        # +1, short +2 = 6) to become a heading on its own -- fixing
+        # is_note_marker() alone stopped it from popping "NOTE 1"
+        # off the stack entirely (the critical part of the bug), but
+        # left this phrase cluttering Note 1's children as its own
+        # spurious, content-free sub-heading.
+        #
+        # The colon is the key safety signal here (matching the same
+        # convention already used elsewhere in this codebase): a
+        # genuine reference to "the consolidated statement of
+        # income" always continues into more sentence text when it's
+        # part of a real title (which never ends in a colon) or
+        # trails onward mid-sentence (which never sits ALONE on a
+        # colon-terminated line). Requiring BOTH the "consolidated
+        # ... statement(s)/balance sheet(s)" phrase AND a trailing
+        # colon keeps this narrowly scoped to exactly this reference-
+        # caption shape.
+        if text.strip().endswith(":") and re.search(
+            r"consolidated\s+(balance\s+sheets?|statements?\s+of\s+\w+)",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+            return 0, ["statement_reference_caption"]
 
         # NEW (Costco 2016, confirmed via real chunks.json output): a
         # heading whose text ENDS with "(Continued)" (any case, with
@@ -1692,10 +1737,51 @@ class HeadingDetector:
         # before for every genuine statement title, while refusing to
         # match a long sentence that merely happens to start with the
         # same opening words.
-        if len(stripped.split()) <= 8 and re.match(
-            r"^CONSOLIDATED\s+(BALANCE\s+SHEETS?|STATEMENTS?\s+OF\s+)",
-            stripped,
-            re.IGNORECASE,
+        # NEW (PayPal 2016, confirmed via real chunks.json output):
+        # tightened further after finding a SHORT, lowercase,
+        # colon-ending fragment -- "consolidated statement of
+        # income:" -- that still slipped through the word-count cap
+        # above (it's only 4 words, well under the cap of 8) because
+        # the regex allowed the SINGULAR "STATEMENT" (via the "?" on
+        # "STATEMENTS?") and didn't care about trailing punctuation.
+        #
+        # Confirmed real-world impact: this fragment is a genuine
+        # PayPal table/reconciliation caption sitting INSIDE Note 1's
+        # own text (introducing an "As Reported / Adjustments /
+        # Revised" recast table), not a real statement title -- but
+        # because it matched is_note_marker(), hierarchy_builder's
+        # same-Note-marker-pops-Note-marker rule closed out the
+        # currently-open "NOTE 1-Overview and Summary of Significant
+        # Accounting Policies" the instant this fragment arrived,
+        # and every one of Note 1's real remaining sub-topics (Use of
+        # estimates, Cash and cash equivalents, Investments, Loans
+        # and interest receivable, Customer accounts, Property and
+        # equipment, Goodwill, Revenue recognition, Income taxes,
+        # Net income per share, Recent Accounting Pronouncements, and
+        # more -- essentially ALL of Note 1's real content) ended up
+        # nested under this meaningless fragment instead of under
+        # Note 1 itself.
+        #
+        # Two independent, safe signals distinguish a genuine
+        # statement title from this kind of caption: (1) every real
+        # SEC statement title uses the PLURAL "STATEMENTS OF ..."
+        # (never singular "STATEMENT OF") -- confirmed true across
+        # every verified company so far; (2) a real title is never
+        # followed by a colon -- that punctuation always marks an
+        # introductory reference ("...as reported in the consolidated
+        # statement of income:") or table caption, never the title
+        # itself. Requiring the plural form AND excluding colon-
+        # terminated text keeps this safe without narrowing the
+        # word-count cap further (which could risk excluding a
+        # genuine longer title phrase instead).
+        if (
+            len(stripped.split()) <= 8
+            and not stripped.endswith(":")
+            and re.match(
+                r"^CONSOLIDATED\s+(BALANCE\s+SHEETS?|STATEMENTS\s+OF\s+)",
+                stripped,
+                re.IGNORECASE,
+            )
         ):
             return True
 
