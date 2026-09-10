@@ -1034,9 +1034,53 @@ class HeadingDetector:
                 if re.search(r"[A-Za-z]", _w):
                     _real_words.append(_w)
 
+            # NEW: this set is now built to be COMPREHENSIVE rather
+            # than growing it one narrow shape at a time -- confirmed
+            # necessary after finding FIVE different leaked-table-
+            # value shapes across just two companies' filings ("10
+            # years $", "$ 17,072 (a)", "2,148 19 years", "21,204
+            # (b)(c)", "3,006 September 14, 2017"): a purely
+            # POSITIONAL fix (e.g. "reject if this heading sits next
+            # to numeric-heavy lines") was deliberately rejected as
+            # an alternative here, because genuine headings like
+            # "iPhone", "Debt", "Goodwill" ALSO always sit directly
+            # above their own numeric table -- that adjacency is
+            # exactly why the heading-over-table PRIORITY rule exists
+            # in paragraph_parser.py in the first place, so a
+            # proximity-based reject would risk breaking those
+            # already-verified cases across all 17 companies.
+            #
+            # A content-word-based filler list is a BOUNDED problem
+            # (English has a finite set of duration/calendar/scale/
+            # connector words that can plausibly be the one leftover
+            # "real word" in a numeric fragment), unlike a statistical
+            # threshold, which could misfire in ways impossible to
+            # predict without already having seen the data. This
+            # covers every category found so far in one pass:
+            #   - time/duration units (was already present)
+            #   - calendar month names/abbreviations (was already
+            #     present, added for the "3,006 September 14, 2017"
+            #     Dividends-table leak)
+            #   - numeric-scale words ("million"/"billion"/etc.) --
+            #     covers a "$500 million"-shaped leak that hasn't
+            #     been observed yet but follows the identical pattern
+            #   - the SAME connector-word set table_parser.py's
+            #     _ORPHAN_CONNECTOR_WORDS already trusts elsewhere in
+            #     this codebase for the identical "is this word
+            #     meaningful standing alone" judgment call -- reusing
+            #     an already-vetted list here is safer than inventing
+            #     a new one from scratch.
             _GENERIC_UNIT_WORDS = {
                 "year", "years", "month", "months",
                 "day", "days", "week", "weeks",
+                "quarter", "quarters", "hour", "hours",
+                "minute", "minutes",
+                "january", "february", "march", "april", "may", "june",
+                "july", "august", "september", "october", "november",
+                "december", "jan", "feb", "mar", "apr", "jun", "jul",
+                "aug", "sep", "sept", "oct", "nov", "dec",
+                "million", "billion", "thousand", "trillion",
+                "and", "or", "of", "the", "in", "for", "to", "with", "&",
             }
 
             if not _real_words or (
