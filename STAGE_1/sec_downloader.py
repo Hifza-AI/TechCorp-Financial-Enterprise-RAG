@@ -4,20 +4,11 @@ from playwright.async_api import async_playwright
 # Salesforce (CRM) 2020, 2021, aur 2022 ki filings
 TARGET_FILINGS = [
     {
-        "company": "CRM",
-        "year": "2020",
-        "url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852420000014/crm-20200131.htm"
+        "company": "Electronic Arts",
+        "year": "2026",
+        "url": "https://www.sec.gov/Archives/edgar/data/712515/000162828026033617/ea-20260331.htm"
     },
-    {
-        "company": "CRM",
-        "year": "2021",
-        "url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852422000008/crm-20210131.htm"
-    },
-    {
-        "company": "CRM",
-        "year": "2022",
-        "url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852422000013/crm-20220131.htm"
-    }
+    
 ]
 
 async def download_filing(playwright, filing):

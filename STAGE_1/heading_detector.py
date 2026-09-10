@@ -1025,7 +1025,7 @@ class HeadingDetector:
                 if re.fullmatch(r"\$", _w):
                     continue
 
-                if re.fullmatch(r"\(\s*[A-Za-z0-9]{1,3}\s*\)", _w):
+                if re.fullmatch(r"(\(\s*[A-Za-z0-9]{1,3}\s*\))+", _w):
                     continue
 
                 if re.fullmatch(r"[\d,\.]+", _w):
