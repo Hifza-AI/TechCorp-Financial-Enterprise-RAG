@@ -2027,7 +2027,39 @@ class HeadingDetector:
         # "Item N." / "PART N" / "Note N", which all require their own
         # distinct leading word and are matched separately before this
         # point is ever reached).
-        if re.match(r"^\d{1,2}\.\s+[A-Z][a-z]+", stripped):
+        # NEW (Intuit 2017, confirmed via real hierarchy_outline.txt +
+        # chunks.json output): this bare "N. Title" pattern had no
+        # word-count limit at all, so it could ALSO match the START
+        # of a long, unrelated NARRATIVE SENTENCE that happens to
+        # begin with a digit, period, and capitalized word purely by
+        # coincidence -- e.g. "7. Revenue in our Small Business
+        # segment increased 9% due to 25% growth in Small Business
+        # Online Ecosystem revenue and the impact of the..." (24
+        # words) matched this exactly, since re.match only anchors
+        # the START of the text, never requiring the whole line to
+        # be short.
+        #
+        # Confirmed real-world impact: with is_note_marker() firing
+        # on this sentence fragment, it independently picked up BOTH
+        # the "structural_marker_unstyled" style credit AND the
+        # length-cap BYPASS (the "word_count <= max_heading_words or
+        # is_structural_marker" bonus) that this codebase reserves
+        # for genuine short structural markers -- turning an ordinary
+        # 24-word MD&A sentence into its own spurious heading, and
+        # (per the same is_note_marker exclusivity mechanism) closing
+        # out or nesting content around it incorrectly.
+        #
+        # A genuine bare-numbered Note title is always short -- even
+        # Chipotle's longest real example, "1. Description of
+        # Business and Summary of Significant Accounting Policies",
+        # is only 10 words -- so capping this pattern at 12 words
+        # (a small safety margin above that) keeps every genuine
+        # verified Note title matching while rejecting narrative
+        # sentences that merely happen to start the same way.
+        if (
+            len(stripped.split()) <= 12
+            and re.match(r"^\d{1,2}\.\s+[A-Z][a-z]+", stripped)
+        ):
             return True
 
         # NEW (ServiceNow 2025, confirmed via real hierarchy_outline.txt
@@ -2060,7 +2092,10 @@ class HeadingDetector:
         # marker like "(1)" on its own (with nothing else on that
         # heading candidate's text) never matches, since there's no
         # trailing word for "\s+[A-Z][a-z]+" to find.
-        if re.match(r"^\(\d{1,2}\)\s+[A-Z][a-z]+", stripped):
+        if (
+            len(stripped.split()) <= 12
+            and re.match(r"^\(\d{1,2}\)\s+[A-Z][a-z]+", stripped)
+        ):
             return True
 
         return False
