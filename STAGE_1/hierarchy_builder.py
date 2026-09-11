@@ -190,6 +190,52 @@ class HierarchyBuilder:
                     # specific much-larger+all-caps combination, so
                     # this stays safe for the ORIGINAL exclusivity
                     # rule's purpose.
+                    # NEW (Intuit 2026, confirmed via real
+                    # hierarchy_outline.txt + chunks.json output): a
+                    # genuine Item/PART marker (is_top_level_marker)
+                    # must ALWAYS be able to pop back to the document
+                    # ROOT, regardless of what level number happens to
+                    # currently sit on top of the stack -- SEC filings
+                    # never nest an Item or Part boundary under
+                    # anything else, by definition.
+                    #
+                    # The existing level-comparison popping below only
+                    # fires while `stack[-1]["level"] >= level` -- but
+                    # a mid-document heading can occasionally render
+                    # in OVERSIZED font (relative_size >= 1.5, our
+                    # Level-1 threshold) purely for VISUAL emphasis,
+                    # not because it's a genuine document-level title.
+                    # Confirmed real-world impact: Intuit's own
+                    # "Financial Highlights" infographic renders the
+                    # segment name "Global Business Solutions" in
+                    # large callout font (Level 1, page 53-54) --
+                    # every subsequent Item boundary (Item 6, 7, 7A,
+                    # 8, 9, 9A, 9B, 9C, all Level 2) then fails to
+                    # pop it at all, since `1 >= 2` is false, so NONE
+                    # of them can close it out through ordinary level
+                    # comparison. Only the NEXT Level-1 heading
+                    # ("PART III", page 125) was ever able to pop it
+                    # -- meaning EVERY Note (1 through 15), all four
+                    # core financial statements, and Item 9's Controls
+                    # and Procedures section all ended up incorrectly
+                    # nested as descendants of "Global Business
+                    # Solutions" instead of their correct top-level
+                    # positions, corrupting the section_path of
+                    # dozens of real, financially-important chunks.
+                    #
+                    # This is checked and applied BEFORE the ordinary
+                    # level-based popping loop below, and unconditionally
+                    # clears the ENTIRE stack back to root when the
+                    # incoming heading is a genuine top-level marker --
+                    # there is no legitimate SEC-filing scenario where
+                    # an Item/Part boundary should remain nested under
+                    # a prior heading, so this can never incorrectly
+                    # flatten a genuine parent-child relationship.
+                    if is_top_level_marker:
+
+                        while len(stack) > 1:
+                            stack.pop()
+
                     while len(stack) > 1 and stack[-1]["level"] >= level:
 
                         if (
