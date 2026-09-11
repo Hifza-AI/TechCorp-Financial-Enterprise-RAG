@@ -138,17 +138,6 @@ class HierarchyBuilder:
                         stack[-1]["page_end"] = page_number
                         continue
 
-                    node = {
-                        "title": block["text"],
-                        "level": level,
-                        "is_note_marker": is_note_marker,
-                        "page_start": page_number,
-                        "page_end": page_number,
-                        "paragraphs": [],
-                        "tables": [],
-                        "children": [],
-                    }
-
                     # Pop back to the correct parent: anything on the
                     # stack with a level >= this heading's level is
                     # NOT an ancestor of this heading, so close it out.
@@ -160,11 +149,11 @@ class HierarchyBuilder:
                     # level number. A Note and its own topic
                     # sub-headings ("Basis of Presentation", "Cash
                     # Equivalents", "Revenue", etc.) are styled
-                    # IDENTICALLY in the PDF (same bold, same size),
-                    # so heading_detector.py has no way to tell "this
-                    # is the Note's own container title" from "this is
-                    # one of its topics" by styling alone -- both
-                    # score as ordinary Level-3 bold headings.
+                    # IDENTICALLY in the PDF, so heading_detector.py has
+                    # no way to tell "this is the Note's own container
+                    # title" from "this is one of its topics" by
+                    # styling alone -- both score as ordinary Level-3
+                    # bold headings.
                     #
                     # Confirmed on Apple 2024: 7 of Apple's 13
                     # numbered notes (1, 4, 6, 7, 9, 10, 11, 12) had
@@ -213,8 +202,101 @@ class HierarchyBuilder:
 
                         stack.pop()
 
-                    stack[-1]["children"].append(node)
-                    stack.append(node)
+                    # NEW (AMD 2025, confirmed via real
+                    # hierarchy_outline.txt output): a genuine core-
+                    # statement title (a note_marker, per
+                    # is_note_marker's CONSOLIDATED-title match) can
+                    # repeat VERBATIM -- with NO "(Continued)" suffix
+                    # at all -- at the top of a later physical page,
+                    # when that ONE statement's table is long enough
+                    # to span multiple pages (confirmed: AMD's
+                    # Consolidated Statements of Cash Flows repeats
+                    # its own exact title once for its main
+                    # Operating/Investing/Financing section, pages
+                    # 74-76, and AGAIN for its own "Supplemental cash
+                    # flow information" section, pages 76-77, with
+                    # nothing distinguishing the two headings' text at
+                    # all).
+                    #
+                    # heading_detector.py already has a hard-reject
+                    # for the "(Continued)" SUFFIX variant of this
+                    # same pagination pattern (Costco 2016, PayPal
+                    # 2025) -- but a bare repeat with no suffix at all
+                    # is NOT a spurious/fragment heading the way
+                    # "(Continued)" is; it independently scores as a
+                    # perfectly legitimate heading each time, so it
+                    # can't be rejected at the heading_detector stage
+                    # without risking rejecting a company's ONLY
+                    # (non-repeated) occurrence of that same title
+                    # elsewhere. The distinguishing signal has to be
+                    # STRUCTURAL instead: is this EXACT title already
+                    # the most recently-closed child of the section
+                    # we're about to attach into?
+                    #
+                    # Confirmed real-world impact: without this,
+                    # "Consolidated Statements of Cash Flows" became
+                    # TWO separate sibling nodes instead of one
+                    # continuous section -- the main activities table
+                    # (47 rows) under the first node, the supplemental
+                    # disclosures table (14 rows) stranded under an
+                    # unrelated second node -- structurally
+                    # fragmenting one statement into two, even though
+                    # every individual VALUE inside both tables
+                    # remained correct.
+                    #
+                    # Fix: if this incoming heading is itself a
+                    # note_marker, and the LAST child already appended
+                    # to the section we're about to attach into has
+                    # the EXACT SAME title text and is ALSO a
+                    # note_marker, REOPEN that existing node (push it
+                    # back onto the stack) instead of creating a brand
+                    # new sibling -- so the new page's table/paragraph
+                    # content continues to accumulate inside the SAME
+                    # node the first occurrence already opened.
+                    #
+                    # Scoped narrowly to "the most recently-appended
+                    # child specifically" (not a search across ALL
+                    # earlier siblings) so this can never accidentally
+                    # merge two genuinely-unrelated, far-apart mentions
+                    # of the same title (e.g. AMD's own Item 15 Index/
+                    # Exhibit-list page, which mentions "Consolidated
+                    # Statements of Cash Flows" again much later purely
+                    # as a cross-reference listing -- by that point,
+                    # many OTHER headings have already been appended
+                    # in between, so it is never the "last child" and
+                    # correctly opens as its own separate node instead).
+                    reopened_node = None
+
+                    if is_note_marker:
+
+                        existing_children = stack[-1]["children"]
+
+                        if (
+                            existing_children
+                            and existing_children[-1]["title"] == block["text"]
+                            and existing_children[-1].get("is_note_marker")
+                        ):
+                            reopened_node = existing_children[-1]
+
+                    if reopened_node is not None:
+
+                        stack.append(reopened_node)
+
+                    else:
+
+                        node = {
+                            "title": block["text"],
+                            "level": level,
+                            "is_note_marker": is_note_marker,
+                            "page_start": page_number,
+                            "page_end": page_number,
+                            "paragraphs": [],
+                            "tables": [],
+                            "children": [],
+                        }
+
+                        stack[-1]["children"].append(node)
+                        stack.append(node)
 
                 else:  # paragraph
 
