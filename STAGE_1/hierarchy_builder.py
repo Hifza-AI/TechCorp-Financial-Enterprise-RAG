@@ -313,14 +313,53 @@ class HierarchyBuilder:
                     # correctly opens as its own separate node instead).
                     reopened_node = None
 
-                    if is_note_marker:
+                    # NEW (Costco 2016, confirmed via real
+                    # hierarchy_outline.txt + chunks.json output):
+                    # this reopen-check originally only covered
+                    # is_note_marker matches (the AMD Cash-Flows
+                    # case) -- but the SAME "verbatim running-header
+                    # repeats once per page" pattern also happens for
+                    # genuine Item/PART markers. Confirmed on Costco:
+                    # "Item 7-Management's Discussion and Analysis of
+                    # Financial Condition and Results of Operations
+                    # (amounts in..." repeats VERBATIM at the top of
+                    # all 12 pages of its own MD&A section (pages
+                    # 20-31) -- and since the dash-format fix now
+                    # correctly recognizes this as is_top_level_marker
+                    # =True, each repeat also now correctly triggers
+                    # the "pop fully back to root" rule above, but
+                    # without this extension, each one still opened
+                    # as its OWN brand-new root-level sibling rather
+                    # than continuing the same one, leaving 12
+                    # redundant identically-titled top-level nodes
+                    # instead of one clean, continuous MD&A section
+                    # (a structural/cosmetic redundancy -- every real
+                    # sub-topic's OWN content, e.g. "Comparable
+                    # Sales", "Gross Margin", "Dividends", still
+                    # correctly nests under whichever of the 12
+                    # duplicate parents it physically sits under, so
+                    # no data is actually lost, but the section is
+                    # needlessly fragmented into 12 parallel copies
+                    # instead of being unified).
+                    #
+                    # Checking BOTH is_note_marker and
+                    # is_top_level_marker here, against the same
+                    # "is this literally the immediately-preceding
+                    # sibling" narrow scope already established for
+                    # the AMD fix, safely covers both marker families
+                    # with the same logic and the same safety
+                    # guarantees.
+                    if is_note_marker or is_top_level_marker:
 
                         existing_children = stack[-1]["children"]
 
                         if (
                             existing_children
                             and existing_children[-1]["title"] == block["text"]
-                            and existing_children[-1].get("is_note_marker")
+                            and (
+                                existing_children[-1].get("is_note_marker")
+                                or existing_children[-1].get("is_top_level_marker")
+                            )
                         ):
                             reopened_node = existing_children[-1]
 
@@ -334,6 +373,7 @@ class HierarchyBuilder:
                             "title": block["text"],
                             "level": level,
                             "is_note_marker": is_note_marker,
+                            "is_top_level_marker": is_top_level_marker,
                             "page_start": page_number,
                             "page_end": page_number,
                             "paragraphs": [],
