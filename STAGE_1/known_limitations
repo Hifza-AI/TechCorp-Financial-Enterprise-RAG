@@ -143,3 +143,29 @@ Netflix — Stockholders' Equity table mein "Common Stock and Additional Paid-in
 Walmart 2026 — Note 8 (Taxes) Effective Income Tax Rate Reconciliation table (FY2026-specific sub-table) mein "U.S. statutory tax rate" pehli row apne column-header mein sweep ho gayi hai. Values ($6,188M/21.0%) column-name mein visible hain lekin apni row mein nahi. Baaki sab rows clean hain, comparison-table (2025/2024) bhi clean hai. Tier-2, narrow (1 row, 1 sub-table). NOT fixed (deferred).
 
 PayPal 2025: Item 16 (Form 10-K Summary) ka exhibit-listing sentence 2 chhoti headings mein split ho jaata hai ("Consolidated Statements of Income (Loss), (iii) the Consolidated" / "...Stockholders' Equity, (v) the"). Koi data-loss nahi, sirf document ke end mein boilerplate exhibit-reference text. Tier-3, cosmetic.
+
+
+
+Known Limitations (Tier-2/3 — Low Priority)
+
+The following minor edge cases are cataloged for tracking purposes. These items do not cause data loss, numerical corruption, or structural breakdown in the RAG ingestion pipeline:
+
+1. Repeating Page-Header Clutter (Costco)
+   - Scope: Item 7 (MD&A)
+   - Issue: Repeated page-header captions such as "(In millions... ) (Continued)" persist as minor paragraph clutter.
+   - Root Cause & Status: Identified at the `paragraph_parser.py` layer; pending raw JSON verification.
+
+2. Signature Block Merging (PayPal 2016)
+   - Scope: Exhibit / Metadata Signatures
+   - Issue: Signature blocks for two board directors (Wences Casares, John J. Donahoe) are captured under a single concatenated heading node.
+   - Impact: Purely cosmetic metadata formatting with no effect on primary financial statements.
+
+3. Chart Legend Spurious Headings (Intuit)
+   - Scope: Stock Performance Graph
+   - Issue: Performance chart legends ("S&P 500", "S&P 500 Information Technology Index") generate empty, standalone heading nodes.
+   - Impact: Visual chart artifact containing no narrative or financial table data.
+
+4. Multi-Page Statement Table Splitting (AMD 2025) — RESOLVED
+   - Scope: Consolidated Statements of Cash Flows
+   - Issue: Verbatim statement titles across page breaks without "(Continued)" suffixes previously spawned duplicate sibling nodes.
+   - Status: Resolved via `hierarchy_builder.py` node-reopening logic; documented here for historical regression tracking.
