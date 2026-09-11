@@ -852,10 +852,35 @@ class HeadingDetector:
         # column below), same fix shape: recognize "As of <Month
         # Day>[,][<year>]" as an additional alternative alongside the
         # "<Period> Ended <date>" pattern already handled above.
+        # NEW (Intuit 2026, confirmed via real hierarchy_outline.txt
+        # output): Intuit's own point-in-time table caption uses "At
+        # <Month Day, Year>:" -- a THIRD wording for the exact same
+        # convention "As of <date>" and "Year Ended <date>" already
+        # cover, just with "At" instead of "As of" and a trailing
+        # colon. Confirmed real-world impact: "At July 31, 2026:" and
+        # "At July 31, 2025:" each became their own empty spurious
+        # heading directly above Note 6's intangible-asset
+        # amortization sub-table.
         if re.fullmatch(
-            r"(?:As\s+of\s+|(?:Year|Years|Quarter|Quarters|Month|Months|"
-            r"Week|Weeks|Three\s+Months|Six\s+Months|Nine\s+Months)\s+"
-            r"Ended\s+)"
+            r"(?:As\s+of\s+|At\s+|(?:Year|Years|Quarter|Quarters|Month|"
+            r"Months|Week|Weeks|Three\s+Months|Six\s+Months|"
+            r"Nine\s+Months)\s+Ended\s+)"
+            r"(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|"
+            r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|"
+            r"Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2},?\s*(\d{4})?:?",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+            return 0, ["table_column_header_date"]
+
+        # NEW (Intuit 2026, confirmed via real hierarchy_outline.txt
+        # output): a bare "Fiscal year ending <Month Day>," caption
+        # (the year itself omitted, since it repeats once per
+        # year-column below) sitting alone on its own line, directly
+        # analogous to the already-handled "Year Ended"/"As of"/"At"
+        # captions but using yet another common SEC-filing wording.
+        if re.fullmatch(
+            r"Fiscal\s+years?\s+ending\s+"
             r"(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|"
             r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|"
             r"Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2},?\s*(\d{4})?",
@@ -1145,6 +1170,17 @@ class HeadingDetector:
                 if re.fullmatch(r"[\d,\.]+", _w):
                     continue
 
+                # NEW (Intuit 2026, confirmed via real
+                # hierarchy_outline.txt output): a dollar sign FUSED
+                # directly onto its number with no space ("$21.4",
+                # "$8.6") -- unlike the bare "$" case above, which
+                # only matches a currency symbol sitting entirely on
+                # its own -- is just as much pure numeric furniture
+                # as a bare number, so it needs its own explicit
+                # strip here too.
+                if re.fullmatch(r"\$[\d,]*\.?\d+", _w):
+                    continue
+
                 if re.search(r"[A-Za-z]", _w):
                     _real_words.append(_w)
 
@@ -1194,6 +1230,21 @@ class HeadingDetector:
                 "december", "jan", "feb", "mar", "apr", "jun", "jul",
                 "aug", "sep", "sept", "oct", "nov", "dec",
                 "million", "billion", "thousand", "trillion",
+                # NEW (Intuit 2026, confirmed via real
+                # hierarchy_outline.txt output): single-letter scale
+                # ABBREVIATIONS ("$21.4 B", "$8.6 B" -- "B" for
+                # billion) are just as common in a "Financial
+                # Highlights" infographic-style callout as the full
+                # word "billion" is in a table caption. Confirmed
+                # real-world impact: "$21.4 B", "$12.9 B", "$8.6 B",
+                # "$5.9 B", "$4.6 B", and "$8.8 B" all independently
+                # scored as headings (at LEVEL 1, since these are
+                # rendered in oversized callout-stat font), each one
+                # fragmenting a real sentence into three pieces --
+                # e.g. "Global Business Solutions revenue of" /
+                # "$21.4 B" / "up 14% from fiscal 2025" ended up as
+                # three disconnected blocks instead of one sentence.
+                "b", "m", "k", "t",
                 "and", "or", "of", "the", "in", "for", "to", "with", "&",
             }
 
@@ -1581,6 +1632,36 @@ class HeadingDetector:
             return True
 
         if re.match(r"^Item\s+\d+[A-Za-z]?\.", stripped, re.IGNORECASE):
+            return True
+
+        # NEW (Intuit 2026, confirmed via real hierarchy_outline.txt
+        # output): some companies punctuate their top-level Item
+        # markers with a DASH instead of a period -- "ITEM 7 -
+        # MANAGEMENT'S DISCUSSION AND ANALYSIS...", "ITEM 1A - RISK
+        # FACTORS" -- rather than the period-punctuated "Item 7."
+        # convention every other verified company uses. The existing
+        # pattern above requires a literal period immediately after
+        # the item number/letter, so NONE of Intuit's own Item
+        # markers (every single one in the filing, Item 1 through
+        # Item 15) ever matched it at all.
+        #
+        # Confirmed real-world impact: every Item boundary in this
+        # filing scored as a generic Level-3 heading instead of the
+        # correct Level-2 top-level marker, and lost the
+        # is_top_level_marker=True protection that lets a genuine
+        # Item/Part boundary force-close an already-open Note or
+        # core-statement container (the SAME exclusivity mechanism
+        # already relied on for every other verified company) --
+        # this happened to not visibly corrupt Intuit's own Notes
+        # nesting only because no Note/statement was still open at
+        # each Item boundary here, but the underlying protection was
+        # silently missing regardless, and could misfire on a
+        # differently-laid-out filing using this same convention.
+        #
+        # Matching a dash (plain hyphen, en-dash, or em-dash) here
+        # mirrors is_note_marker()'s own established handling of
+        # exactly this kind of punctuation variance for "Note N".
+        if re.match(r"^Item\s+\d+[A-Za-z]?\s*[-\u2013\u2014]", stripped, re.IGNORECASE):
             return True
 
         # NEW (Microsoft 2026, confirmed via real video-frame output):
