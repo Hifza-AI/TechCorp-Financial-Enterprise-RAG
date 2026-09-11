@@ -940,30 +940,66 @@ class HeadingDetector:
         # Cash Flows' "Operations"/"Financing"/"Investing" similarly
         # became three empty orphan sibling nodes.
         #
-        # This list is deliberately narrow and matched as a FULL,
-        # exact line (case-insensitive) -- these exact phrases are
-        # never used as genuine standalone narrative section titles
-        # elsewhere in a 10-K, so this cannot misfire on real content
-        # the way a broader heuristic might.
-        _FINANCIAL_STATEMENT_DIVIDERS = {
-            "assets",
-            "liabilities and stockholders' equity",
-            "liabilities and shareholders' equity",
-            "liabilities and stockholders equity",
-            "liabilities and shareholders equity",
-            "liabilities and equity",
-            "operations",
-            "financing",
-            "investing",
-            "common stock and paid-in capital",
-            "retained earnings",
-            "accumulated other comprehensive loss",
-            "accumulated other comprehensive income",
-            "accumulated other comprehensive income (loss)",
-            "accumulated other comprehensive (loss) income",
-        }
+        # NEW (AMD 2025, confirmed via real hierarchy_outline.txt
+        # output): the exact-string set approach kept needing a new
+        # entry added every time a new company's own wording variant
+        # showed up (MSFT's bare "Assets"/"Liabilities and
+        # stockholders' equity"; now AMD's "Current assets:", "Total
+        # current assets", "Total assets", "Current liabilities:",
+        # "Total current liabilities", "Stockholders' equity:",
+        # "Total stockholders' equity", "Total liabilities and
+        # stockholders' equity", "Capital stock", "Retained earnings
+        # (accumulated deficit)" -- none of which matched the
+        # narrower exact-string set at all, since it never accounted
+        # for a "Current"/"Total"/"Total current" PREFIX or an
+        # optional trailing colon).
+        #
+        # Confirmed real-world impact: ALL of AMD's own Balance Sheet
+        # sub-dividers ("Current assets:", "Total current assets",
+        # "Total assets", "Current liabilities:", "Total current
+        # liabilities", "Stockholders' equity:", "Total stockholders'
+        # equity", "Total liabilities and stockholders' equity") and
+        # its own Stockholders' Equity statement dividers ("Capital
+        # stock", "Retained earnings (accumulated deficit)") became
+        # spurious, empty sibling headings instead of staying inside
+        # their own tables -- the exact same failure mode as MSFT's
+        # Balance Sheet bug, just with a wording convention the
+        # earlier fix's exact-string set didn't anticipate.
+        #
+        # Rather than keep growing an exact-match set one company's
+        # wording at a time, this is now a REGEX matching the known,
+        # FIXED set of SEC-standard structural NOUN PHRASES (assets /
+        # liabilities / stockholders'-or-shareholders' equity /
+        # capital stock / retained earnings / accumulated other
+        # comprehensive income-or-loss / operations / financing /
+        # investing), with an OPTIONAL "Current"/"Total"/"Total
+        # current" prefix and an OPTIONAL trailing colon -- covering
+        # every variant found across companies so far in one general
+        # rule, without risking a false match on unrelated content:
+        # a heading like "Total Revenue" or "Total Compensation
+        # Expense" still safely falls through, since "revenue" and
+        # "compensation expense" aren't among these fixed structural
+        # nouns.
+        _financial_statement_divider_re = re.compile(
+            r"^(Current\s+|Total\s+|Total\s+current\s+)?"
+            r"("
+            r"assets"
+            r"|liabilities(\s+and\s+((stockholders'?|shareholders'?)\s+)?equity(\s*\(deficit\))?)?"
+            r"|(stockholders'?|shareholders'?)\s+equity(\s*\(deficit\))?"
+            r"|common\s+stock\s+and\s+paid-in\s+capital"
+            r"|capital\s+stock"
+            r"|retained\s+earnings(\s*\(accumulated\s+deficit\))?"
+            r"|accumulated\s+other\s+comprehensive\s+(loss|income)"
+            r"(\s*\((loss|income)\))?"
+            r"|operations"
+            r"|financing"
+            r"|investing"
+            r")"
+            r"\s*:?\s*$",
+            re.IGNORECASE,
+        )
 
-        if text.strip().lower() in _FINANCIAL_STATEMENT_DIVIDERS:
+        if _financial_statement_divider_re.match(text.strip()):
             return 0, ["financial_statement_section_divider"]
 
         # NEW (PayPal 2016, confirmed via real chunks.json output): a
