@@ -169,3 +169,10 @@ The following minor edge cases are cataloged for tracking purposes. These items 
    - Scope: Consolidated Statements of Cash Flows
    - Issue: Verbatim statement titles across page breaks without "(Continued)" suffixes previously spawned duplicate sibling nodes.
    - Status: Resolved via `hierarchy_builder.py` node-reopening logic; documented here for historical regression tracking.
+
+
+5. Oversized Header Flattening in Modern Filing Formats (Intel 2025, PANW 2025)
+   - Scope: Item 8 & Audit Report Subtrees
+   - Issue: Recent 10-K styling trends render standard sub-headings in oversized fonts, promoting them to Level-1 nodes and flattening implicit parent-child trees (e.g., "Item 8 → Notes" or "Audit Report → Critical Audit Matters").
+   - Impact: Direct semantic queries (e.g., retrieving specific Note text) remain 100% accurate with zero data loss. However, structural subtree queries (e.g., fetching all child nodes under Item 8) may return partial hierarchies.
+   - Status: Active observation; gathering additional enterprise document samples before implementing a generalized layout-aware parser rule to avoid over-segmentation risks.
