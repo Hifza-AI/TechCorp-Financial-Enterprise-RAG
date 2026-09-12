@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 
@@ -342,26 +343,93 @@ class HierarchyBuilder:
                     # needlessly fragmented into 12 parallel copies
                     # instead of being unified).
                     #
-                    # Checking BOTH is_note_marker and
-                    # is_top_level_marker here, against the same
-                    # "is this literally the immediately-preceding
-                    # sibling" narrow scope already established for
-                    # the AMD fix, safely covers both marker families
-                    # with the same logic and the same safety
-                    # guarantees.
-                    if is_note_marker or is_top_level_marker:
+                    # NEW (Google/Intel 2016, confirmed via real
+                    # hierarchy_outline.txt output): this reopen-check
+                    # was previously restricted to is_note_marker and
+                    # is_top_level_marker headings only -- but the
+                    # SAME underlying pattern (a heading's own exact
+                    # title repeating verbatim, with no distinguishing
+                    # "(Continued)" suffix, purely because a page-break
+                    # falls in the middle of that ONE section's own
+                    # content) is confirmed to ALSO happen on ordinary,
+                    # non-marker bold sub-headings: Google's "Google
+                    # segment" (an MD&A revenue-discussion sub-heading)
+                    # and Intel's "Effective tax rate" / "Net deferred
+                    # tax assets (liabilities)" (both regular Note
+                    # sub-topics) each repeat verbatim once a table or
+                    # page-break interrupts their own discussion.
+                    #
+                    # Confirmed real-world impact: each repeat split
+                    # what should be ONE continuous sub-section's
+                    # narrative (e.g. Intel's own explanation of ITS
+                    # effective-tax-rate table, split before vs. after
+                    # the table itself) into two disconnected sibling
+                    # nodes -- structurally fragmenting the discussion
+                    # even though every individual sentence and value
+                    # remains present and correct somewhere in the
+                    # tree.
+                    #
+                    # Removing the is_note_marker/is_top_level_marker
+                    # restriction and checking ANY heading is safe
+                    # specifically BECAUSE the scope stays exactly as
+                    # narrow as before: only the LITERAL immediately-
+                    # preceding sibling (never a search further back)
+                    # with the EXACT same title text can ever trigger
+                    # a reopen. Two genuinely different, intentionally
+                    # short-titled sections being immediately adjacent
+                    # siblings under the same parent AND sharing the
+                    # exact same title is not a realistic scenario in
+                    # a properly-organized SEC filing -- so this can
+                    # only ever correctly reunite a genuine page-break
+                    # split, never incorrectly merge two unrelated
+                    # sections.
+                    # NEW (Apple/Google 2016, confirmed via real
+                    # hierarchy_outline.txt output): generalizing the
+                    # reopen-check to ANY heading (see above) surfaced
+                    # a genuine, important EXCEPTION -- a company's
+                    # audit-report heading, "Report of [Firm Name],
+                    # Independent Registered Public Accounting Firm",
+                    # legitimately appears TWICE, back-to-back, with
+                    # the EXACT same title: once for the opinion on
+                    # the financial statements themselves, and again
+                    # for the SEPARATE opinion on internal control
+                    # over financial reporting (ICFR) -- both are
+                    # complete, self-contained, independently-signed
+                    # legal documents (each ending in its own "/s/
+                    # [Firm]" signature and date), not a single report
+                    # split across a page-break.
+                    #
+                    # Confirmed real-world impact if left unguarded:
+                    # Apple's and Google's two genuinely-separate
+                    # audit opinions would be incorrectly MERGED into
+                    # one node, mixing the financial-statement
+                    # opinion's text with the unrelated ICFR opinion's
+                    # text as if they were one continuous document --
+                    # a meaningful legal/compliance-content corruption,
+                    # not just a cosmetic nesting issue.
+                    #
+                    # This is a narrow, explicit exclusion (matched by
+                    # the same "Report of ... Accounting Firm" wording
+                    # this codebase already recognizes elsewhere for
+                    # is_note_marker), checked BEFORE the general
+                    # reopen logic -- every other heading, marked or
+                    # not, still gets the reopen treatment as normal.
+                    _is_audit_report_title = bool(
+                        re.search(
+                            r"Report\s+of\s+.*Registered\s+Public\s+Accounting\s+Firm",
+                            block["text"],
+                            re.IGNORECASE,
+                        )
+                    )
 
-                        existing_children = stack[-1]["children"]
+                    existing_children = stack[-1]["children"]
 
-                        if (
-                            existing_children
-                            and existing_children[-1]["title"] == block["text"]
-                            and (
-                                existing_children[-1].get("is_note_marker")
-                                or existing_children[-1].get("is_top_level_marker")
-                            )
-                        ):
-                            reopened_node = existing_children[-1]
+                    if (
+                        not _is_audit_report_title
+                        and existing_children
+                        and existing_children[-1]["title"] == block["text"]
+                    ):
+                        reopened_node = existing_children[-1]
 
                     if reopened_node is not None:
 
