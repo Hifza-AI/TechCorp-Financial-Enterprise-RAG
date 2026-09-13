@@ -1912,6 +1912,26 @@ class HeadingDetector:
         if re.match(r"^Item\s+\d+[A-Za-z]?\s*[-\u2013\u2014]", stripped, re.IGNORECASE):
             return True
 
+        # NEW (eBay 2025, confirmed via real PDF text-extraction
+        # output): a THIRD Item-marker punctuation convention --
+        # "ITEM 1: BUSINESS", "ITEM 1A: RISK FACTORS" -- using a
+        # colon separator, matching neither the period convention
+        # ("Item 1.") nor the dash convention already added for
+        # Intuit ("ITEM 7 - MANAGEMENT'S..."). Confirmed real-world
+        # impact: with NEITHER existing pattern matching, is_top_
+        # level_marker was False for EVERY real Item boundary in
+        # eBay's entire filing (the ONLY "Item 1." text anywhere in
+        # the document was the Table-of-Contents listing itself,
+        # confirmed via direct PDF text search -- the real,
+        # content-starting heading uses this colon format
+        # exclusively) -- meaning none of eBay's real Item boundaries
+        # ever got the is_top_level_marker protection that lets a
+        # genuine Item/Part boundary force-close an already-open Note
+        # or core-statement container, the same critical mechanism
+        # already fixed for Intuit's dash convention.
+        if re.match(r"^Item\s+\d+[A-Za-z]?\s*:", stripped, re.IGNORECASE):
+            return True
+
         # NEW (Microsoft 2026, confirmed via real video-frame output):
         # every content page of Item 8 repeats a small, two-line
         # running header at the very top -- "PART II" (matches the

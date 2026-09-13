@@ -176,3 +176,9 @@ The following minor edge cases are cataloged for tracking purposes. These items 
    - Issue: Recent 10-K styling trends render standard sub-headings in oversized fonts, promoting them to Level-1 nodes and flattening implicit parent-child trees (e.g., "Item 8 → Notes" or "Audit Report → Critical Audit Matters").
    - Impact: Direct semantic queries (e.g., retrieving specific Note text) remain 100% accurate with zero data loss. However, structural subtree queries (e.g., fetching all child nodes under Item 8) may return partial hierarchies.
    - Status: Active observation; gathering additional enterprise document samples before implementing a generalized layout-aware parser rule to avoid over-segmentation risks.
+
+   6. Financial Statement Title Wrapping (Nike 2025)
+   - Scope: Consolidated Statements of Shareholders' Equity
+   - Issue: The statement header is truncated as "CONSOLIDATED STATEMENTS OF", with the trailing qualifier ("SHAREHOLDERS' EQUITY") separated due to multi-line layout wrapping (>2 lines).
+   - Impact: Purely cosmetic metadata issue. Table parsing, column structures, and numerical data (Class A/B Shares, Common Stock Amount, Retained Earnings) remain 100% intact with zero data loss.
+   - Status: Tier-2 observation; full pattern-matching resolution pending raw `cleaned.json` layout analysis.

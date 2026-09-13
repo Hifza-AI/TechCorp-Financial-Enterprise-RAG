@@ -2226,12 +2226,25 @@ class TableParser:
 
         stripped = text.strip()
 
-        m = re.match(r"^(.+\S)\s+(\$)$", stripped)
+        # NEW (eBay 2025, confirmed via real chunks.json output): the
+        # ORIGINAL pattern here, "(.+\S)", requires a MINIMUM of two
+        # characters for the numeric-value group (one-or-more of any
+        # character, immediately followed by one MORE non-whitespace
+        # character) -- so a genuinely single-character value like a
+        # bare "2" or "5" (confirmed: eBay's Common Stock balance is
+        # literally "$2" million throughout, fused as "2 $") could
+        # never match at all, even though multi-character values like
+        # "101,832" worked correctly. Using "\S+" instead (one-or-more
+        # non-whitespace characters, with no artificial minimum-length
+        # requirement) matches every length correctly, including the
+        # single-character case, with no change in behavior for any
+        # value that already worked.
+        m = re.match(r"^(\S+)\s+(\$)$", stripped)
 
         if m and self._looks_numeric_cell(m.group(1)):
             return [m.group(1), m.group(2)]
 
-        m = re.match(r"^(\$)\s+(.+\S)$", stripped)
+        m = re.match(r"^(\$)\s+(\S+)$", stripped)
 
         if m and self._looks_numeric_cell(m.group(2)):
             return [m.group(1), m.group(2)]
