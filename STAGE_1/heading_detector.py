@@ -565,6 +565,170 @@ class HeadingDetector:
                     "demoted_table_header_zone"
                 ]
 
+        # NEW (Nike 2026, confirmed via real hierarchy_outline.txt
+        # output): a note_marker/top_level_marker's own TITLE
+        # occasionally wraps across 2 physical PDF lines when the
+        # title text is long relative to the page width -- e.g.
+        # Nike's "NOTE 1 - SUMMARY OF SIGNIFICANT ACCOUNTING" /
+        # "POLICIES" (the word "POLICIES" wrapping onto its own
+        # line). Both lines independently score as prominent-boundary
+        # headings (same oversized, all-caps styling), so without
+        # this merge, "POLICIES" becomes its OWN separate heading
+        # that immediately pops "NOTE 1" right back off the stack --
+        # which is fatal to the demotion pass below: since this
+        # continuation fragment would be the FIRST prominent-boundary
+        # candidate since the marker, it keeps full override power
+        # and closes the marker before any of the marker's REAL
+        # sub-topics ("DESCRIPTION OF BUSINESS", etc.) ever arrive,
+        # completely defeating the fix.
+        #
+        # Detected narrowly: the CONTINUATION candidate must be SHORT
+        # (<=3 words -- a wrapped title-tail is never long), must
+        # itself independently qualify as prominent-boundary (same
+        # style tier as the marker), and must sit within a small
+        # Y-gap of the marker's own line (a genuine wrap never has
+        # unrelated content -- like the marker's OWN units-disclaimer
+        # or intro paragraph -- physically between the two title
+        # fragments). When these all hold, the continuation's text is
+        # appended onto the marker's own title and the continuation
+        # itself is removed from heading candidacy entirely (so it
+        # can never appear as its own spurious node either).
+        _TITLE_CONTINUATION_MAX_WORDS = 3
+        _TITLE_CONTINUATION_Y_GAP = 25
+
+        _markers_with_merged_continuation = set()
+
+        for index, item in enumerate(heading_candidates):
+
+            if not item["is_heading"]:
+                continue
+
+            if not (item.get("is_note_marker") or item.get("is_top_level_marker")):
+                continue
+
+            if not item.get("is_prominent_boundary"):
+                continue
+
+            next_index = index + 1
+
+            if next_index >= len(heading_candidates):
+                continue
+
+            next_item = heading_candidates[next_index]
+
+            if not next_item["is_heading"]:
+                continue
+
+            if next_item.get("is_note_marker") or next_item.get("is_top_level_marker"):
+                continue
+
+            if not next_item.get("is_prominent_boundary"):
+                continue
+
+            if len(next_item["text"].split()) > _TITLE_CONTINUATION_MAX_WORDS:
+                continue
+
+            this_y = self._line_y(lines[item["line_index"]])
+            next_y = self._line_y(lines[next_item["line_index"]])
+
+            if (
+                this_y is None
+                or next_y is None
+                or (next_y - this_y) > _TITLE_CONTINUATION_Y_GAP
+            ):
+                continue
+
+            item["text"] = f"{item['text']} {next_item['text']}".strip()
+            next_item["is_heading"] = False
+            next_item["is_prominent_boundary"] = False
+            next_item["reasons"] = next_item.get("reasons", []) + [
+                "merged_wrapped_marker_title_continuation"
+            ]
+
+            # NEW: a marker whose own title just absorbed a wrapped
+            # continuation has, in effect, ALREADY used up its one
+            # legitimate "prominent-boundary override" -- that
+            # continuation WAS a prominent-boundary-styled candidate
+            # before being merged away. Without tracking this, the
+            # demotion pass below (which resets its own tracking
+            # every time it sees a note_marker/top_level_marker) would
+            # treat the NEXT independent heading after this marker as
+            # if it were STILL the first one, letting it escape the
+            # marker's protection too -- exactly the failure mode
+            # this whole fix exists to prevent.
+            _markers_with_merged_continuation.add(id(item))
+
+        # NEW (Nike 2026, confirmed via real hierarchy_outline.txt
+        # output): "is_prominent_boundary" (much_larger_than_body AND
+        # all_caps) was built for ONE narrow, specific use-case --
+        # letting a genuinely NEW, unrelated section boundary that
+        # lacks a recognizable "Note N" prefix (Intel 2019's
+        # "BORROWINGS", "DERIVATIVE FINANCIAL INSTRUMENTS", etc.)
+        # still correctly close out and replace a DIFFERENT,
+        # currently-open note-marker container.
+        #
+        # Confirmed real-world impact on Nike: Nike renders EVERY
+        # heading tier -- the Note's own title AND every one of its
+        # own accounting-policy sub-topics ("DESCRIPTION OF
+        # BUSINESS", "BASIS OF CONSOLIDATION", "MANAGEMENT ESTIMATES",
+        # "RECLASSIFICATIONS", etc, all within the SAME "NOTE 1")
+        # -- with this exact SAME oversized, all-caps styling. Since
+        # EVERY one of these sub-topics independently qualifies as
+        # "prominent_boundary", each one incorrectly popped "NOTE 1"
+        # and became its own top-level ROOT SIBLING instead of
+        # nesting as Note 1's own child -- completely flattening
+        # Note 1 (and, by the same mechanism, every other Note in the
+        # filing) into dozens of disconnected, mis-leveled root nodes.
+        #
+        # The key distinguishing signal: Intel's genuine replacement
+        # boundary ("BORROWINGS") is the FIRST prominent-boundary-
+        # styled heading to appear after whatever note-marker was
+        # previously open -- there is exactly ONE such heading
+        # transitioning between two DIFFERENT topics. Nike's own
+        # sub-topics, by contrast, are MULTIPLE consecutive
+        # prominent-boundary headings all appearing one after another
+        # WITHOUT any intervening genuine note_marker/top_level_marker
+        # closing and reopening between them -- they are peers within
+        # the SAME still-open container, not each its own new
+        # container.
+        #
+        # Demoting every prominent-boundary candidate EXCEPT THE
+        # FIRST one seen since the most recent genuine
+        # note_marker/top_level_marker keeps Intel's original fix
+        # fully intact (its ONE qualifying "BORROWINGS"-style heading
+        # is always the first, so it's never demoted) while
+        # correctly preventing Nike's repeated same-styled sub-topics
+        # from each independently escaping their Note's protection.
+        #
+        # NOTE: this pass currently resets per-PAGE (matching every
+        # other stateful pass in this file) -- Nike's own confirmed
+        # case happens to have its Note-1 sub-topics all on one page
+        # (p70), so this fully fixes that instance. A company whose
+        # own same-styled sub-topics span MULTIPLE pages would need a
+        # report-level (cross-page) extension of this same tracking,
+        # which is a reasonable candidate for future work if evidence
+        # of that broader pattern emerges.
+        _prominent_override_used = False
+
+        for item in heading_candidates:
+
+            if not item["is_heading"]:
+                continue
+
+            if item.get("is_note_marker") or item.get("is_top_level_marker"):
+                _prominent_override_used = id(item) in _markers_with_merged_continuation
+                continue
+
+            if item.get("is_prominent_boundary"):
+
+                if _prominent_override_used:
+                    item["is_prominent_boundary"] = False
+                    item["reasons"] = item.get("reasons", []) + [
+                        "demoted_repeated_prominent_boundary"
+                    ]
+                else:
+                    _prominent_override_used = True
+
         detected_page["heading_analysis"] = {
             "candidates": heading_candidates,
             "heading_count": sum(
@@ -913,6 +1077,40 @@ class HeadingDetector:
         ):
             return 0, ["table_column_header_date"]
 
+        # NEW (Nike 2017, confirmed via real hierarchy_outline.txt
+        # output): a multi-date caption listing THREE full dates --
+        # "Years Ended May 31, 2017, May 31, 2016 and May 31, 2015"
+        # -- occasionally wraps across multiple physical PDF lines
+        # such that only a MIDDLE or TAIL fragment (missing the
+        # leading "Year(s) Ended" / "As of" prefix that was already
+        # correctly excluded on its own separate line) is left as its
+        # own line -- e.g. "2017, May 31, 2016 and May 31, 2015" or
+        # "ended May 31, 2017, May 31, 2016 and May 31, 2015".
+        #
+        # Confirmed real-world impact: 4 separate spurious empty
+        # headings from this single wrapped caption, all on page 90
+        # of Nike's Note tables.
+        #
+        # This is scoped to a line that is ENTIRELY composed of full
+        # "<Month> <Day>, <Year>" date mentions (1-3 of them, joined
+        # by comma/"and"), with only an optional leading "ended"/"of"
+        # connector word -- so it can never match a genuine narrative
+        # sentence that merely happens to mention a date in passing.
+        _month_re = (
+            r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|"
+            r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|"
+            r"Nov(?:ember)?|Dec(?:ember)?)"
+        )
+        _single_date_re = rf"{_month_re}\.?\s+\d{{1,2}},\s*\d{{4}}"
+        if re.fullmatch(
+            rf"(?:ended\s+|of\s+)?(?:\d{{4}}|{_single_date_re})"
+            rf"(?:\s*,\s*{_single_date_re})*"
+            rf"(?:\s+and\s+{_single_date_re})?",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+            return 0, ["table_column_header_date"]
+
         # NEW (Microsoft 2026, confirmed via real hierarchy_outline.txt
         # + video-frame output): a standalone table-cell VALUE that
         # expresses a weighted-average duration -- "10 years", "5
@@ -1245,6 +1443,17 @@ class HeadingDetector:
                 # "$21.4 B" / "up 14% from fiscal 2025" ended up as
                 # three disconnected blocks instead of one sentence.
                 "b", "m", "k", "t",
+                # NEW (Nike 2026, confirmed via real
+                # hierarchy_outline.txt output): "bps" (basis points)
+                # is the standard SEC-filing abbreviation for a
+                # hundredth-of-a-percent margin/rate change, appearing
+                # throughout MD&A "Comparable %-Change" tables (e.g.
+                # "Gross margin -140 bps", "Operating margin -100
+                # bps"). Confirmed real-world impact: "-140 bps" and
+                # "-100 bps" each became their own empty, spurious
+                # heading directly above Nike's "EARNINGS BEFORE
+                # INTEREST AND TAXES" MD&A discussion.
+                "bps",
                 "and", "or", "of", "the", "in", "for", "to", "with", "&",
             }
 

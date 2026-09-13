@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 import pymupdf as fitz
 
-
 class PDFExtractor:
     """
     Extracts every page of every PDF using PyMuPDF's "dict" mode --
