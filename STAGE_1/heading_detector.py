@@ -603,7 +603,49 @@ class HeadingDetector:
             if not item["is_heading"]:
                 continue
 
-            if not (item.get("is_note_marker") or item.get("is_top_level_marker")):
+            # NEW (Nike 2026, confirmed via real hierarchy_outline.txt
+            # output): a core-statement title can wrap EXACTLY at the
+            # boundary between "CONSOLIDATED STATEMENTS OF" and its
+            # own completing type-word ("COMPREHENSIVE INCOME",
+            # "SHAREHOLDERS' EQUITY") landing on a separate physical
+            # line -- e.g. "CONSOLIDATED STATEMENTS OF" / "COMPREHENSIVE
+            # INCOME". Neither fragment alone matches is_note_marker:
+            # the first is missing its completing type-word (so it
+            # fails the CONSOLIDATED-title regex, which requires one
+            # of the specific statement-type words), and the second
+            # is missing the "CONSOLIDATED STATEMENTS OF" prefix that
+            # the SAME regex also requires. The earlier NOTE-1-style
+            # fix above only merges when the FIRST fragment is ALREADY
+            # a confirmed marker, so it can't catch this shape at all.
+            #
+            # Confirmed real-world impact: BOTH "CONSOLIDATED
+            # STATEMENTS OF" / "COMPREHENSIVE INCOME" (p64) and the
+            # same split repeating for another statement (p67) lost
+            # their real, complete title -- becoming a meaningless
+            # "CONSOLIDATED STATEMENTS OF" node with an unrelated
+            # "COMPREHENSIVE INCOME" sibling instead of one correct,
+            # complete "CONSOLIDATED STATEMENTS OF COMPREHENSIVE
+            # INCOME" heading.
+            #
+            # Broadened trigger: also merge when the FIRST fragment's
+            # own text simply STARTS WITH "CONSOLIDATED" (case-
+            # insensitive) and is prominent-boundary-styled, even if
+            # it doesn't YET independently match is_note_marker on
+            # its own -- since the missing completing word is exactly
+            # what a wrap would push onto the next line. After
+            # merging, is_note_marker/is_top_level_marker are
+            # RE-EVALUATED on the now-complete combined text, so the
+            # correct protection applies going forward.
+            is_marker_prefix_fragment = (
+                item.get("is_prominent_boundary")
+                and item["text"].strip().upper().startswith("CONSOLIDATED")
+            )
+
+            if not (
+                item.get("is_note_marker")
+                or item.get("is_top_level_marker")
+                or is_marker_prefix_fragment
+            ):
                 continue
 
             if not item.get("is_prominent_boundary"):
@@ -645,17 +687,14 @@ class HeadingDetector:
                 "merged_wrapped_marker_title_continuation"
             ]
 
-            # NEW: a marker whose own title just absorbed a wrapped
-            # continuation has, in effect, ALREADY used up its one
-            # legitimate "prominent-boundary override" -- that
-            # continuation WAS a prominent-boundary-styled candidate
-            # before being merged away. Without tracking this, the
-            # demotion pass below (which resets its own tracking
-            # every time it sees a note_marker/top_level_marker) would
-            # treat the NEXT independent heading after this marker as
-            # if it were STILL the first one, letting it escape the
-            # marker's protection too -- exactly the failure mode
-            # this whole fix exists to prevent.
+            if is_marker_prefix_fragment and not (
+                item.get("is_note_marker") or item.get("is_top_level_marker")
+            ):
+                item["is_note_marker"] = self._is_note_marker(item["text"])
+                item["is_top_level_marker"] = self._is_top_level_marker(
+                    item["text"]
+                )
+
             _markers_with_merged_continuation.add(id(item))
 
         # NEW (Nike 2026, confirmed via real hierarchy_outline.txt
