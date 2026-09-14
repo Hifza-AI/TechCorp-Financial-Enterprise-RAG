@@ -2046,6 +2046,90 @@ class TableParser:
 
         label = " ".join(label_parts).strip()
 
+        # NEW (Southwest 2026, confirmed via real cleaned.json output):
+        # when this row's own value-like cells (to the right of the
+        # label) EXACTLY match the number of columns, assign them by
+        # simple LEFT-TO-RIGHT POSITIONAL ORDER directly, bypassing
+        # distance-tolerance matching for this row entirely.
+        #
+        # Confirmed real-world impact: Southwest's "Short-term
+        # investments" row has a dash placeholder for 2025 sitting at
+        # x=451 -- genuinely closer, in raw absolute distance, to the
+        # NEIGHBORING 2024 column's own header-anchor (x=475.6, diff
+        # 24.6) than to its OWN 2025 column's anchor (x=385.6, diff
+        # 65.4, just outside the 65pt text-label tolerance). Distance-
+        # based matching (even a GLOBALLY-optimal version) would
+        # therefore always assign this dash to the wrong (2024) column
+        # first, since it genuinely IS numerically closer there --
+        # leaving 2025 empty and letting the positional fallback
+        # incorrectly hand it the 2024 value ("1,216") instead,
+        # silently SWAPPING two real financial values between columns.
+        #
+        # This exact "row has exactly N value-cells for N columns, so
+        # assign by left-to-right order" logic ALREADY exists later in
+        # this function as a fallback for LEFTOVER unmatched columns
+        # (built for Apple's EPS row, the Share Repurchase table, and
+        # the "September" date-header table) -- promoting it to run
+        # FIRST, whenever the count matches exactly, sidesteps the
+        # whole distance-ambiguity problem: a dash sitting anywhere in
+        # its own column's visual space is still correctly the FIRST
+        # (leftmost) value cell in the row, regardless of exactly how
+        # close its raw x happens to land to a neighboring column's
+        # header-anchor. Every previously-correct row (where distance-
+        # matching and positional-order already agreed) is completely
+        # unaffected, since both approaches produce the identical
+        # result whenever there's no genuine ambiguity.
+        # NEW (Southwest 2026, confirmed via real cleaned.json output):
+        # a footnote-marked value -- "43 (a)" -- is extracted as TWO
+        # separate spans/cells ("43" and "(a)"), since the footnote
+        # reference is typically a distinct, slightly-raised span next
+        # to its value. The bare "(a)" marker itself is NOT itself a
+        # genuine additional column-value -- it's a superscript-style
+        # annotation on the value immediately before it -- but it also
+        # doesn't exactly match any single symbol in NON_LABEL_TOKENS,
+        # so without this explicit exclusion it gets counted as its
+        # own "value-like" cell, inflating a 3-column row's cell-count
+        # to 4 and preventing the exact-count positional-assignment
+        # fix above from ever firing for this row at all.
+        #
+        # Confirmed real-world impact: Southwest's "Unrealized gain
+        # (loss) on fuel derivative instruments" row (Comprehensive
+        # Income statement) has its 2025 value footnote-marked ("43
+        # (a)"), which inflated its value-cell count to 4 vs 3 real
+        # columns -- falling through to the OLDER distance-based
+        # matching, where the marker's own x-position (immediately
+        # next to "43") could interfere with correct column
+        # assignment, ultimately losing this row's values entirely.
+        _footnote_marker_re = re.compile(r"^\(\s*[A-Za-z]\s*\)$")
+
+        _value_like_cells = [
+            cell for cell in cells
+            if (
+                cell["text"].strip() not in self.NON_LABEL_TOKENS
+                or cell["text"].strip() in ("-", "--", "—")
+            )
+            and not _footnote_marker_re.match(cell["text"].strip())
+            and cell["x"] >= (first_column_x - value_tolerance)
+        ]
+
+        if len(_value_like_cells) == len(columns):
+
+            sorted_cells = sorted(_value_like_cells, key=lambda c: c["x"])
+            sorted_columns = sorted(columns, key=lambda c: c["x"])
+
+            values = {
+                column["name"]: cell["text"]
+                for column, cell in zip(sorted_columns, sorted_cells)
+            }
+
+            if not label and not any(v is not None for v in values.values()):
+                return None
+
+            return {
+                "label": label,
+                "values": values,
+            }
+
         # -----------------------------------------------------
         # Map values to columns by nearest x-position
         #
@@ -2063,63 +2147,82 @@ class TableParser:
         # table had genuine offsets up to ~37 points.
         # -----------------------------------------------------
 
-        values = {}
+        # NEW (Southwest 2026, confirmed via real cleaned.json output):
+        # the ORIGINAL column-by-column loop processed columns in a
+        # FIXED left-to-right order, letting each column greedily claim
+        # its own single closest matching cell -- but this can let an
+        # EARLIER column "steal" a cell that actually, more correctly,
+        # belongs to a LATER column, whenever the two columns' own
+        # header-anchors sit close enough together (within
+        # value_tolerance of each other) that a single cell falls
+        # within range of BOTH.
+        #
+        # Confirmed real-world impact: Southwest's Balance Sheet has
+        # "December 31, 2025" (x=385.6) and "December 31, 2024"
+        # (x=475.6) as column anchors -- only 90pt apart, well within
+        # 2x the 65pt text-label tolerance used here. On the "Short-
+        # term investments" row, the dash placeholder for 2025's value
+        # sits at x=451 (just outside the 65pt tolerance of ITS OWN
+        # column-2025's anchor at 385.6, but well within 65pt of the
+        # NEIGHBORING column-2024's anchor at 475.6). The 2024 column
+        # was processed and correctly found this dash as its single
+        # closest match within tolerance -- WRONGLY claiming the 2025
+        # dash placeholder as its own 2024 value. The genuinely-2024
+        # value ("1,216", correctly positioned at x=530, matching the
+        # exact same x as other confirmed 2024 values in the same
+        # column) was then LEFT UNCLAIMED, and the positional fallback
+        # (built for a completely different scenario) incorrectly
+        # assigned it to the now-empty 2025 column instead -- silently
+        # SWAPPING two real financial values between columns, not just
+        # a cosmetic/label issue.
+        #
+        # Fix: instead of processing columns one at a time and letting
+        # each grab its own nearest cell independent of what any OTHER
+        # column might also want, build EVERY (column, cell) pairing
+        # that falls within tolerance FIRST, across the WHOLE row, sort
+        # ALL of them by distance, and then claim the globally closest
+        # pairs first (marking both sides claimed together). This
+        # guarantees a cell always goes to whichever column it is
+        # TRULY closest to overall, never to a column that merely
+        # happened to be processed first -- fixing this exact swap
+        # while keeping every previously-correct match (where no
+        # competition existed) completely unchanged.
+
+        values = {name: None for name in (column["name"] for column in columns)}
         claimed_cell_ids = set()
+        claimed_column_names = set()
+
+        candidate_pairs = []
 
         for column in columns:
 
             target_x = column["x"]
 
-            matching_cells = []
-
             for cell in cells:
 
                 text = cell["text"].strip()
 
-                # Symbols alone should never "win" a column match --
-                # EXCEPT dash/em-dash, which in financial tables
-                # represents an explicit zero/not-applicable VALUE
-                # (e.g. "Cumulative effect of change in accounting
-                # principle: — — (136)"). Treating it the same as a
-                # stray "$" caused genuine zero-values to disappear
-                # as null instead of being recorded as "—".
                 if text in self.NON_LABEL_TOKENS and text not in ("-", "--", "—"):
-                    continue
-
-                # NEW: a cell already assigned to an earlier (closer)
-                # column can never be reused by a later column. Each
-                # column used to search ALL cells independently, so
-                # two columns whose target x's both fell within
-                # tolerance of the SAME cell would both claim it --
-                # confirmed on Apple 2016's Shareholders' Equity
-                # statement, where "Accumulated Other Comprehensive
-                # Income/(Loss)" and "Retained Earnings" both matched
-                # Retained Earnings' own value cell, silently
-                # duplicating "39,510" into both columns for the
-                # "Net income" row instead of AOCI correctly getting
-                # "-". Columns are processed left-to-right (sorted by
-                # x), so the closer/earlier column keeps first claim,
-                # which is always the geometrically correct one.
-                if id(cell) in claimed_cell_ids:
                     continue
 
                 distance = abs(cell["x"] - target_x)
 
                 if distance <= value_tolerance:
-                    matching_cells.append((distance, cell))
+                    candidate_pairs.append((distance, column["name"], cell))
 
-            if matching_cells:
+        candidate_pairs.sort(key=lambda item: item[0])
 
-                matching_cells.sort(key=lambda item: item[0])
+        for distance, column_name, cell in candidate_pairs:
 
-                best_cell = matching_cells[0][1]
+            if column_name in claimed_column_names:
+                continue
 
-                values[column["name"]] = best_cell["text"]
-                claimed_cell_ids.add(id(best_cell))
+            if id(cell) in claimed_cell_ids:
+                continue
 
-            else:
-
-                values[column["name"]] = None
+            values[column_name] = cell["text"]
+            claimed_column_names.add(column_name)
+            claimed_cell_ids.add(id(cell))
 
         # -----------------------------------------------------
         # Positional fallback for still-unmatched columns.

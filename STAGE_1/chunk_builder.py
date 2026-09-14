@@ -17,7 +17,7 @@ class ChunkBuilder:
       - "table" chunks: one chunk per table, kept intact (never split
         mid-table, since a half-table is useless for a numeric answer).
     """
-
+    
     def __init__(
         self,
         max_chunk_chars=1200,
