@@ -2159,11 +2159,45 @@ class HeadingDetector:
         # terminated text keeps this safe without narrowing the
         # word-count cap further (which could risk excluding a
         # genuine longer title phrase instead).
+        # NEW (Southwest 2026, confirmed via real PDF text-extraction
+        # output): the PLURAL-only restriction above ("STATEMENTS\s+OF"
+        # instead of "STATEMENTS?\s+OF") was added specifically to
+        # reject PayPal's narrative-reference false-positive
+        # ("consolidated statement of income:", singular, ending in a
+        # colon) -- but this ALSO rejects Southwest's own GENUINE
+        # statement titles, which use the SINGULAR convention as their
+        # real, correct title text: "Consolidated Statement of
+        # Income", "Consolidated Statement of Comprehensive Income",
+        # "Consolidated Statement of Stockholders' Equity",
+        # "Consolidated Statement of Cash Flows" (all bold, Title
+        # Case, confirmed via direct PDF extraction).
+        #
+        # Confirmed real-world impact: with NONE of these 4 core
+        # statement titles recognized as is_note_marker (or scoring
+        # as a heading via any other path), ALL FOUR of Southwest's
+        # real financial statements were swallowed as if they were
+        # part of the PRECEDING "Consolidated Balance Sheet" section
+        # -- every downstream chunk for Income Statement, Comprehensive
+        # Income, Stockholders' Equity, and Cash Flows was mislabeled
+        # with "Consolidated Balance Sheet" as its section title,
+        # even though the actual numeric VALUES inside each table
+        # remained correct.
+        #
+        # The colon-exclusion already added alongside the plural-only
+        # restriction is INDEPENDENTLY sufficient to protect against
+        # PayPal's original false-positive on its own: PayPal's text
+        # ends in a colon ("...consolidated statement of income:"),
+        # while Southwest's genuine titles never do. Reverting to
+        # allow singular "STATEMENT" (matching the ALREADY-safe
+        # "BALANCE SHEETS?" plural-optional pattern's own precedent)
+        # keeps PayPal's case correctly excluded via the colon check
+        # alone, while correctly recognizing Southwest's genuine
+        # singular-titled statements.
         if (
             len(stripped.split()) <= 8
             and not stripped.endswith(":")
             and re.match(
-                r"^CONSOLIDATED\s+(BALANCE\s+SHEETS?|STATEMENTS\s+OF\s+)",
+                r"^CONSOLIDATED\s+(BALANCE\s+SHEETS?|STATEMENTS?\s+OF\s+)",
                 stripped,
                 re.IGNORECASE,
             )
