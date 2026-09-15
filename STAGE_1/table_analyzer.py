@@ -622,6 +622,67 @@ class TableAnalyzer:
                 "_y": y,
             }
 
+        # NEW (Caterpillar 2025, confirmed via real cleaned.json +
+        # table_analyzed.json output): a bare "STATEMENT N" running
+        # caption sits at the very TOP of every one of Caterpillar's
+        # core-financial-statement pages, ABOVE the statement's own
+        # real title line -- e.g. "STATEMENT 1" (y=80.3) sits above
+        # "Consolidated Results of Operations for the Years Ended
+        # December 31," (y=93.1), which itself sits above the real
+        # year-header row ("2025"/"2024"/"2023", y=120.1).
+        #
+        # heading_detector.py already correctly excludes "STATEMENT N"
+        # from ever becoming a HEADING (it's a plain page-caption, not
+        # a real section title) -- but that exclusion does NOT
+        # automatically protect it from THIS file's own, independent
+        # rescue-passes: since it never became a confirmed heading, it
+        # was never added to `heading_line_indices`, so Pass 3 (the
+        # header-zone-fragment rescue just below, which promotes a
+        # short line sitting ABOVE a table's confirmed numeric content
+        # when it x-aligns with a confirmed column) was free to sweep
+        # it up as a table candidate on its own merits: short (2
+        # words), doesn't end in a period, sits within the
+        # HEADER_ZONE_WINDOW above the table's real "2025" column, and
+        # x-aligns with that same column (both start at x=35.5).
+        #
+        # Confirmed real-world impact: with "STATEMENT 1" promoted as
+        # a table candidate, the table's own recorded bbox (computed
+        # from the min/max of every candidate line's own bbox) now
+        # starts at "STATEMENT 1"'s y=80.3 -- ABOVE the real statement
+        # title's own y=93.1. hierarchy_builder.py interleaves each
+        # page's headings and tables by sorting on this SAME bbox top
+        # -- so with the table's recorded top now sitting ABOVE its
+        # own real heading, the ENTIRE Income Statement table (Total
+        # sales and revenues: 67,589/64,809/67,060, and everything
+        # below it) was attaching to whatever heading was STILL OPEN
+        # from the PRECEDING page instead of to "Consolidated Results
+        # of Operations..." itself -- a genuine, severe structural
+        # misattachment, even though every individual VALUE inside
+        # the table remained internally correct.
+        #
+        # This is the exact same underlying failure category as the
+        # already-documented "Document" browser-print-artifact bug
+        # just above (a short, non-heading fragment sitting above a
+        # table, x-aligned with its columns, silently corrupting the
+        # table's own bbox) -- so it's fixed the same way: excluded
+        # here, unconditionally, before ANY rescue-pass ever gets a
+        # chance to consider it, mirroring heading_detector.py's own
+        # STATEMENT-N pattern exactly so both files stay in agreement
+        # about what this text is.
+        if re.fullmatch(r"STATEMENT\s+\d+\.?", text.strip(), re.IGNORECASE):
+
+            return {
+                "line_index": index,
+                "text": text,
+                "is_candidate": False,
+                "numeric_ratio": 0.0,
+                "numeric_count": 0,
+                "token_count": 0,
+                "x_positions": [],
+                "y_positions": [],
+                "_y": y,
+            }
+
         # NEW (PayPal 2025, confirmed via real hierarchy_outline.txt +
         # chunks.json output + video-frame verification): a "...
         # -(Continued)" / "...--(Continued)" page-header caption --
