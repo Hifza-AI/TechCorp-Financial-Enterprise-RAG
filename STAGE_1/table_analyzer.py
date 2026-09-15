@@ -304,7 +304,66 @@ class TableAnalyzer:
 
             word_count = len(item["text"].split())
 
-            if word_count == 0 or word_count > 5:
+            # NEW (Caterpillar 2025/2016, confirmed via real
+            # table_analyzed.json output): a genuine SEC-filing
+            # SECTION-DIVIDER label ending in a colon -- "Long-term
+            # debt due within one year:", "Long-term debt due after
+            # one year:", "Proceeds from debt issued (original
+            # maturities greater than three months):", "Payments on
+            # debt (original maturities greater than three months):"
+            # -- is structurally identical to the ALREADY-rescued
+            # "Current assets:" / "Current liabilities:" dividers
+            # (short noun phrase, no value of its own, sits at the
+            # SAME left-margin x as the table's own row-labels,
+            # directly above its own numeric sub-items) -- but these
+            # Caterpillar-specific dividers run 6-10 words, well past
+            # this pass's existing 5-word cap (tuned for SHORT wrapped
+            # column-header words like "Total"/"Number"/"of Shares").
+            #
+            # Confirmed real-world impact: because these dividers
+            # never became table candidates, their sub-items
+            # ("Machinery, Power & Energy" / "Financial Products")
+            # appeared in the rendered table with NO indication of
+            # which category ("due within one year" vs "due after one
+            # year") each set of values belongs to -- the numbers
+            # themselves were never lost, but the grouping label was.
+            #
+            # Widening the cap ONLY for colon-ending text (never for
+            # a bare/period-ending fragment) is safe: a colon is
+            # already the established convention this codebase relies
+            # on elsewhere (heading_detector.py's own divider regex,
+            # table_parser.py's wrapped-label-merge stop-condition) to
+            # recognize a short structural label, as opposed to body
+            # prose. The is_column_aligned check just below still
+            # independently requires this line's x to match a
+            # confirmed row-label/value x, so a random long colon-
+            # ending line elsewhere on the page still can't slip
+            # through just from this widened word count alone.
+            #
+            # EXCLUDED even with a trailing colon: text ending in
+            # "following:" / "follows:" specifically -- the exact
+            # signature of the Costco 2025 intro-SENTENCE case this
+            # pass was already hardened against ("...consisted of the
+            # following:", "...were as follows:"). Those are genuine
+            # narrative sentences introducing a table, not the table's
+            # own divider row, and must keep falling through at the
+            # original tight 5-word cap exactly as before -- this
+            # exclusion guarantees that already-fixed case is
+            # completely unaffected by the widening.
+            _stripped_item_text = item["text"].strip()
+
+            _is_colon_divider = (
+                _stripped_item_text.endswith(":")
+                and not re.search(
+                    r"\b(following|follows):$",
+                    _stripped_item_text,
+                    re.IGNORECASE,
+                )
+            )
+
+            _pass3_max_words = 10 if _is_colon_divider else 5
+
+            if word_count == 0 or word_count > _pass3_max_words:
                 continue
 
             if item["text"].strip().endswith("."):

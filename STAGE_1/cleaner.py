@@ -4,7 +4,6 @@ from pathlib import Path
 
 from cleaning_rules import CleaningRules
 
-
 class TextCleaner:
 
     def __init__(self):
