@@ -606,65 +606,31 @@ class HeadingDetector:
         # object -- even though all of them sit on the exact same
         # visual row -- each of these bold LABEL lines sits entirely
         # alone with no numbers of its own, so it independently scores
-        # as a genuine heading (bold +3, body-size +1, short +2 = 6)
-        # with no way to see that 2-3 OTHER "line" objects immediately
-        # to its right, at the EXACT SAME y-coordinate, are that same
-        # row's real numeric values.
+        # as a genuine heading with no way to see that 2-3 OTHER
+        # "line" objects immediately to its right, at the EXACT SAME
+        # y-coordinate, are that same row's real numeric values.
         #
         # Confirmed real-world impact: 11 of Caterpillar's own Income-
         # Statement subtotal rows (and the opening/closing rows of its
         # Comprehensive Income statement) became empty, orphaned
         # heading nodes while their real numeric values survived in
-        # the table but with a BLANK row label -- e.g. real output
-        # showed " -- 2025: 11,151, 2024: 13,072, 2023: 12,966" with
-        # no "Operating profit" text anywhere near it, or a stray
-        # footnote-marker digit ("1") wrongly adopted as the label
-        # once the genuine text was gone. Confirmed present identically
-        # in Caterpillar's 2016 filing too -- a long-standing, company-
-        # specific bolding convention, not a one-off formatting quirk.
+        # the table but with a BLANK row label.
         #
-        # This is NOT the same shape as the table-header-zone demotion
-        # pass above (which looks for many SHORT candidates clustered
-        # within a +/-30pt Y WINDOW) -- these subtotal labels usually
-        # sit entirely alone, with no other short-heading neighbors
-        # nearby. The real, reliable signal here is different: does
-        # this candidate's line share the EXACT SAME y-coordinate (not
-        # just a nearby window) as genuine numeric VALUE lines
-        # elsewhere in the page's raw content -- the unmistakable
-        # fingerprint of PyMuPDF having split ONE visual table row
-        # into multiple separate line-objects, one per column.
+        # The reliable signal here: does this candidate's line share
+        # the EXACT SAME y-coordinate (not just a nearby window) as
+        # genuine numeric VALUE lines elsewhere in the page's raw
+        # content -- the unmistakable fingerprint of PyMuPDF having
+        # split ONE visual table row into multiple separate
+        # line-objects, one per column. A genuine standalone section
+        # title never shares an EXACT (within 2pt) y-coordinate with
+        # a separate numeric-value line elsewhere on the page, since a
+        # title and its table's first data row are always vertically
+        # separated by at least a full line-height.
         #
-        # A genuine standalone section title (Apple's "iPhone", "Debt",
-        # or any Note/Item boundary) is ALWAYS its own, single line
-        # sitting ABOVE its table -- it never shares an EXACT (within
-        # 2pt) y-coordinate with a separate numeric-value line
-        # elsewhere on the page, since a title and its table's first
-        # data row are always vertically separated by at least a full
-        # line-height (~12-14pt, confirmed across every verified
-        # company's own line spacing). Requiring a tight y-match
-        # against at least 2 genuine numeric-looking sibling lines
-        # (mirroring a real multi-year-column layout) keeps this
-        # narrowly scoped to exactly this row-fragmented-into-columns
-        # shape and safe from ever misfiring on a genuine title sitting
-        # above a table (confirmed safe against Apple's iPhone/Mac/
-        # Debt titles, ServiceNow's table-header-zone words, and every
-        # other already-verified company's short bold headings, none
-        # of which share an exact y with numeric sibling content).
-        #
-        # Structural markers (is_note_marker/is_top_level_marker/
-        # is_prominent_boundary) are NEVER demoted here, matching the
-        # same protection already given them by every other demotion
-        # pass in this file -- and this is capped at a modest word
-        # count, since a genuine financial-statement row label is
-        # always short.
+        # Structural markers are NEVER demoted here, matching the same
+        # protection given them by every other demotion pass in this
+        # file.
         ROW_LABEL_DEMOTE_MAX_WORDS = 10
-        # A bold label's own baseline can sit ~1.5pt off from its
-        # plain-weight numeric siblings on the "same" visual row
-        # (confirmed: Caterpillar's "Profit" label at y=507.09 vs its
-        # own values at y=505.59) -- 2.0pt comfortably covers this
-        # font-metric offset while staying far below a real row-to-row
-        # gap (~12-14pt in every filing seen so far), so this still
-        # cannot misfire across two genuinely different rows.
         ROW_LABEL_Y_TOLERANCE = 2.0
         ROW_LABEL_MIN_NUMERIC_SIBLINGS = 2
 
@@ -1129,28 +1095,6 @@ class HeadingDetector:
         ) and text.strip().startswith("(") and text.strip().endswith(")"):
             return 0, ["units_disclaimer_caption"]
 
-        # NEW (Caterpillar 2025/2016, confirmed via real chunks.json
-        # output): some companies phrase this SAME universal units-
-        # disclaimer caption with the scale word FIRST -- "(Millions
-        # of dollars)" -- instead of the "(in millions)" / "(dollars
-        # in millions)" wording the check above already covers. Since
-        # this reversed phrasing never contains the literal substring
-        # "in millions/thousands/billions", the existing check misses
-        # it entirely.
-        #
-        # Confirmed real-world impact: "(Millions of dollars)" became
-        # its own spurious heading directly under "Consolidated
-        # Comprehensive Income (Loss)..." and "Consolidated Statement
-        # of Cash Flow...", so both tables ended up labeled with this
-        # meaningless caption instead of their real statement title.
-        if re.fullmatch(
-            r"\(\s*(millions|thousands|billions)\s+of\s+dollars\s*"
-            r"(\s*,\s*[^)]*)?\)",
-            text.strip(),
-            re.IGNORECASE,
-        ):
-            return 0, ["units_disclaimer_caption"]
-
         # A bare column-header DATE ("Jan 25, 2026", "December 31,
         # 2025") or a period-range label ("Year Ended", "Quarter
         # Ended", "Three Months Ended") is another universal SEC-
@@ -1231,7 +1175,23 @@ class HeadingDetector:
         # "At July 31, 2025:" each became their own empty spurious
         # heading directly above Note 6's intangible-asset
         # amortization sub-table.
+        # NEW (Colgate-Palmolive 2026, confirmed via real PDF text-
+        # extraction output): Colgate's own period-caption adds a
+        # "For the " prefix before "Year(s)/Quarter(s)/... Ended" --
+        # "For the years ended December 31," -- which neither this
+        # combined pattern nor the bare "Year(s) Ended" pattern above
+        # accounts for. Confirmed real-world impact: this caption
+        # sits directly under 3 of Colgate's 6 core statement titles
+        # (Income, Comprehensive Income, Cash Flows) and, left
+        # unrecognized, becomes its own small heading node -- each
+        # statement's real table then attaches to THIS spurious child
+        # instead of to the statement's own title directly, so every
+        # retrieval chunk's section_path reads "...Statements of
+        # Income > For the years ended December 31," instead of just
+        # "...Statements of Income", even though the values themselves
+        # remain correct.
         if re.fullmatch(
+            r"(?:For\s+the\s+)?"
             r"(?:As\s+of\s+|At\s+|(?:Year|Years|Quarter|Quarters|Month|"
             r"Months|Week|Weeks|Three\s+Months|Six\s+Months|"
             r"Nine\s+Months)\s+Ended\s+)"
@@ -1410,32 +1370,14 @@ class HeadingDetector:
         # "compensation expense" aren't among these fixed structural
         # nouns.
         # NEW (Caterpillar 2025/2016, confirmed via real PDF output):
-        # extended with 4 additional universal SEC-filing structural
-        # captions found on Caterpillar's own Income Statement, Cash
-        # Flow Statement, and Balance Sheet:
-        #   - "sales and revenues" / "operating costs" -- the Income-
-        #     Statement equivalent of the Balance-Sheet "assets" /
-        #     "liabilities" dividers already covered below (a bold,
-        #     zero-value section-opening caption with no number of
-        #     its own).
-        #   - "cash flow from operating/investing/financing
-        #     activities" -- the same zero-value divider convention
-        #     on the Cash Flow Statement.
-        #   - "commitments and contingencies", with an optional
-        #     trailing Note cross-reference in parens -- the standard
-        #     SEC caption marking the Balance-Sheet boundary between
-        #     Liabilities and Equity. Confirmed real-world impact:
-        #     "Commitments and contingencies (Notes 21 and 22)" was
-        #     becoming its own spurious heading, splitting the Balance
-        #     Sheet section into 2 disconnected sibling nodes.
-        # Also widened the stockholders'/shareholders' apostrophe
-        # match to accept the Unicode right-single-quote (\u2019) --
-        # Caterpillar's own PDF renders "Shareholders\u2019 equity"
-        # with this typographic apostrophe rather than a straight
-        # ASCII one, which the original `'?` alternative could not
-        # match at all. This only WIDENS what already matches (never
-        # narrows it), so it cannot regress any previously-verified
-        # company's plain-ASCII-apostrophe filings.
+        # widened the stockholders'/shareholders' apostrophe match to
+        # accept the Unicode right-single-quote (\u2019) -- Caterpillar's
+        # own PDF renders "Shareholders\u2019 equity" with this
+        # typographic apostrophe rather than a straight ASCII one,
+        # which the original `'?` alternative could not match at all.
+        # This only WIDENS what already matches (never narrows it), so
+        # it cannot regress any previously-verified company's plain-
+        # ASCII-apostrophe filings.
         _financial_statement_divider_re = re.compile(
             r"^(Current\s+|Total\s+|Total\s+current\s+)?"
             r"("
@@ -1450,10 +1392,6 @@ class HeadingDetector:
             r"|operations"
             r"|financing"
             r"|investing"
-            r"|sales\s+and\s+revenues"
-            r"|operating\s+costs"
-            r"|cash\s+flow\s+from\s+(operating|investing|financing)\s+activities"
-            r"|commitments\s+and\s+contingencies(\s*\(\s*notes?\s+[\d,\s&and]+\))?"
             r")"
             r"\s*:?\s*$",
             re.IGNORECASE,
@@ -1559,6 +1497,38 @@ class HeadingDetector:
         # real sentence is never JUST "Statement 4" standing alone.
         if re.fullmatch(r"STATEMENT\s+\d+\.?", text.strip(), re.IGNORECASE):
             return 0, ["statement_number_caption"]
+
+        # NEW (Caterpillar 2025/2016, confirmed via real PDF output):
+        # a small, fixed set of ADDITIONAL SEC-standard financial-
+        # statement SECTION-DIVIDER captions found on Caterpillar's
+        # own Income Statement, Cash Flow Statement, and Balance
+        # Sheet -- restored here alongside the main divider regex
+        # below (this is checked as its OWN, separate hard-reject so
+        # it stays independent of that regex's own word-boundary
+        # structure):
+        #   - "sales and revenues" / "operating costs" -- the Income-
+        #     Statement equivalent of the Balance-Sheet "assets" /
+        #     "liabilities" dividers.
+        #   - "cash flow from operating/investing/financing
+        #     activities" -- the same zero-value divider convention
+        #     on the Cash Flow Statement.
+        #   - "commitments and contingencies", with an optional
+        #     trailing Note cross-reference in parens -- the standard
+        #     SEC caption marking the Balance-Sheet boundary between
+        #     Liabilities and Equity. Confirmed real-world impact:
+        #     "Commitments and contingencies (Notes 21 and 22)" was
+        #     becoming its own spurious heading, splitting the Balance
+        #     Sheet section into 2 disconnected sibling nodes.
+        if re.match(
+            r"^(sales\s+and\s+revenues"
+            r"|operating\s+costs"
+            r"|cash\s+flow\s+from\s+(operating|investing|financing)\s+activities"
+            r"|commitments\s+and\s+contingencies(\s*\(\s*notes?\s+[\d,\s&and]+\))?"
+            r")\s*:?\s*$",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+            return 0, ["financial_statement_section_divider"]
 
         # NEW (MSFT 2017 / Costco, confirmed via real chunks.json
         # output): a short, bold table-VALUE fragment that leaked
@@ -2497,8 +2467,23 @@ class HeadingDetector:
         # doesn't happen to catch it (e.g. a very short filing where
         # the page-repetition count falls under the boilerplate
         # floor).
+        # NEW (Dell 2026, confirmed via real PDF text-extraction
+        # output): Dell's own wording for this bare divider inserts
+        # the word "THE" between "TO" and "CONSOLIDATED" -- "NOTES TO
+        # THE CONSOLIDATED FINANCIAL STATEMENTS" -- which the
+        # original pattern's optional "(CONSOLIDATED\s+)?" group
+        # didn't account for (it only makes "CONSOLIDATED" itself
+        # optional, not an extra word appearing immediately before
+        # it). Confirmed real-world impact: without this, Dell's
+        # entire Notes section (Note 1 through Note 20+) would fail
+        # to close out the immediately-preceding "CONSOLIDATED
+        # STATEMENTS OF STOCKHOLDERS' EQUITY (DEFICIT)" note-marker,
+        # nesting every single Note as its descendant instead of a
+        # correct top-level sibling -- the same failure mode already
+        # fixed once for Adobe's own bare-divider wording (which
+        # omits "CONSOLIDATED" entirely rather than inserting "THE").
         if re.match(
-            r"^NOTES?\s+TO\s+(CONSOLIDATED\s+)?FINANCIAL\s+STATEMENTS"
+            r"^NOTES?\s+TO\s+(THE\s+)?(CONSOLIDATED\s+)?FINANCIAL\s+STATEMENTS"
             r"\s*(\(Continued\))?\s*$",
             stripped,
             re.IGNORECASE,
