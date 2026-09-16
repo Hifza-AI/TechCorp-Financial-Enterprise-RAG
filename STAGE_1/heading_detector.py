@@ -1095,6 +1095,28 @@ class HeadingDetector:
         ) and text.strip().startswith("(") and text.strip().endswith(")"):
             return 0, ["units_disclaimer_caption"]
 
+        # NEW (Caterpillar 2025/2016, confirmed via real chunks.json
+        # output): some companies phrase this SAME universal units-
+        # disclaimer caption with the scale word FIRST -- "(Millions
+        # of dollars)" -- instead of the "(in millions)" / "(dollars
+        # in millions)" wording the check above already covers. Since
+        # this reversed phrasing never contains the literal substring
+        # "in millions/thousands/billions", the existing check misses
+        # it entirely.
+        #
+        # Confirmed real-world impact: "(Millions of dollars)" became
+        # its own spurious heading directly under "Consolidated
+        # Comprehensive Income (Loss)..." and "Consolidated Statement
+        # of Cash Flow...", so both tables ended up labeled with this
+        # meaningless caption instead of their real statement title.
+        if re.fullmatch(
+            r"\(\s*(millions|thousands|billions)\s+of\s+dollars\s*"
+            r"(\s*,\s*[^)]*)?\)",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+            return 0, ["units_disclaimer_caption"]
+
         # A bare column-header DATE ("Jan 25, 2026", "December 31,
         # 2025") or a period-range label ("Year Ended", "Quarter
         # Ended", "Three Months Ended") is another universal SEC-
@@ -1267,11 +1289,31 @@ class HeadingDetector:
             r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|"
             r"Nov(?:ember)?|Dec(?:ember)?)"
         )
+        # NEW (Dell 2017, confirmed via real chunks.json output): the
+        # comma/"and" connector between consecutive dates is
+        # sometimes entirely ABSENT -- Dell's own multi-column
+        # date-header row renders as "January 29, 2016 January 30,
+        # 2015" (two full dates joined by nothing but a single space,
+        # no comma or "and" at all). Confirmed real-world impact:
+        # this exact 2-date fragment became its own spurious heading
+        # directly above the Income Statement and Comprehensive
+        # Income tables, and BOTH tables' own real titles were lost
+        # -- their section_path showed this meaningless date-fragment
+        # instead of "CONSOLIDATED STATEMENTS OF INCOME (LOSS)" /
+        # "...COMPREHENSIVE INCOME (LOSS)", and both tables fell
+        # through to the raw/unstructured fallback parser.
+        #
+        # Making the separator between consecutive dates OPTIONAL
+        # (comma/"and"/bare whitespace, all equally acceptable) stays
+        # exactly as safe as the original: the line must still be
+        # ENTIRELY composed of full "<Month> <Day>, <Year>" mentions
+        # end to end, so a genuine narrative sentence that merely
+        # mentions a date in passing (which always has other real
+        # words before/after/between the dates) still cannot match.
         _single_date_re = rf"{_month_re}\.?\s+\d{{1,2}},\s*\d{{4}}"
         if re.fullmatch(
             rf"(?:ended\s+|of\s+)?(?:\d{{4}}|{_single_date_re})"
-            rf"(?:\s*,\s*{_single_date_re})*"
-            rf"(?:\s+and\s+{_single_date_re})?",
+            rf"(?:\s*(?:,\s*|and\s+|\s+)\s*{_single_date_re})*",
             text.strip(),
             re.IGNORECASE,
         ):
