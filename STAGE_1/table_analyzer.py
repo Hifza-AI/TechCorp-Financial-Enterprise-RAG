@@ -387,6 +387,86 @@ class TableAnalyzer:
                 item["is_candidate"] = True
                 item["promoted_as_header_fragment"] = True
 
+        # NEW (Dell 2026, confirmed via real cleaned.json output): a
+        # genuine multi-column DATE-HEADER row -- e.g. "January 30,
+        # 2026" / "January 31, 2025" / "February 2, 2024", all sitting
+        # at the EXACT SAME y-coordinate, one per column -- is the
+        # SAME underlying convention already handled for BARE years
+        # ("2025"/"2024") and for Nvidia's own "Jan 25, 2026"-style
+        # abbreviated dates (both already excluded from ever becoming
+        # a HEADING by heading_detector.py's `table_column_header_date`
+        # pattern) -- but unlike those cases, table_analyzer.py's OWN
+        # Pass 3 (the header-zone-fragment rescue just above) relies
+        # on each candidate independently X-ALIGNING with a confirmed
+        # numeric column below it, within a narrow +/-20pt tolerance.
+        #
+        # A full "<Month> <Day>, <Year>" caption is considerably WIDER
+        # than the numeric values it captions (right-aligned numbers
+        # are typically narrower and sit further right within the
+        # same visual column), so its own left-edge x-position often
+        # does NOT fall within that narrow tolerance of the data
+        # below it -- purely by chance, ONE of several such dates on
+        # the SAME row might happen to x-align well enough (as
+        # "January 30, 2026" did here), while its own neighbors on
+        # the EXACT SAME row do not, silently dropping them from
+        # candidacy entirely even though they are obviously part of
+        # the identical header row.
+        #
+        # Confirmed real-world impact: Dell's own Income Statement
+        # header row has "January 30, 2026" (x=303.6) promoted via
+        # Pass 3's x-alignment luck, but "January 31, 2025" (x=394.4)
+        # and "February 2, 2024" (x=482.8) -- sitting at the EXACT
+        # SAME y=148.6 -- were never promoted at all. With only 1 of
+        # the 3 real date-columns ever becoming a candidate,
+        # table_parser.py's `_find_text_header()` could never form
+        # more than 1 column (needs >=2 to succeed), so the ENTIRE
+        # Income Statement fell through to the raw/unstructured
+        # fallback parser instead of resolving into a clean,
+        # 3-column table.
+        #
+        # Fix: a MUCH more reliable signal than individual x-alignment
+        # is Y-CLUSTERING -- when 2 or more lines, ALL matching this
+        # same full-date-caption SHAPE, share the EXACT SAME
+        # y-coordinate (within the same tight tolerance used
+        # elsewhere in this file for "is this the same visual row"),
+        # that is unambiguous proof they together form ONE genuine
+        # multi-column date-header row, regardless of how any single
+        # one of them happens to x-align against content elsewhere on
+        # the page. This pattern -- 2+ full dates, same y -- never
+        # occurs by coincidence in ordinary prose or any other genuine
+        # 10-K content, so promoting every member of such a cluster is
+        # safe and can never misfire on unrelated text.
+        _full_date_re = re.compile(
+            r"^(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|"
+            r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|"
+            r"Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2},\s+\d{4}$",
+            re.IGNORECASE,
+        )
+
+        date_candidates_by_y = {}
+
+        for item in line_analysis:
+
+            if item["line_index"] in heading_line_indices:
+                continue
+
+            if item["_y"] is None:
+                continue
+
+            if _full_date_re.match(item["text"].strip()):
+                date_candidates_by_y.setdefault(
+                    round(item["_y"], 1), []
+                ).append(item)
+
+        for y_key, items_at_y in date_candidates_by_y.items():
+
+            if len(items_at_y) < 2:
+                continue
+
+            for item in items_at_y:
+                item["is_candidate"] = True
+                item["promoted_as_date_header_row"] = True
+
         ADJACENT_Y_WINDOW = 40
         MAX_LABEL_WORDS = 15
 
