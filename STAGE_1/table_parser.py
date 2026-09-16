@@ -1709,6 +1709,38 @@ class TableParser:
             re.IGNORECASE,
         )
 
+        # NEW (Dell 2026, confirmed via real cleaned.json output): the
+        # SAME phantom-column problem just fixed for financial-
+        # statement dividers ("ASSETS") ALSO happens for the
+        # already-established date-caption family heading_detector.py
+        # excludes from ever becoming a heading -- e.g. Dell's own
+        # Income Statement has a bold "Fiscal Year Ended" caption
+        # (y=135.1, x=390.0) sitting in the header-zone between the
+        # units-disclaimer and the 3 real date-columns
+        # ("January 30, 2026" / "January 31, 2025" / "February 2,
+        # 2024", y=148.6). Its own x-position doesn't match any of
+        # the 3 real columns, so it was becoming its OWN 4th phantom
+        # column in the same way "ASSETS" did on the Balance Sheet --
+        # confirmed real-world impact: this pushed the Income
+        # Statement's header-detection off just enough that it fell
+        # through to the raw/unstructured fallback parser entirely
+        # (no clean "Columns: ..." structure at all), rather than
+        # cleanly resolving to 3 real year-columns.
+        #
+        # Reuses the SAME bare "Year(s)/Quarter(s)/Month(s) Ended"
+        # and "Fiscal Year(s) Ended" wording heading_detector.py
+        # already excludes elsewhere in this pipeline, so this stays
+        # perfectly consistent with what's already treated as a
+        # non-heading caption -- it can never misfire on a genuine
+        # column name, since no real SEC-filing column is ever named
+        # just "Year Ended" on its own.
+        _date_caption_re = re.compile(
+            r"^(Fiscal\s+)?(Year|Years|Quarter|Quarters|Month|Months|"
+            r"Week|Weeks|Three\s+Months|Six\s+Months|Nine\s+Months)"
+            r"\s+Ended\s*$",
+            re.IGNORECASE,
+        )
+
         for row_index in header_row_indices:
 
             if row_index in title_row_indices:
@@ -1720,6 +1752,10 @@ class TableParser:
                 continue
 
             if _divider_re.match(row_cells[0]["text"].strip()):
+                title_row_indices.add(row_index)
+                continue
+
+            if _date_caption_re.match(row_cells[0]["text"].strip()):
                 title_row_indices.add(row_index)
 
         if table_width and table_width > 0:
