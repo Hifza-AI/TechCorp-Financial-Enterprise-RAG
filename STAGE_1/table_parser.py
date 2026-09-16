@@ -1639,9 +1639,27 @@ class TableParser:
         # than width for this exact case (a units caption is never
         # mistaken for a real column name), so this runs regardless
         # of table_width being available at all.
+        # NEW (Dell 2017, confirmed via real chunks.json output): the
+        # original pattern requires the parenthetical to START with
+        # "in millions/thousands/billions" (optionally preceded only
+        # by "dollars "/"amounts ") -- but Dell's own multi-page
+        # Stockholders' Equity statement captions its CONTINUATION
+        # page with "(continued; in millions)", where "continued;"
+        # sits BEFORE "in millions" instead. Confirmed real-world
+        # impact: this caption became its own bogus column, and its
+        # text leaked directly into the rendered column name
+        # ("(continued; in millions) Accumulated...").
+        #
+        # Matching "in millions/thousands/billions" as a SUBSTRING
+        # ANYWHERE within a standalone parenthetical (rather than
+        # requiring it at the very start) is exactly as safe as the
+        # original: no genuine per-column header fragment is ever
+        # phrased as a parenthetical containing this exact phrase, so
+        # this can only ever exclude a units-disclaimer-family
+        # caption, never a real column name.
         _units_disclaimer_re = re.compile(
-            r"^\(\s*(dollars\s+|amounts\s+)?in\s+(millions|thousands|billions)"
-            r"(\s*,\s*[^)]*)?\)$",
+            r"^\([^)]*\b(dollars\s+|amounts\s+)?in\s+"
+            r"(millions|thousands|billions)\b[^)]*\)$",
             re.IGNORECASE,
         )
 
