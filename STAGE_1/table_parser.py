@@ -1655,6 +1655,73 @@ class TableParser:
             if _units_disclaimer_re.match(row_cells[0]["text"].strip()):
                 title_row_indices.add(row_index)
 
+        # NEW (Dell 2026, confirmed via real cleaned.json output): a
+        # genuine SEC-filing financial-statement SECTION-DIVIDER --
+        # "ASSETS", "Current assets:", "Liabilities and stockholders'
+        # equity", etc -- can ALSO sit inside the header-zone,
+        # BETWEEN the year-header row and the first real data row,
+        # exactly like a units-disclaimer caption does. Confirmed on
+        # Dell's own Balance Sheet: "ASSETS" (y=143.3, x=279.5) sits
+        # between the "January 30, 2026" / "January 31, 2025"
+        # year-header row (y=129.8) and the first data row "Cash and
+        # cash equivalents" (y=169.6) -- its own x-position doesn't
+        # match either real year-column's x, so the header-zone
+        # x-clustering below was treating it as its OWN, THIRD,
+        # phantom column sitting BETWEEN the two genuine columns.
+        #
+        # Confirmed real-world impact: this bogus 3rd column
+        # (mis-)counted against the row's real 2 values whenever the
+        # exact-count positional-assignment check ran, silently
+        # falling through to distance-based matching instead --
+        # which then genuinely SWAPPED "Cash and cash equivalents"'s
+        # two values between the "January 30, 2026" and "January 31,
+        # 2025" columns, since the phantom "ASSETS" column's presence
+        # disrupted the count that would otherwise have safely
+        # resolved this row by simple left-to-right position.
+        #
+        # This reuses the EXACT SAME structural-divider regex already
+        # established and verified in heading_detector.py's own
+        # `_financial_statement_divider_re` (the fixed, known set of
+        # SEC-standard noun phrases: assets / liabilities / equity /
+        # capital stock / retained earnings / AOCI / operations /
+        # financing / investing, with an optional Current/Total
+        # prefix and optional trailing colon) -- so this can never
+        # misfire on a genuine, unrelated column name, and stays
+        # perfectly consistent with what heading_detector.py already
+        # recognizes as a non-heading divider elsewhere in this same
+        # pipeline.
+        _divider_re = re.compile(
+            r"^(Current\s+|Total\s+|Total\s+current\s+)?"
+            r"("
+            r"assets"
+            r"|liabilities(\s+and\s+((stockholders['\u2019]?|shareholders['\u2019]?)\s+)?equity(\s*\(deficit\))?)?"
+            r"|(stockholders['\u2019]?|shareholders['\u2019]?)\s+equity(\s*\(deficit\))?"
+            r"|common\s+stock\s+and\s+paid-in\s+capital"
+            r"|capital\s+stock"
+            r"|retained\s+earnings(\s*\(accumulated\s+deficit\))?"
+            r"|accumulated\s+other\s+comprehensive\s+(loss|income)"
+            r"(\s*\((loss|income)\))?"
+            r"|operations"
+            r"|financing"
+            r"|investing"
+            r")"
+            r"\s*:?\s*$",
+            re.IGNORECASE,
+        )
+
+        for row_index in header_row_indices:
+
+            if row_index in title_row_indices:
+                continue
+
+            row_cells = self._extract_cells(rows[row_index])
+
+            if len(row_cells) != 1:
+                continue
+
+            if _divider_re.match(row_cells[0]["text"].strip()):
+                title_row_indices.add(row_index)
+
         if table_width and table_width > 0:
 
             for row_index in header_row_indices:
