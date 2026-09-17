@@ -2112,6 +2112,46 @@ class HeadingDetector:
 
         stripped = text.strip()
 
+        # NEW (Colgate-Palmolive 2025, confirmed via real PDF text-
+        # extraction output): every regex below uses `re.match`, which
+        # only anchors the START of the text -- so a LONG, unrelated
+        # narrative sentence that merely happens to START with an
+        # Item/Part-marker-shaped prefix would ALSO incorrectly match.
+        # Confirmed real-world impact: Colgate's own audit-report
+        # opening sentence -- "Item 9A. Our responsibility is to
+        # express opinions on the Company's consolidated financial
+        # statements and on the Company's internal control over
+        # financial reporting based on our audits." (20+ words) --
+        # matched this exact way. Because is_top_level_marker=True
+        # also grants the "structural_marker" length-penalty BYPASS
+        # in _score_line() (built for genuine short Item/Note titles),
+        # this long sentence scored high enough to become a genuine
+        # heading -- and, since a genuine is_top_level_marker
+        # unconditionally pops the ENTIRE stack back to root
+        # (Intuit's own GBS-trap-fix mechanism), this fake "Item 9A"
+        # incorrectly became the new top-level container that
+        # swallowed ALL FIVE of Colgate's real core financial
+        # statements (Balance Sheet, Income Statement, Comprehensive
+        # Income, Equity, Cash Flows) as its own descendants, instead
+        # of them correctly nesting under "Item 8. Financial
+        # Statements and Supplementary Data".
+        #
+        # A genuine Item/Part marker's own title is always SHORT --
+        # even the longest real example seen so far, "Item 5. Market
+        # for Registrant's Common Equity, Related Stockholder Matters
+        # and Issuer Purchases of Equity Securities" (Boeing/3M), is
+        # only 15 words -- so rejecting anything longer than that (a
+        # small safety margin) here, BEFORE trying any of the specific
+        # patterns below, keeps every genuine verified Item/Part
+        # marker matching while safely rejecting a narrative sentence
+        # that merely happens to start the same way. This mirrors the
+        # identical word-count-cap fix already applied to
+        # is_note_marker()'s own bare-numbered-Note patterns for the
+        # exact same class of bug (Intuit 2017's own narrative-
+        # sentence false-positive).
+        if len(stripped.split()) > 16:
+            return False
+
         if re.match(r"^PART\s+[IVXLCDM]+\b", stripped, re.IGNORECASE):
             return True
 
