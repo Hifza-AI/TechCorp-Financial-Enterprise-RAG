@@ -10,6 +10,18 @@ class TableParser:
     # (e.g. "$" before a number) and were leaking into labels before.
     NON_LABEL_TOKENS = {"$", "-", "--", "—", "%", "(", ")"}
 
+    # NEW (eBay 2025): promoted to a class-level attribute so both
+    # `_find_text_header()`'s column-clustering exclusion AND the
+    # year-header data-row exclusion (see `_parse_table_region`) can
+    # share the exact same pattern -- a units-disclaimer caption is
+    # the identical convention regardless of which header-detection
+    # path a given table happens to use.
+    _units_disclaimer_re = re.compile(
+        r"^\([^)]*\b(dollars\s+|amounts\s+)?in\s+"
+        r"(millions|thousands|billions)\b[^)]*\)$",
+        re.IGNORECASE,
+    )
+
     def __init__(
         self,
         y_tolerance=6.0,
@@ -1200,6 +1212,49 @@ class TableParser:
                     if index == header_index:
                         continue
 
+                    # NEW (eBay 2025, confirmed via real chunks.json
+                    # output): a units-disclaimer caption -- "(In
+                    # millions, except par value)", "(In millions)",
+                    # "(In millions, except per share amounts)" --
+                    # sitting on its OWN single-cell row directly
+                    # below a bare YEAR header ("2025"/"2024") was
+                    # never excluded from the year-header data-row
+                    # loop the way it's already excluded from the
+                    # TEXT-LABEL header's column-clustering (see
+                    # `_units_disclaimer_re` in `_find_text_header`
+                    # above) -- this is a genuinely different code
+                    # path (a table whose header row is bare years,
+                    # not wrapped text-label columns), so that
+                    # existing exclusion never had a chance to apply
+                    # here at all.
+                    #
+                    # Confirmed real-world impact: this caption
+                    # appeared as its own DATA ROW across ALL FIVE of
+                    # eBay's core financial statements (Balance
+                    # Sheet, Income Statement, Comprehensive Income,
+                    # Stockholders' Equity, Cash Flows) -- with an
+                    # EMPTY label and the caption text itself
+                    # incorrectly recorded as that row's "value" under
+                    # whichever year column its x-position happened
+                    # to fall nearest to (e.g. rendered downstream as
+                    # " -- 2025: (In millions, except par value)").
+                    #
+                    # Skipping any row whose entire cell content
+                    # (once its label-vs-value split is considered)
+                    # is JUST this caption -- checked here BEFORE
+                    # `_parse_data_row` ever runs -- is safe: a
+                    # genuine data row always has a real, substantive
+                    # row-label (e.g. "Cash and cash equivalents")
+                    # to its left, which this caption never does.
+                    _row_cells_check = self._extract_cells(row)
+                    if (
+                        len(_row_cells_check) == 1
+                        and self._units_disclaimer_re.match(
+                            _row_cells_check[0]["text"].strip()
+                        )
+                    ):
+                        continue
+
                     parsed_row = self._parse_data_row(row, columns)
 
                     if parsed_row is not None:
@@ -2162,6 +2217,45 @@ class TableParser:
             if text in self.NON_LABEL_TOKENS:
                 continue
 
+            # NEW (Boeing 2025, confirmed via real cleaned.json
+            # output): a cell that genuinely LOOKS LIKE a numeric or
+            # currency VALUE (e.g. "$168,235") must never be treated
+            # as part of the row's label, regardless of how close its
+            # x-position happens to sit to the label-boundary
+            # threshold. Confirmed on Boeing's own "Total assets" row:
+            # its own values ($168,235 at x=448.9, $156,363 at
+            # x=515.3) sit slightly further LEFT than the SAME table's
+            # other rows' values (e.g. "Cash and cash equivalents"'s
+            # $10,921 at x=454.4) -- simply because a WIDER number,
+            # right-aligned within the same visual column, naturally
+            # starts further left. This shifted $168,235 to x=448.9,
+            # just inside the label-boundary threshold (first_column_x
+            # - value_tolerance = 471.6 - 20 = 451.6) -- so it was
+            # silently swallowed into the LABEL text ("Total assets
+            # $168,235") instead of being recognized as a genuine
+            # value at all.
+            #
+            # Confirmed real-world impact: with $168,235 absorbed into
+            # the label, only ONE value-candidate ($156,363) remained
+            # for this row -- but that single leftover value ALSO
+            # fell just outside BOTH columns' own distance tolerance
+            # (its own x, 515.3, is 43.7pt from the 2025 column and
+            # 22.8pt from the 2024 column, both just past the 20pt
+            # limit) -- so it too went unmatched, and Boeing's own
+            # "Total assets" row -- one of a Balance Sheet's most
+            # important summary lines -- ended up with BOTH of its
+            # real values completely lost.
+            #
+            # A genuine row-label is never a bare number or currency
+            # figure on its own -- so skipping (never label-izing) any
+            # cell that independently looks like a real value is safe
+            # regardless of company: it can only ever correctly
+            # reclassify a genuine value that was about to be
+            # mis-absorbed into the label, never remove a real label
+            # word (which never matches this numeric/currency shape).
+            if self._looks_like_value_cell(text):
+                continue
+
             if cell["x"] < (first_column_x - value_tolerance):
                 label_parts.append(text)
 
@@ -2230,7 +2324,18 @@ class TableParser:
                 or cell["text"].strip() in ("-", "--", "—")
             )
             and not _footnote_marker_re.match(cell["text"].strip())
-            and cell["x"] >= (first_column_x - value_tolerance)
+            and (
+                cell["x"] >= (first_column_x - value_tolerance)
+                # NEW (Boeing 2025, confirmed via real cleaned.json
+                # output): a cell whose text genuinely looks like a
+                # value (see the matching label-extraction fix just
+                # above) is counted here too even when its x sits
+                # slightly left of the strict boundary -- a wider
+                # number's own left edge, right-aligned within its
+                # column, can legitimately start further left than
+                # this table's other, narrower values do.
+                or self._looks_like_value_cell(cell["text"].strip())
+            )
         ]
 
         if len(_value_like_cells) == len(columns):

@@ -467,6 +467,74 @@ class TableAnalyzer:
                 item["is_candidate"] = True
                 item["promoted_as_date_header_row"] = True
 
+        # NEW (Dell 2017, confirmed via real chunks.json output): a
+        # DIFFERENT shape of the same underlying problem -- instead
+        # of 2-3 SEPARATE physical lines (one date each) sitting at
+        # the same y-coordinate (handled by the Y-clustering pass
+        # just above), Dell's own multi-column date-header sometimes
+        # renders as ONE single physical line already containing 2-3
+        # full dates joined together with nothing but whitespace --
+        # "January 29, 2016 January 30, 2015".
+        #
+        # heading_detector.py's own multi-date-caption exclusion
+        # correctly stops this text from ever becoming a spurious
+        # HEADING -- but excluding it from heading status does NOT
+        # automatically make table_analyzer.py treat it as a table
+        # candidate either: with no numeric content of its own, it
+        # never independently qualifies via Pass 1, and since it
+        # doesn't share an exact y with any OTHER similarly-shaped
+        # line (there's only ONE such line here, not 2+), the
+        # Y-clustering pass just above doesn't catch it either. Left
+        # unclaimed by either heading or table-candidate status, it
+        # fell through as an ordinary, ORPHANED paragraph -- sitting
+        # completely OUTSIDE the table it was actually meant to
+        # caption.
+        #
+        # Confirmed real-world impact: with only "February 3, 2017"
+        # (a single date, which DID separately qualify some other
+        # way) ever becoming part of the table's own candidate lines,
+        # the Income Statement table never had enough recognized
+        # date-columns to resolve into a clean, structured table --
+        # it fell all the way through to the raw/unstructured
+        # fallback parser, and the caption text itself
+        # ("January 29, 2016 January 30, 2015") ended up as a
+        # meaningless stray paragraph completely disconnected from
+        # its own table.
+        #
+        # Fix: promote a line DIRECTLY (no y-clustering needed) when
+        # its own text, taken as a WHOLE, is composed of 2 or more
+        # full dates joined by nothing but whitespace/comma/"and" --
+        # this is the exact same content-shape heading_detector.py's
+        # own multi-date regex already recognizes as caption-only
+        # content, so promoting it here keeps both files in
+        # agreement about what this text represents, and it can
+        # never misfire on genuine narrative prose (which always has
+        # other real words woven between/around any dates it
+        # mentions, unlike this caption which is ENTIRELY dates and
+        # nothing else).
+        _multi_date_re = re.compile(
+            r"^(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|"
+            r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|"
+            r"Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2},\s*\d{4}"
+            r"(?:\s*(?:,\s*|and\s+|\s+)\s*"
+            r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|"
+            r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|"
+            r"Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2},\s*\d{4})+$",
+            re.IGNORECASE,
+        )
+
+        for item in line_analysis:
+
+            if item["is_candidate"]:
+                continue
+
+            if item["line_index"] in heading_line_indices:
+                continue
+
+            if _multi_date_re.match(item["text"].strip()):
+                item["is_candidate"] = True
+                item["promoted_as_multi_date_caption"] = True
+
         ADJACENT_Y_WINDOW = 40
         MAX_LABEL_WORDS = 15
 
@@ -1397,3 +1465,4 @@ if __name__ == "__main__":
         print(
             "===================================="
         )
+        
