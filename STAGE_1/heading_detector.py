@@ -2180,6 +2180,38 @@ class HeadingDetector:
         if len(stripped.split()) > 16:
             return False
 
+        # NEW (Emerson Electric 2025, confirmed via real
+        # hierarchy_outline.txt output): a narrative CROSS-REFERENCE
+        # to another Item -- e.g. Item 1's own text mentioning 'see
+        # Item 7 - "Management's Discussion and Analysis of Financial
+        # Condition and Results of Operations."' -- wraps the
+        # REFERENCED section's title in quotation marks. This falls
+        # under the 16-word cap above (roughly 13-14 words), so that
+        # guard alone doesn't catch it, but a genuine Item/Part marker
+        # heading is NEVER itself wrapped in quotes -- quoting a title
+        # is exactly how a company signals "I am REFERRING to this
+        # other section," not "I AM this section."
+        #
+        # Confirmed real-world impact: this spurious "Item 7 -
+        # ..." cross-reference, sitting on page 4 (deep inside Item
+        # 1's own segment-descriptions), independently qualified as a
+        # genuine is_top_level_marker -- triggering the unconditional
+        # pop-to-root rule and incorrectly capturing Item 1's own real
+        # segment content ("Final Control", "Measurement &
+        # Analytical", "Discrete Automation", "Safety & Productivity"
+        # descriptions) as children of this FAKE Item-7 node instead
+        # of correctly remaining under Item 1 -- even though the
+        # REAL, correctly-titled Item 7 (without quotes) still
+        # separately and correctly appears much later, at its own
+        # real page.
+        #
+        # Checking for a quotation mark (straight or curly) anywhere
+        # in the text is safe and narrow: a real Item/Part title is
+        # never itself quoted, so this can only ever reject a
+        # cross-reference, never a genuine marker.
+        if re.search(r'["\u201c\u201d]', stripped):
+            return False
+
         if re.match(r"^PART\s+[IVXLCDM]+\b", stripped, re.IGNORECASE):
             return True
 
@@ -2677,9 +2709,38 @@ class HeadingDetector:
         # (a small safety margin above that) keeps every genuine
         # verified Note title matching while rejecting narrative
         # sentences that merely happen to start the same way.
+        # NEW (Hershey 2025 / Northrop Grumman 2025, confirmed via
+        # real PDF text-extraction output): the original pattern
+        # required the word immediately after the number+period to be
+        # Title-Case (`[A-Z][a-z]+` -- an uppercase letter followed by
+        # LOWERCASE letters), which correctly matches Chipotle's own
+        # "1. Description of Business..." but REJECTS the identical
+        # underlying convention when a company instead renders its
+        # bare-numbered Note titles in ALL-CAPS -- e.g. Hershey's "1.
+        # SUMMARY OF SIGNIFICANT ACCOUNTING POLICIES" and Northrop's
+        # own identical wording, both confirmed via direct PDF
+        # extraction to use this exact ALL-CAPS bare-number style.
+        #
+        # Confirmed real-world impact: without this, Note 1's own
+        # heading never gets is_note_marker protection, so its own
+        # sub-topics (e.g. "Description of Business", "Basis of
+        # Presentation") would incorrectly pop it off the stack and
+        # flatten out as its SIBLINGS instead of nesting under it --
+        # the same Apple-2024-style flattening bug already fixed once
+        # for Chipotle's own Title-Case bare-number variant.
+        #
+        # Widening the continuation-letters class to `[A-Za-z]+`
+        # (allowing EITHER lowercase OR uppercase letters after the
+        # first) accepts both conventions in one pattern, without
+        # narrowing what already matched: Chipotle's Title-Case title
+        # still matches (lowercase letters are still valid members of
+        # the widened class), and this can never accidentally match a
+        # narrative sentence differently than before, since the
+        # SHAPE of the match (digit(s) + period + real word) is
+        # otherwise identical.
         if (
             len(stripped.split()) <= 12
-            and re.match(r"^\d{1,2}\.\s+[A-Z][a-z]+", stripped)
+            and re.match(r"^\d{1,2}\.\s+[A-Z][A-Za-z]+", stripped)
         ):
             return True
 
@@ -2713,9 +2774,18 @@ class HeadingDetector:
         # marker like "(1)" on its own (with nothing else on that
         # heading candidate's text) never matches, since there's no
         # trailing word for "\s+[A-Z][a-z]+" to find.
+        # NEW (Emerson Electric 2025, confirmed via real PDF text-
+        # extraction output): same widening as the bare-period-format
+        # fix just above, applied to the parentheses-format variant --
+        # Emerson's own "(1) SUMMARY OF SIGNIFICANT ACCOUNTING
+        # POLICIES" uses ALL-CAPS, which the original Title-Case-only
+        # `[A-Z][a-z]+` pattern (matching ServiceNow's own Title-Case
+        # "(1) Description of the Business") rejected. Widening to
+        # `[A-Za-z]+` accepts both conventions without narrowing
+        # either.
         if (
             len(stripped.split()) <= 12
-            and re.match(r"^\(\d{1,2}\)\s+[A-Z][a-z]+", stripped)
+            and re.match(r"^\(\d{1,2}\)\s+[A-Z][A-Za-z]+", stripped)
         ):
             return True
 
