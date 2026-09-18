@@ -1511,7 +1511,35 @@ class HeadingDetector:
         # ever stop a page-continuation repeat from fragmenting an
         # already-open section, it can never demote or discard a
         # genuine, unique heading.
+        # NEW (Block Inc 2025, confirmed via real PDF text-extraction
+        # output): some companies mark a continuation-page header with
+        # a DASH-separated "- Continued" suffix instead of the
+        # parenthetical "(Continued)" convention already handled
+        # above -- e.g. "CONSOLIDATED STATEMENTS OF CASH FLOWS -
+        # Continued". Confirmed real-world impact: since this dash
+        # variant independently ALSO matches the CONSOLIDATED-title
+        # is_note_marker pattern (it's under the 8-word cap and
+        # doesn't end in a colon), and its own text differs from the
+        # original statement's title (extra "- Continued" suffix), the
+        # existing same-title-reopen mechanism (built for AMD's own
+        # verbatim, no-suffix page-repeat) never recognizes them as
+        # the same section -- so this 2-page statement fragmented into
+        # 2 disconnected sibling nodes (Operating activities on one,
+        # Financing/Investing activities on the other) instead of one
+        # continuous Cash Flow statement.
+        #
+        # Matching "- Continued" (or "-Continued", "\u2013 Continued",
+        # "\u2014 Continued") as an ADDITIONAL suffix pattern -- checked
+        # as its own separate condition, so the existing parenthetical
+        # check remains completely untouched -- is safe for the exact
+        # same reason as the original: no genuine, substantive SEC-
+        # filing section title is ever named "... - Continued" on its
+        # own, since that phrase is exclusively a PDF-pagination
+        # convention.
         if re.search(r"\(\s*continued\s*\)\s*$", text.strip(), re.IGNORECASE):
+            return 0, ["continued_pagination_artifact"]
+
+        if re.search(r"[-\u2013\u2014]\s*continued\s*$", text.strip(), re.IGNORECASE):
             return 0, ["continued_pagination_artifact"]
 
         # NEW (Caterpillar 2025/2016, confirmed via real PDF output):
