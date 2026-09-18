@@ -1814,6 +1814,35 @@ class TableParser:
             re.IGNORECASE,
         )
 
+        # NEW (Chevron 2025, confirmed via real PDF text-extraction
+        # output): Chevron prints a running-header caption --
+        # "Financial Table of Contents" -- directly beneath EVERY
+        # core financial statement's own title, sitting in the
+        # header-zone between the title and the real column-headers
+        # (e.g. "Consolidated Statement of Equity" / "Financial Table
+        # of Contents" / "Millions of dollars, except per-share
+        # amounts" / <real grouped column headers>). This is a
+        # company-specific running-header, not a universal SEC
+        # convention (unlike the units-disclaimer/date-caption
+        # patterns above), so it needed its own explicit exclusion --
+        # matching the same precedent already established for other
+        # companies' own unique running-headers (Nvidia's repeated
+        # company-name header, Microsoft's "PART II Item 8" caption).
+        #
+        # Confirmed real-world impact: on the Stockholders' Equity
+        # statement specifically (a wide, grouped-column table using
+        # this TEXT-LABEL header-detection path), this caption's text
+        # was clustering together with the genuine "Noncontrolling
+        # Interests" column header sitting nearby, garbling the real
+        # column name into "Financial Table of Contents
+        # Noncontrolling Interests" -- corrupting that column's own
+        # identity even though the underlying VALUES beneath it
+        # remained numerically correct.
+        _chevron_running_header_re = re.compile(
+            r"^Financial\s+Table\s+of\s+Contents$",
+            re.IGNORECASE,
+        )
+
         for row_index in header_row_indices:
 
             if row_index in title_row_indices:
@@ -1829,6 +1858,10 @@ class TableParser:
                 continue
 
             if _date_caption_re.match(row_cells[0]["text"].strip()):
+                title_row_indices.add(row_index)
+                continue
+
+            if _chevron_running_header_re.match(row_cells[0]["text"].strip()):
                 title_row_indices.add(row_index)
 
         if table_width and table_width > 0:
