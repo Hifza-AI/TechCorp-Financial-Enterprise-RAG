@@ -2286,7 +2286,45 @@ class TableParser:
             # reclassify a genuine value that was about to be
             # mis-absorbed into the label, never remove a real label
             # word (which never matches this numeric/currency shape).
-            if self._looks_like_value_cell(text):
+            # NEW (Parker Hannifin 2026, confirmed via real PDF text-
+            # extraction output): the override above has no
+            # positional bound at all -- it fires purely on the
+            # cell's TEXT shape, regardless of how far left it sits.
+            # Confirmed real-world impact: Parker's own Balance Sheet
+            # legitimately embeds an inline, BOLD dollar-figure deep
+            # within several of its own labels' descriptive text --
+            # "Trade accounts receivable, net of allowances of $7 and
+            # $10" (current-year figure bold, prior-year figure not,
+            # matching this company's own bold-current-year-column
+            # convention) -- with the bold "$7" sitting at x=261.1,
+            # while the table's real first data column doesn't begin
+            # until roughly x=440+. Because "$7" independently looks
+            # like a genuine value (matches _looks_like_value_cell),
+            # it was being unconditionally excluded from the label
+            # regardless of this huge distance, silently DROPPING it
+            # from the rendered label text ("...of allowances of and
+            # $10" -- the current-year figure vanished entirely).
+            # This same pattern recurred for "Property, plant and
+            # equipment, net of accumulated depreciation of $X and
+            # $4,480" and "Treasury shares at cost: X shares and 54.4
+            # shares".
+            #
+            # A genuine leaked VALUE (Boeing's own "$168,235" case)
+            # always sits reasonably close to where a real column is
+            # expected -- confirmed there, only 22.7pt past the
+            # standard tolerance. Capping the override to a bounded
+            # extra margin beyond the standard value_tolerance (here,
+            # 3x it) keeps Boeing's own case correctly excluded from
+            # the label while no longer misfiring on a number that is
+            # genuinely deep within a label's own sentence, far from
+            # any real column.
+            _VALUE_OVERRIDE_MAX_EXTRA_DISTANCE = value_tolerance * 3
+
+            if (
+                self._looks_like_value_cell(text)
+                and (first_column_x - cell["x"])
+                <= (value_tolerance + _VALUE_OVERRIDE_MAX_EXTRA_DISTANCE)
+            ):
                 continue
 
             if cell["x"] < (first_column_x - value_tolerance):
@@ -2367,7 +2405,22 @@ class TableParser:
                 # number's own left edge, right-aligned within its
                 # column, can legitimately start further left than
                 # this table's other, narrower values do.
-                or self._looks_like_value_cell(cell["text"].strip())
+                #
+                # NEW (Parker Hannifin 2026, confirmed via real PDF
+                # text-extraction output): this override is now
+                # capped to the SAME bounded extra margin as the
+                # matching label-extraction fix above -- without it,
+                # a genuinely inline, deep-in-the-label bold figure
+                # (Parker's own "$7" in "...allowances of $7 and
+                # $10", at x=261.1 while the real first column sits
+                # past x=440) was being miscounted here as an extra
+                # value-candidate, throwing off the exact-count match
+                # against this row's real 2 columns.
+                or (
+                    self._looks_like_value_cell(cell["text"].strip())
+                    and (first_column_x - cell["x"])
+                    <= (value_tolerance + value_tolerance * 3)
+                )
             )
         ]
 
