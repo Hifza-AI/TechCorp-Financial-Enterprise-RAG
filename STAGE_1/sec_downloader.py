@@ -4,7 +4,7 @@ from playwright.async_api import async_playwright
 # Salesforce (CRM) 2020, 2021, aur 2022 ki filings
 TARGET_FILINGS = [
     {
-        "company": "Electronic Arts",
+        "Company": "Electronic Arts",
         "year": "2026",
         "url": "https://www.sec.gov/Archives/edgar/data/712515/000162828026033617/ea-20260331.htm"
     },
