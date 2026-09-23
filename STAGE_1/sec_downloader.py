@@ -1,7 +1,7 @@
 import asyncio
 from playwright.async_api import async_playwright
 
-# Salesforce (CRM) 2020, 2021, aur 2022 ki filings
+# Salesforce (CRM) 2020, 2021, aur 2022 filings
 TARGET_FILINGS = [
     {
         "Company": "Electronic Arts",
