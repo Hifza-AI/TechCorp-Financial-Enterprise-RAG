@@ -17,7 +17,7 @@ class CleaningRules:
         )
 
     # =====================================================
-    # 2. Browser timestamps
+    # 2. Browser Timestamps
     # =====================================================
 
     @staticmethod
