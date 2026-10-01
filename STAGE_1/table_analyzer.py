@@ -831,6 +831,61 @@ class TableAnalyzer:
                 "_y": y,
             }
 
+        # NEW (Roper Technologies 2016, confirmed via real cleaned.json
+        # + chunks.json output): a "<Company Name>, Inc. and
+        # Subsidiaries" (or "... and Subsidiary", "... and
+        # Subsidiary Companies") caption is a UNIVERSAL SEC-filing
+        # running-header -- the company's own legal name repeated
+        # directly above its core financial statements, a convention
+        # seen across many companies' filings, not specific to one.
+        # This is NOT flagged as a heading by heading_detector.py
+        # (it's short and bold/non-bold but doesn't independently
+        # match any structural-marker pattern), so unlike the
+        # statement's own title immediately below it, nothing
+        # excludes it from table candidacy here.
+        #
+        # Confirmed real-world impact: on Roper's own Consolidated
+        # Statements of Stockholders' Equity page, "ROPER
+        # TECHNOLOGIES, INC. AND SUBSIDIARIES" (y=28.6) sits directly
+        # above the statement's own title "CONSOLIDATED STATEMENTS OF
+        # STOCKHOLDERS' EQUITY" (y=46.6, correctly excluded from
+        # candidacy as a heading). Being swept into the SAME table's
+        # candidate-line set extended the table's own computed bbox
+        # to START at y=28.6 -- BEFORE the real title's own y=46.6 --
+        # which then caused hierarchy_builder.py's table-to-heading
+        # attachment logic to conclude this table does not belong
+        # to the title directly below it (since the table's own
+        # "start" comes before that heading), misattaching the
+        # entire 33-row table to whatever heading was already open
+        # from the PRECEDING page (here, "CONSOLIDATED STATEMENTS OF
+        # COMPREHENSIVE INCOME") instead.
+        #
+        # Matching is deliberately narrow -- the ENTIRE line must be
+        # just the company-name phrase ending in this exact
+        # "and Subsidiary/Subsidiaries/Subsidiary Companies" suffix --
+        # so this can never accidentally exclude a genuine sentence
+        # that merely mentions a company and its subsidiaries in
+        # passing (which would have other surrounding words and not
+        # end the line at that exact phrase).
+        if re.fullmatch(
+            r"(?:THE\s+)?.{1,60}?,?\s+(?:Inc\.?|Company|Corporation|Corp\.?),?"
+            r"\s+and\s+Subsidiar(?:y|ies)(?:\s+Compan(?:y|ies))?\.?",
+            text.strip(),
+            re.IGNORECASE,
+        ):
+
+            return {
+                "line_index": index,
+                "text": text,
+                "is_candidate": False,
+                "numeric_ratio": 0.0,
+                "numeric_count": 0,
+                "token_count": 0,
+                "x_positions": [],
+                "y_positions": [],
+                "_y": y,
+            }
+
         # NEW (PayPal 2025, confirmed via real hierarchy_outline.txt +
         # chunks.json output + video-frame verification): a "...
         # -(Continued)" / "...--(Continued)" page-header caption --
@@ -1455,7 +1510,7 @@ if __name__ == "__main__":
         )
 
         print(
-            "\n====================================="
+            "\n===================================="
         )
 
         print(
@@ -1463,6 +1518,5 @@ if __name__ == "__main__":
         )
 
         print(
-            "====================================="
+            "===================================="
         )
-        
