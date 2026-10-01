@@ -2664,6 +2664,48 @@ class TableParser:
         if m and self._looks_numeric_cell(m.group(2)):
             return [m.group(1), m.group(2)]
 
+        # NEW (Roper Technologies 2016, confirmed via real cleaned.json
+        # output): on this filing's own Balance Sheet, the "Total
+        # assets" and "Total liabilities and stockholders' equity"
+        # subtotal rows go a step further than the 2-piece fusion
+        # above -- PyMuPDF fuses BOTH columns' full "$ <value>" pairs
+        # together into one single span: "$ 14,324,927 $ 10,168,365"
+        # (the EXACT same row's own real values, confirmed against
+        # the real PDF, for its 2016 and 2015 columns respectively).
+        # Every other row on this same table has its 4 pieces ($,
+        # number, $, number) correctly reported as 4 separate spans --
+        # this fusion is isolated to just these 2 specific subtotal
+        # rows.
+        #
+        # Confirmed real-world impact: left unsplit, the ENTIRE
+        # "$ 14,324,927 $ 10,168,365" string became that row's single,
+        # sole cell -- which doesn't look like a real column-value on
+        # its own, so NEITHER "Total assets" nor "Total liabilities
+        # and stockholders' equity" had any number recorded under
+        # either the 2016 or 2015 column at all, even though
+        # 14,324,927 (= the Balance Sheet's own confirmed Total
+        # liabilities of 8,536,062 + Total stockholders' equity of
+        # 5,788,865) is clearly the correct, real 2016 total.
+        #
+        # Splitting into FOUR separate pieces -- "$", the first
+        # number, "$", the second number, in their original left-to-
+        # right order -- lets the existing NON_LABEL_TOKENS handling
+        # drop both bare "$" pieces exactly as it already does
+        # elsewhere, leaving the 2 real numeric values to correctly
+        # fall into the standard exact-count-vs-columns fallback
+        # (2 value-like cells for this row's 2 real columns), with
+        # their original left-to-right order preserved by Python's
+        # stable sort even though both numbers happen to share this
+        # fused span's own single x-position.
+        m = re.match(r"^\$\s*(\S+)\s+\$\s*(\S+)$", stripped)
+
+        if (
+            m
+            and self._looks_numeric_cell(m.group(1))
+            and self._looks_numeric_cell(m.group(2))
+        ):
+            return ["$", m.group(1), "$", m.group(2)]
+
         return None
 
     def _extract_cells(self, row):
