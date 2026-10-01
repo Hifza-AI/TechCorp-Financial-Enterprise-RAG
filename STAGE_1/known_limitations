@@ -213,3 +213,12 @@ Phantom Footnote Column Header: The Stockholders' Equity table contains a spurio
 Systemic Entity Name Child Node: The EMERSON ELECTRIC CO. & SUBSIDIARIES caption line is promoted to a child-heading across all 5 core statements (systemic pattern shared with Union Pacific). (Impact: Cosmetic).
 
 Unmatched Bracketed Reserved Marker: ITEM 6 [RESERVED] bypasses is_top_level_marker regex matching due to bracketed formatting without trailing punctuation. (Impact: Zero Data Loss — target section is natively empty).
+
+Ametek (FY2016, FY2025) — Both years verified.
+Known limitation: In FY2016, five Item headings (Item 1, 1A, 2, 3, 5) have their titles split into a separate child node rather than merging into the parent heading. Content is correctly nested and no data is lost — cosmetic only.
+
+Rockwell Automation (FY2016, FY2025) — Both years verified.
+Known limitations: (1) The "Liabilities and Shareowners' Equity" divider on the Balance Sheet forms its own empty child node in both years; values remain complete and arithmetically consistent. (2) Two subtotal rows per year render with blank labels while their values remain correct. A critical defect (missing "Item 5" heading in FY2016 due to title-length) was identified and has been corrected.
+
+Roper Technologies (FY2016, FY2025) — Both years verified.
+FY2025: no limitations identified. FY2016: two critical defects were identified and corrected — (1) the Stockholders' Equity statement's table was misattached to the preceding Comprehensive Income statement, and (2) the Balance Sheet's Total Assets and Total Liabilities and Stockholders' Equity rows were missing values due to a PDF-extraction artifact. Both have been fixed and values are now complete and arithmetically consistent.
