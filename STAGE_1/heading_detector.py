@@ -2164,20 +2164,34 @@ class HeadingDetector:
         # of them correctly nesting under "Item 8. Financial
         # Statements and Supplementary Data".
         #
-        # A genuine Item/Part marker's own title is always SHORT --
-        # even the longest real example seen so far, "Item 5. Market
-        # for Registrant's Common Equity, Related Stockholder Matters
-        # and Issuer Purchases of Equity Securities" (Boeing/3M), is
-        # only 15 words -- so rejecting anything longer than that (a
-        # small safety margin) here, BEFORE trying any of the specific
-        # patterns below, keeps every genuine verified Item/Part
-        # marker matching while safely rejecting a narrative sentence
-        # that merely happens to start the same way. This mirrors the
-        # identical word-count-cap fix already applied to
-        # is_note_marker()'s own bare-numbered-Note patterns for the
-        # exact same class of bug (Intuit 2017's own narrative-
-        # sentence false-positive).
-        if len(stripped.split()) > 16:
+        # A genuine Item/Part marker's own title is always SHORT, but
+        # different companies phrase the SAME title with slightly
+        # different wording/length. Boeing/3M's own version of Item
+        # 5's title ("Item 5. Market for Registrant's Common Equity,
+        # Related Stockholder Matters and Issuer Purchases of Equity
+        # Securities") is 15 words -- but Rockwell Automation's own
+        # phrasing of this EXACT SAME Item ("Item 5. Market for the
+        # Company's Common Equity, Related Stockholder Matters and
+        # Issuer Purchases of Equity Securities", confirmed via real
+        # PDF text-extraction output) runs to 17 words, simply because
+        # it says "the Company's" instead of "Registrant's" and adds
+        # the article "the". The original 16-word cap, sized only
+        # against Boeing/3M's shorter phrasing, incorrectly rejected
+        # Rockwell's own longer-but-equally-genuine version of the
+        # identical title -- meaning is_top_level_marker returned
+        # False for a real Item 5 heading, which could leave it
+        # without the Item/Part exclusivity-protection this check
+        # exists to grant.
+        #
+        # Widening the cap to 20 words keeps a clear, safe margin
+        # below Colgate's own confirmed FALSE positive (the audit-
+        # report sentence this cap was originally added to reject,
+        # at 27 words) while now also covering this genuine phrasing
+        # variation. This mirrors the identical word-count-cap fix
+        # already applied to is_note_marker()'s own bare-numbered-Note
+        # patterns for the exact same class of bug (Intuit 2017's own
+        # narrative-sentence false-positive).
+        if len(stripped.split()) > 20:
             return False
 
         # NEW (Emerson Electric 2025, confirmed via real
