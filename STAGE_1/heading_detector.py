@@ -2318,6 +2318,33 @@ class HeadingDetector:
         if re.fullmatch(r"Item\s+\d+[A-Za-z]?\.?", stripped, re.IGNORECASE):
             return True
 
+        # NEW (Kennametal 2026, confirmed via real PDF text-extraction
+        # output): Kennametal's own Item 1A section heading is
+        # rendered as the bare topic-name "RISK FACTORS" with NO
+        # "Item 1A" prefix anywhere on the line at all -- a genuinely
+        # new convention, since every other company confirmed so far
+        # always includes the Item-number as part of the heading text
+        # itself (even Intel 2019's own un-prefixed Note-boundaries,
+        # handled separately via is_prominent_boundary, still had a
+        # "Note N" cross-reference elsewhere; here there is no "Item
+        # 1A" text anywhere on this page at all).
+        #
+        # Confirmed real-world impact: without is_top_level_marker
+        # recognizing this line, "RISK FACTORS" never force-closed
+        # the still-open "ITEM 1 - BUSINESS" container before it, so
+        # the ENTIRE Risk Factors section (one of the most heavily
+        # retrieved sections in any 10-K) nested as a child of Item 1
+        # instead of becoming its own correct, top-level Item 1A.
+        #
+        # Matching is deliberately narrow -- re.fullmatch requires the
+        # ENTIRE line to be EXACTLY "RISK FACTORS" and nothing else --
+        # so this can never misfire on a narrative sentence that
+        # merely references risk factors in passing (which always has
+        # other surrounding words on the same line), only on this
+        # exact standalone caption shape.
+        if re.fullmatch(r"RISK\s+FACTORS\.?", stripped, re.IGNORECASE):
+            return True
+
         return False
 
     def _is_note_marker(self, text):
