@@ -86,8 +86,59 @@ def fix_paragraph_file(data):
 
                 words = text.split()
 
+                # NEW (Watts Water Technologies 2025, confirmed via
+                # real cleaned.json + hierarchy_outline.txt output):
+                # this demotion was built to catch a genuine orphaned
+                # SENTENCE-FRAGMENT -- e.g. "local currencies." left
+                # over from a bold-run-merge, which is bold, short,
+                # and ends in a period purely by coincidence of where
+                # a wrapped sentence happened to break. But a real,
+                # short Item/Part title that itself ends in a period
+                # -- "Item 1. BUSINESS.", "Item 16. FORM 10-K
+                # SUMMARY." -- looks IDENTICAL by this same shape
+                # (short, ends in ".") and was being caught by the
+                # exact same check, since numbering_pattern only ever
+                # matched a BARE marker on its own ("Item 1." alone)
+                # and never accounted for a real title being attached
+                # to it.
+                #
+                # Confirmed real-world impact: Watts Water's own Item
+                # 1 ("Item 1. BUSINESS."), Item 1A ("Item 1A. RISK
+                # FACTORS." -- the single most commonly retrieved
+                # section in any 10-K), Item 2, and Item 3 ALL lost
+                # their heading status this way and were silently
+                # demoted to ordinary paragraph text -- flattening
+                # roughly 47 pages of real content so that it nested
+                # directly under "PART I" instead of under its own,
+                # correct top-level Item. Shorter-titled Items with a
+                # LONGER title (5+ words, e.g. "Item 1B. UNRESOLVED
+                # STAFF COMMENTS.") or a title with no trailing period
+                # happened to survive only by accident of their own
+                # specific wording, not because this check was
+                # actually safe for them.
+                #
+                # heading_detector.py has ALREADY independently
+                # confirmed, via its own is_top_level_marker /
+                # is_note_marker checks, whether a given line is a
+                # genuine SEC-mandated structural marker -- reusing
+                # that existing, already-verified signal here (rather
+                # than trying to pattern-match every possible "Item N.
+                # Title." phrasing within this file) is the safest
+                # fix: a block already confirmed to be a real
+                # Item/Part/Note marker is now NEVER demoted by this
+                # check, regardless of its own word count or whether
+                # its title happens to end in a period. A genuine
+                # orphaned sentence-fragment never independently
+                # matches either of these checks, so this carve-out
+                # cannot let a real stray fragment slip through.
+                is_confirmed_structural_marker = (
+                    block.get("is_top_level_marker", False)
+                    or block.get("is_note_marker", False)
+                )
+
                 looks_like_fragment = (
-                    len(words) <= 4
+                    not is_confirmed_structural_marker
+                    and len(words) <= 4
                     and text.endswith(".")
                     and not numbering_pattern.match(text)
                 )
