@@ -232,6 +232,68 @@ class HierarchyBuilder:
                     # an Item/Part boundary should remain nested under
                     # a prior heading, so this can never incorrectly
                     # flatten a genuine parent-child relationship.
+                    # NEW (Kennametal 2026, confirmed via real
+                    # hierarchy_outline.txt output): a BARE "Item N."
+                    # running-header -- no title text at all, just the
+                    # number repeated at the top of a page purely as a
+                    # page-header artifact (the same bare shape
+                    # Microsoft's own "PART II / Item 8" running-header
+                    # fix already excludes from TABLE candidacy) --
+                    # can ALSO appear sitting in the MIDDLE of that
+                    # SAME Item's own real content, not just between
+                    # genuinely different sections.
+                    #
+                    # Confirmed real-world impact: Kennametal's own
+                    # "Item 5" section (Market for Registrant's Common
+                    # Equity...) is itself several pages long -- its
+                    # real title correctly opens the section on page
+                    # 17, but a bare "Item 5." repeat on a LATER page
+                    # (with no title attached) was ALSO independently
+                    # matching is_top_level_marker, which (via the pop-
+                    # to-root rule just below) force-closed the real,
+                    # still-open "Item 5" container and opened a brand
+                    # new, EMPTY top-level sibling in its place -- the
+                    # REST of Item 5's own real content (its
+                    # Performance Graph, its own Issuer Purchases
+                    # table, etc.) then nested under this second, bare
+                    # duplicate instead of continuing under the first,
+                    # correctly-titled one. Item 5's real content
+                    # ended up split across two disconnected top-level
+                    # nodes instead of one continuous section.
+                    #
+                    # Detected narrowly: the incoming heading's own
+                    # text must be JUST "Item N[Letter]" with nothing
+                    # else (a real title is never this bare), AND the
+                    # CURRENTLY open container (before any popping)
+                    # must ALREADY be that exact same Item number/
+                    # letter. When both hold, this bare repeat is
+                    # skipped entirely -- its own heading-candidacy is
+                    # discarded and processing moves on to the next
+                    # block -- leaving the real, already-open Item
+                    # section undisturbed so its later content
+                    # continues to correctly nest under it. This can
+                    # never skip a genuine NEW Item/Part boundary, since
+                    # those always carry their own real title text and
+                    # never match this bare-text shape at all.
+                    _bare_item_match = re.fullmatch(
+                        r"item\s+(\d+[a-z]?)\.?",
+                        block["text"].strip(),
+                        re.IGNORECASE,
+                    )
+
+                    if _bare_item_match and len(stack) > 1:
+
+                        _current_open_text = stack[-1].get("title", "")
+
+                        _current_item_match = re.match(
+                            r"^item\s+" + re.escape(_bare_item_match.group(1)) + r"\b",
+                            _current_open_text.strip(),
+                            re.IGNORECASE,
+                        )
+
+                        if _current_item_match:
+                            continue
+
                     if is_top_level_marker:
 
                         while len(stack) > 1:
