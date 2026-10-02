@@ -283,15 +283,31 @@ class HierarchyBuilder:
 
                     if _bare_item_match and len(stack) > 1:
 
-                        _current_open_text = stack[-1].get("title", "")
-
-                        _current_item_match = re.match(
-                            r"^item\s+" + re.escape(_bare_item_match.group(1)) + r"\b",
-                            _current_open_text.strip(),
-                            re.IGNORECASE,
+                        # NEW: check every currently-open ancestor on
+                        # the stack, not just the immediate top --
+                        # confirmed necessary because by the time a
+                        # bare "Item N." repeat appears, the real
+                        # top of the stack is often a deeper sub-
+                        # topic already nested several levels under
+                        # the genuine Item N container (e.g.
+                        # Kennametal's own "ISSUER PURCHASES OF
+                        # EQUITY SECURITIES", itself a child of Item
+                        # 5), not Item N's own node directly. Walking
+                        # the full stack (excluding the root) finds
+                        # the genuine Item N ancestor wherever it
+                        # currently sits.
+                        _is_same_item_already_open = any(
+                            re.match(
+                                r"^item\s+"
+                                + re.escape(_bare_item_match.group(1))
+                                + r"\b",
+                                _ancestor.get("title", "").strip(),
+                                re.IGNORECASE,
+                            )
+                            for _ancestor in stack[1:]
                         )
 
-                        if _current_item_match:
+                        if _is_same_item_already_open:
                             continue
 
                     if is_top_level_marker:
