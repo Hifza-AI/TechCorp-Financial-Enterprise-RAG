@@ -2226,6 +2226,60 @@ class HeadingDetector:
         if re.search(r'["\u201c\u201d]', stripped):
             return False
 
+        # NEW (Union Pacific 2016, confirmed via real
+        # hierarchy_outline.txt output): a narrative sentence can
+        # start with "Item N." purely by coincidence -- e.g. Union
+        # Pacific's own audit-report text reads "Item 15. These
+        # financial statements and financial statement schedule are
+        # the responsibility of the Corporation's management..." (a
+        # genuine cross-reference to the Item 15 financial-statement-
+        # schedule requirement, embedded mid-paragraph in the audit
+        # opinion). At 16 words this falls safely under the 20-word
+        # cap above -- that cap alone doesn't catch it, since it was
+        # sized to admit Rockwell's own genuinely longer Item 5
+        # title, not to reject every sentence under 20 words.
+        #
+        # Confirmed real-world impact: this fake "Item 15" (sitting
+        # inside the audit report, directly before the real financial
+        # statements) independently qualified as a genuine
+        # is_top_level_marker, triggering the pop-to-root rule and
+        # incorrectly swallowing the ENTIRE financial-statements
+        # section (Balance Sheet, Income Statement, Cash Flow, etc.)
+        # as ITS OWN children -- instead of them correctly remaining
+        # under "Item 8. Financial Statements and Supplementary
+        # Data", where they belong. The real, correctly-titled Item
+        # 15 ("Exhibits, Financial Statement Schedules") still
+        # separately and correctly appears much later, at its own
+        # real page.
+        #
+        # The key distinguishing signal: a genuine SEC Item/Part
+        # title is always a NOUN PHRASE naming a topic ("Business",
+        # "Risk Factors", "Market for Registrant's Common Equity...")
+        # -- it never opens with a pronoun or demonstrative word,
+        # since a title never refers back to something with "these"/
+        # "this"/"our"/"it". A narrative sentence that happens to
+        # start with "Item N." as a cross-reference, by contrast,
+        # almost always continues with exactly this kind of word
+        # ("These financial statements...", "Our responsibility
+        # is...", confirmed on Colgate's own earlier false-positive
+        # too). Rejecting on this opening-word alone is safe and
+        # narrow: no genuine Item/Part title in any filing confirmed
+        # so far opens this way, so this can only ever reject a
+        # narrative fragment, never a real marker.
+        _text_after_marker = re.sub(
+            r"^(?:PART\s+[IVXLCDM]+|Item\s+\d+[A-Za-z]?)\s*[-.:\u2013\u2014]?\s*",
+            "",
+            stripped,
+            flags=re.IGNORECASE,
+        )
+
+        if re.match(
+            r"^(These|This|Our|We|It|They|Such)\b",
+            _text_after_marker.strip(),
+            re.IGNORECASE,
+        ):
+            return False
+
         if re.match(r"^PART\s+[IVXLCDM]+\b", stripped, re.IGNORECASE):
             return True
 
