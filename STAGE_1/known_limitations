@@ -222,3 +222,10 @@ Known limitations: (1) The "Liabilities and Shareowners' Equity" divider on the 
 
 Roper Technologies (FY2016, FY2025) — Both years verified.
 FY2025: no limitations identified. FY2016: two critical defects were identified and corrected — (1) the Stockholders' Equity statement's table was misattached to the preceding Comprehensive Income statement, and (2) the Balance Sheet's Total Assets and Total Liabilities and Stockholders' Equity rows were missing values due to a PDF-extraction artifact. Both have been fixed and values are now complete and arithmetically consistent.
+
+Nordson Corporation (FY2016, FY2025) — Both years verified.
+
+Known limitations:
+
+The Balance Sheet's "Total assets" and "Total liabilities and shareholders' equity" subtotal rows render with a blank label in both years (the grand-total value itself is correct and arithmetically consistent — confirmed against the PDF both years) — cosmetic only, no data loss.
+In FY2016, one isolated extraneous row ("Nordson Corporation, 36" — a page-footer artifact: company name plus page number) leaks into the Balance Sheet table as its own row with no real financial meaning. It does not corrupt or displace any genuine data row — cosmetic only.
