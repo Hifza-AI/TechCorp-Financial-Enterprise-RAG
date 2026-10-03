@@ -2336,6 +2336,33 @@ class HeadingDetector:
         if re.match(r"^Item\s+\d+[A-Za-z]?\s*:", stripped, re.IGNORECASE):
             return True
 
+        # NEW (Woodward 2025, confirmed via real hierarchy_outline.txt
+        # output): Woodward's own Item 2 heading reads "Item 2
+        # Properties" -- a bare SPACE between the Item number and its
+        # title, with no period, dash, or colon separator at all. This
+        # is a punctuation variant none of the patterns above cover
+        # (they require ".", "-"/"\u2013"/"\u2014", or ":" immediately
+        # after the Item number).
+        #
+        # Confirmed real-world impact: without this match, "Item 2
+        # Properties" never got the is_top_level_marker protection,
+        # so its own content (the company's principal facilities
+        # table) nested as a CHILD of the preceding "Item 1C.
+        # Cybersecurity" instead of becoming its own correct, top-
+        # level Item 2.
+        #
+        # This is placed AFTER the word-count cap and pronoun-opener
+        # checks earlier in this function, so it inherits the same
+        # protection against a narrative sentence that merely starts
+        # with "Item N" followed by a space -- a long, unrelated
+        # sentence is already rejected by those checks before
+        # reaching here, and a sentence opening with "These"/"This"/
+        # "Our"/etc. is already rejected too. What remains distinct
+        # enough to still match here is a short, title-shaped phrase
+        # immediately following "Item N" with only a space between.
+        if re.match(r"^Item\s+\d+[A-Za-z]?\s+[A-Z]", stripped):
+            return True
+
         # NEW (Microsoft 2026, confirmed via real video-frame output):
         # every content page of Item 8 repeats a small, two-line
         # running header at the very top -- "PART II" (matches the
