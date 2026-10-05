@@ -2970,7 +2970,29 @@ def load_analyzed_reports(input_dir):
 # MAIN
 # =============================================================
 
+def iter_analyzed_reports(input_dir):
+    """Memory-safe loader: yields one table-analyzed report at a time."""
+
+    input_dir = Path(input_dir)
+
+    if not input_dir.exists():
+        print(f"Folder not found: {input_dir}")
+        return
+
+    for company_dir in sorted(input_dir.iterdir()):
+
+        if not company_dir.is_dir():
+            continue
+
+        for json_file in sorted(company_dir.glob("*_table_analyzed.json")):
+
+            with open(json_file, "r", encoding="utf-8") as f:
+                yield json.load(f)
+
+
 if __name__ == "__main__":
+
+    import gc
 
     INPUT_DIR = "STAGE_1/table_analysis"
     OUTPUT_DIR = "STAGE_1/parsed_tables"
@@ -2979,51 +3001,48 @@ if __name__ == "__main__":
     print(" Table Parser Started")
     print("====================================\n")
 
-    analyzed_reports = load_analyzed_reports(INPUT_DIR)
+    parser = TableParser()
 
-    if not analyzed_reports:
+    processed = 0
+    total_tables = 0
+    with_header = 0
+    with_section_title = 0
+
+    # One report at a time: load -> parse -> save -> free memory.
+    for report in iter_analyzed_reports(INPUT_DIR):
+
+        print(f"Parsing: {report.get('file_name')}")
+
+        parsed_report = parser.parse_report(report)
+
+        parser.save_parsed_reports([parsed_report], OUTPUT_DIR)
+
+        total_tables += len(parsed_report["tables"])
+
+        with_header += sum(
+            1 for t in parsed_report["tables"] if t.get("header_detected")
+        )
+
+        with_section_title += sum(
+            1 for t in parsed_report["tables"] if t.get("section_title")
+        )
+
+        processed += 1
+
+        del report, parsed_report
+        gc.collect()
+
+    if processed == 0:
 
         print("No table-analyzed JSON files found.")
         print("Run TableAnalyzer first.")
 
     else:
 
-        parser = TableParser()
-
-        parsed_reports = []
-
-        for report in analyzed_reports:
-
-            print(f"Parsing: {report.get('file_name')}")
-
-            parsed_report = parser.parse_report(report)
-
-            parsed_reports.append(parsed_report)
-
-        parser.save_parsed_reports(parsed_reports, OUTPUT_DIR)
-
-        total_tables = sum(
-            len(report["tables"]) for report in parsed_reports
-        )
-
-        with_header = sum(
-            1
-            for report in parsed_reports
-            for table in report["tables"]
-            if table.get("header_detected")
-        )
-
-        with_section_title = sum(
-            1
-            for report in parsed_reports
-            for table in report["tables"]
-            if table.get("section_title")
-        )
-
         print("\n====================================")
         print(" Table Parsing Completed")
         print("====================================")
-        print(f"Reports Parsed         : {len(parsed_reports)}")
+        print(f"Reports Parsed         : {processed}")
         print(f"Tables Parsed           : {total_tables}")
         print(f"Tables With Header      : {with_header}")
         print(f"Tables With Section Title: {with_section_title}")
