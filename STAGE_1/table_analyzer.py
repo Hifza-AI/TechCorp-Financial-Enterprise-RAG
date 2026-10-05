@@ -1446,77 +1446,67 @@ def save_analyzed_reports(
         )
 
 
+def iter_cleaned_reports(input_dir):
+    """
+    Memory-safe loader: yields ONE cleaned report at a time instead of
+    loading every company/year into a single list. With 60-70+ filings
+    the all-at-once approach exhausts RAM (MemoryError inside deepcopy).
+    """
+
+    input_dir = Path(input_dir)
+
+    if not input_dir.exists():
+        print(f"Folder not found: {input_dir}")
+        return
+
+    for company_dir in sorted(input_dir.iterdir()):
+
+        if not company_dir.is_dir():
+            continue
+
+        for json_file in sorted(company_dir.glob("*_cleaned.json")):
+
+            with open(json_file, "r", encoding="utf-8") as f:
+                yield json.load(f)
+
+
 if __name__ == "__main__":
 
-    INPUT_DIR = (
-        "STAGE_1/cleaned"
-    )
+    import gc
 
-    OUTPUT_DIR = (
-        "STAGE_1/table_analysis"
-    )
+    INPUT_DIR = "STAGE_1/cleaned"
+    OUTPUT_DIR = "STAGE_1/table_analysis"
 
-    print(
-        "\n===================================="
-    )
+    print("\n====================================")
+    print(" Table Analyzer Started")
+    print("====================================\n")
 
-    print(
-        " Table Analyzer Started"
-    )
+    analyzer = TableAnalyzer()
 
-    print(
-        "====================================\n"
-    )
+    processed = 0
 
-    cleaned_reports = (
-        load_cleaned_reports(
-            INPUT_DIR
-        )
-    )
+    # One report at a time: load -> analyze -> save -> free memory.
+    for report in iter_cleaned_reports(INPUT_DIR):
 
-    if not cleaned_reports:
+        heading_report = load_matching_heading_report(report)
 
-        print(
-            "No cleaned JSON files found."
-        )
+        analyzed_report = analyzer._analyze_report(report, heading_report)
 
-        print(
-            "Run TextCleaner first."
-        )
+        save_analyzed_reports([analyzed_report], OUTPUT_DIR)
+
+        processed += 1
+
+        del report, heading_report, analyzed_report
+        gc.collect()
+
+    if processed == 0:
+
+        print("No cleaned JSON files found.")
+        print("Run TextCleaner first.")
 
     else:
 
-        analyzer = TableAnalyzer()
-
-        # Cross-reference heading_detector.py's results so confirmed
-        # headings never get mistaken for table candidates. Falls
-        # back gracefully (per-report) if a report's heading_detection
-        # output isn't available yet.
-        heading_reports = [
-            load_matching_heading_report(report)
-            for report in cleaned_reports
-        ]
-
-        analyzed_reports = (
-            analyzer.analyze(
-                cleaned_reports,
-                heading_reports,
-            )
-        )
-
-        save_analyzed_reports(
-            analyzed_reports,
-            OUTPUT_DIR,
-        )
-
-        print(
-            "\n===================================="
-        )
-
-        print(
-            " Table Analysis Completed"
-        )
-
-        print(
-            "===================================="
-        )
+        print("\n====================================")
+        print(" Table Analysis Completed")
+        print("====================================")
+        print(f"Reports Processed : {processed}")
