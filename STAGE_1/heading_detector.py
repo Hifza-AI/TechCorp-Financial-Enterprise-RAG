@@ -2982,7 +2982,29 @@ def save_detected_reports(
 # MAIN
 # =============================================================
 
+def iter_cleaned_reports(input_dir):
+    """Memory-safe loader: yields one cleaned report at a time."""
+
+    input_dir = Path(input_dir)
+
+    if not input_dir.exists():
+        print(f"Folder not found: {input_dir}")
+        return
+
+    for company_dir in sorted(input_dir.iterdir()):
+
+        if not company_dir.is_dir():
+            continue
+
+        for json_file in sorted(company_dir.glob("*_cleaned.json")):
+
+            with open(json_file, "r", encoding="utf-8") as f:
+                yield json.load(f)
+
+
 if __name__ == "__main__":
+
+    import gc
 
     INPUT_DIR = "STAGE_1/cleaned"
     OUTPUT_DIR = "STAGE_1/heading_detection"
@@ -2991,32 +3013,38 @@ if __name__ == "__main__":
     print(" Heading Detector Started")
     print("====================================\n")
 
-    cleaned_reports = load_cleaned_reports(INPUT_DIR)
+    detector = HeadingDetector()
 
-    if not cleaned_reports:
+    processed = 0
+    total_headings = 0
+
+    # One report at a time: load -> detect -> save -> free memory.
+    for report in iter_cleaned_reports(INPUT_DIR):
+
+        detected = detector.detect([report])
+
+        save_detected_reports(detected, OUTPUT_DIR)
+
+        for d in detected:
+            for page in d["pages"]:
+                total_headings += page["heading_analysis"]["heading_count"]
+
+        processed += len(detected)
+
+        del report, detected
+        gc.collect()
+
+    if processed == 0:
 
         print("No cleaned JSON files found.")
         print("Run TextCleaner first.")
 
     else:
 
-        detector = HeadingDetector()
-
-        detected_reports = detector.detect(cleaned_reports)
-
-        save_detected_reports(detected_reports, OUTPUT_DIR)
-
-        total_headings = 0
-
-        for report in detected_reports:
-            for page in report["pages"]:
-                total_headings += page["heading_analysis"]["heading_count"]
-
         print("\n====================================")
         print(" Heading Detection Completed")
         print("====================================")
-        print(f"Reports Processed : {len(detected_reports)}")
+        print(f"Reports Processed : {processed}")
         print(f"Total Headings    : {total_headings}")
         print("\nOutput:")
         print(OUTPUT_DIR)
-    

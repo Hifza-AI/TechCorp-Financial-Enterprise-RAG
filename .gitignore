@@ -17,3 +17,4 @@ STAGE_1/vector_store/
 STAGE_1/**/*.json
 STAGE_1/**/*.txt
 STAGE_1/chk_output
+STAGE_1_old_duplicates
