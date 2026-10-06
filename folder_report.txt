@@ -1,0 +1,70 @@
+Root folder: C:\Users\riaze\Desktop\TechCorp-Financial-Enterprise-RAG
+
+== Folders (do level tak) ==
+app/   json=0  pdf=0  txt=0
+apple_pipeline/   json=0  pdf=0  txt=21
+    All_Files_cover/   json=0  pdf=0  txt=0
+    clean_text/   json=0  pdf=0  txt=10
+    extracted_text/   json=0  pdf=0  txt=10
+    headings/   json=0  pdf=0  txt=1
+data/   json=0  pdf=470  txt=224534
+    api_cache/   json=0  pdf=0  txt=0
+    chunks/   json=0  pdf=0  txt=223534
+    cleaned_text/   json=0  pdf=0  txt=500
+    CVS/   json=0  pdf=10  txt=0
+    extracted_text/   json=0  pdf=0  txt=500
+    Microsoft/   json=0  pdf=10  txt=0
+    pdfs/   json=0  pdf=450  txt=0
+    sqlite/   json=0  pdf=0  txt=0
+    vector_store/   json=0  pdf=0  txt=0
+models/   json=0  pdf=0  txt=0
+notebooks/   json=0  pdf=0  txt=0
+src/   json=0  pdf=0  txt=0
+STAGE_1/   json=4500  pdf=500  txt=500
+    __pycache__/   json=0  pdf=0  txt=0
+    chunks/   json=500  pdf=0  txt=0
+    cleaned/   json=500  pdf=0  txt=0
+    data/   json=0  pdf=500  txt=0
+    embeddings & Retrieval/   json=0  pdf=0  txt=0
+    extracted/   json=500  pdf=0  txt=0
+    heading_detection/   json=500  pdf=0  txt=0
+    headings_outlines/   json=0  pdf=0  txt=0
+    hierarchy/   json=500  pdf=0  txt=0
+    hierarchy_outlines/   json=0  pdf=0  txt=500
+    paragraphs/   json=500  pdf=0  txt=0
+    paragraphs_fixed/   json=500  pdf=0  txt=0
+    paragraphs_fixed_outlines/   json=0  pdf=0  txt=0
+    paragraphs_outlines/   json=0  pdf=0  txt=0
+    parsed_tables/   json=500  pdf=0  txt=0
+STAGE_1_old_duplicates/   json=150  pdf=0  txt=0
+    hierarchy/   json=30  pdf=0  txt=0
+    paragraphs/   json=30  pdf=0  txt=0
+    paragraphs_fixed/   json=30  pdf=0  txt=0
+    parsed_tables/   json=30  pdf=0  txt=0
+    table_analysis/   json=30  pdf=0  txt=0
+tests/   json=0  pdf=0  txt=0
+
+== Namune (har type ki 3 files, poora path) ==
+*_chunks.json:
+    STAGE_1\chunks\3M\3M_2016_10K_chunks.json
+    STAGE_1\chunks\3M\3M_2017_10K_chunks.json
+    STAGE_1\chunks\3M\3M_2018_10K_chunks.json
+*_hierarchy.json:
+    STAGE_1\hierarchy\3M\3M_2016_10K_hierarchy.json
+    STAGE_1\hierarchy\3M\3M_2017_10K_hierarchy.json
+    STAGE_1\hierarchy\3M\3M_2018_10K_hierarchy.json
+*_hierarchy_outline.txt:
+    STAGE_1\hierarchy_outlines\3M\3M_2016_10K_hierarchy_outline.txt
+    STAGE_1\hierarchy_outlines\3M\3M_2017_10K_hierarchy_outline.txt
+    STAGE_1\hierarchy_outlines\3M\3M_2018_10K_hierarchy_outline.txt
+*.pdf:
+    data\CVS\CVS_2016_10K.pdf
+    data\CVS\CVS_2017_10K.pdf
+    data\CVS\CVS_2018_10K.pdf
+*_cleaned.json:
+    STAGE_1\cleaned\3M\3M_2016_10K_cleaned.json
+    STAGE_1\cleaned\3M\3M_2017_10K_cleaned.json
+    STAGE_1\cleaned\3M\3M_2018_10K_cleaned.json
+
+Total *_chunks.json files: 500
+Chunks wale company folders: 50

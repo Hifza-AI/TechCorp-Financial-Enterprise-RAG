@@ -131,6 +131,31 @@ class ChunkBuilder:
             for table in node["tables"]:
 
                 if not self._looks_like_real_table(table):
+
+                    # NEW: a table that is not numeric enough to be a
+                    # "real" table (bullet lists, text-only grids) used
+                    # to be skipped here with no trace, so its text was
+                    # lost from the index. table_analyzer treats a bullet
+                    # marker + its text (two x-positions on one row) as a
+                    # table-like row, so paragraph_parser removes those
+                    # lines from the paragraphs and they only exist
+                    # inside this header-less table. Keep the text: turn
+                    # the rows back into ordinary text and chunk them
+                    # like any other paragraph of this section.
+                    fallback_paragraphs = self._table_to_paragraphs(table)
+
+                    if fallback_paragraphs:
+
+                        chunks.extend(
+                            self._chunk_paragraphs(
+                                fallback_paragraphs,
+                                section_path=current_path,
+                                company=company,
+                                year=year,
+                                file_name=file_name,
+                            )
+                        )
+
                     continue
 
                 chunks.append(
@@ -247,6 +272,86 @@ class ChunkBuilder:
             pieces.append(current.strip())
 
         return pieces if pieces else [text]
+
+    _BULLET_MARKERS = ("-", "\u2022", "\u25cf", "\u25aa", "\u2013", "\u2014", "\u00b7")
+
+    def _table_to_paragraphs(self, table):
+        """
+        Converts a table that failed _looks_like_real_table() back into
+        paragraph-like items so its text is not lost.
+
+        Bullet-list tables: every row that starts with a bullet marker
+        cell ("-", bullet dots, dashes) opens a new item; rows without
+        a marker are the wrapped continuation of the previous item.
+        Other text-only tables: each row becomes one item.
+        """
+
+        page = table.get("page_number")
+
+        row_texts = []
+
+        for row in table.get("rows", []):
+
+            if "cells" in row:
+                texts = [
+                    (c.get("text") or "").strip()
+                    for c in row["cells"]
+                ]
+                texts = [t for t in texts if t]
+
+            elif "label" in row:
+                texts = [(row.get("label") or "").strip()]
+                texts += [
+                    str(v).strip()
+                    for v in (row.get("values") or {}).values()
+                    if v
+                ]
+                texts = [t for t in texts if t]
+
+            else:
+                texts = []
+
+            if texts:
+                row_texts.append(texts)
+
+        if not row_texts:
+            return []
+
+        is_bullet_list = any(
+            texts[0] in self._BULLET_MARKERS for texts in row_texts
+        )
+
+        items = []
+
+        if is_bullet_list:
+
+            current = []
+
+            for texts in row_texts:
+
+                if texts[0] in self._BULLET_MARKERS:
+
+                    if current:
+                        items.append(" ".join(current))
+
+                    current = texts[1:]
+
+                else:
+
+                    current.extend(texts)
+
+            if current:
+                items.append(" ".join(current))
+
+        else:
+
+            items = [" | ".join(texts) for texts in row_texts]
+
+        return [
+            {"text": item, "page_number": page}
+            for item in items
+            if item.strip()
+        ]
 
     def _looks_like_real_table(self, table, min_numeric_row_ratio=0.4):
 
