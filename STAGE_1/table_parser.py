@@ -1133,6 +1133,7 @@ class TableParser:
         # -----------------------------------------------------
 
         grouped_header_rows, grouped_columns = self._find_grouped_year_header(rows)
+        grouped_columns = self._dedupe_column_names(grouped_columns) if grouped_columns else grouped_columns
 
         if grouped_columns:
 
@@ -1201,7 +1202,9 @@ class TableParser:
 
             header_row = rows[header_index]
 
-            columns = self._extract_columns(header_row)
+            columns = self._dedupe_column_names(
+                self._extract_columns(header_row)
+            )
 
             if len(columns) >= 2:
 
@@ -1292,6 +1295,7 @@ class TableParser:
         # -----------------------------------------------------
 
         text_header_rows, text_columns = self._find_text_header(rows)
+        text_columns = self._dedupe_column_names(text_columns) if text_columns else text_columns
 
         if text_columns and len(text_columns) >= 2:
 
@@ -2197,6 +2201,31 @@ class TableParser:
     # =========================================================
     # EXTRACT COLUMNS (from header row)
     # =========================================================
+
+    def _dedupe_column_names(self, columns):
+        """
+        REPEATED-HEADER FIX (Caterpillar 2025 p69/p70, Northrop, Block, Woodward 2016 Note 17):
+        wide tables repeat the same column label ("2025", "2024", "2025", "2024", ...)
+        once per column group (Consolidated / Machinery / Financial Products / ...).
+        Values are stored in a dict keyed by column name, so the repeats used to
+        overwrite each other and every group except one lost its numbers.
+        The first occurrence keeps its name unchanged; later ones get a " (col N)"
+        suffix (N = 1-based position left to right). Tables with all-unique names are
+        returned untouched, so nothing that parsed correctly before changes.
+        """
+        names = [c["name"] for c in columns]
+        if len(set(names)) == len(names):
+            return columns
+        seen = {}
+        out = []
+        for position, column in enumerate(columns, start=1):
+            name = column["name"]
+            seen[name] = seen.get(name, 0) + 1
+            if seen[name] > 1:
+                column = dict(column)
+                column["name"] = f"{name} (col {position})"
+            out.append(column)
+        return out
 
     def _extract_columns(self, header_row):
 
