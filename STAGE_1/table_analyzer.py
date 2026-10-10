@@ -1477,7 +1477,7 @@ if __name__ == "__main__":
     INPUT_DIR = "STAGE_1/cleaned"
     OUTPUT_DIR = "STAGE_1/table_analysis"
 
-    print("\n====================================")
+    print("\n=====================================")
     print(" Table Analyzer Started")
     print("====================================\n")
 
