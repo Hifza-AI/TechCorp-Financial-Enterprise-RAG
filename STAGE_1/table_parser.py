@@ -3070,7 +3070,7 @@ if __name__ == "__main__":
 
         print("\n====================================")
         print(" Table Parsing Completed")
-        print("====================================")
+        print("=====================================")
         print(f"Reports Parsed         : {processed}")
         print(f"Tables Parsed           : {total_tables}")
         print(f"Tables With Header      : {with_header}")
