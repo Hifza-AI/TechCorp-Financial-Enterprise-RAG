@@ -2995,9 +2995,9 @@ def load_analyzed_reports(input_dir):
     return reports
 
 
-# =============================================================
+# ==============================================================
 # MAIN
-# =============================================================
+# ==============================================================
 
 def iter_analyzed_reports(input_dir):
     """Memory-safe loader: yields one table-analyzed report at a time."""
