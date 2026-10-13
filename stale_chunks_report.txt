@@ -1,0 +1,28 @@
+Total files: 500
+Theek (naya fix laga hua hai): 476
+Purani (dobara chalani hain): 24
+
+   3 tables  Apple_2022_10K_chunks.json
+   3 tables  Apple_2023_10K_chunks.json
+   3 tables  Apple_2024_10K_chunks.json
+   3 tables  Parker Hannifin_2020_10K_chunks.json
+   2 tables  Apple_2021_10K_chunks.json
+   2 tables  Apple_2025_10K_chunks.json
+   2 tables  Parker Hannifin_2019_10K_chunks.json
+   2 tables  Salesforce_2020_10K_chunks.json
+   2 tables  ServiceNow_2023_10K_chunks.json
+   2 tables  ServiceNow_2025_10K_chunks.json
+   1 tables  Apple_2016_10K_chunks.json
+   1 tables  Apple_2017_10K_chunks.json
+   1 tables  Apple_2018_10K_chunks.json
+   1 tables  Chipotle Mexican Grill (CMG)_2020_10K_chunks.json
+   1 tables  Google_2021_10K_chunks.json
+   1 tables  Google_2025_10K_chunks.json
+   1 tables  MSFT_2019_10K_chunks.json
+   1 tables  MSFT_2020_10K_chunks.json
+   1 tables  MSFT_2021_10K_chunks.json
+   1 tables  Nvidia_2026_10K_chunks.json
+   1 tables  Parker Hannifin_2018_10K_chunks.json
+   1 tables  Roper Technologies_2024_10K_chunks.json
+   1 tables  ServiceNow_2024_10K_chunks.json
+   1 tables  Workday (WDAY)_2023_10K_chunks.json
