@@ -1,332 +1,350 @@
+"""
+build_embeddings.py  -  Tumhari wahi file, naye (500-file ke liye) tareeqe se.
+
+Chalane ka tareeqa (project root se):
+  1) Chhota test:   python STAGE_1/build_embeddings.py --only Nordson
+  2) Poora:         python STAGE_1/build_embeddings.py
+     (beech mein ruk jaye to wahi command dobara chalao -- jo files ho chuki hain wo dobara nahi banti)
+
+Kya badla (purani file se):
+  * Model: bge-small (bge-base se ~3 guna tez; 500 files par base ~1 din leta, small ~9-10 ghante).
+    Chaho to  --model BAAI/bge-base-en-v1.5  de sakti ho.
+  * Har file ki embeddings alag save hoti hain (STAGE_1/vector_store/cache) -> crash par kuch zaya nahi.
+  * Vector index: FAISS (IndexFlatIP = exact cosine search, FYP report wala). File-by-file add hota hai, RAM kam.
+  * Keyword search (BM25) bhi yahin banta hai -- rank_bm25 ki jagah sparse matrix (rank_bm25 3 lakh chunks par
+    kai GB RAM leta). Numbers (jaise 1,285) poore rehte hain.
+  * Bekaar chunks index mein nahi jaate: sirf EXHIBIT LISTS (doosre documents ki fehrist) aur
+    "See accompanying notes." jaisi khaali lines. Signatures, power of attorney aur chhote chunks RAKHE jaate hain
+    (un mein CEO/CFO/directors ke naam aur kuch asli numbers hote hain). Sab wapas daalne ke liye --keep-junk.
+  * Embedding text = "Company | Saal 10-K | Section" + chunk text (section retrieval mein madad karta hai).
+    Headings baad mein theek hon to sirf wahi files dobara embed hongi jin ke labels badle (cache khud pehchanta hai).
+    Section ke baghair chahiye to --no-section.
+  * Lambe chunks (zyada-tar bade tables) tukdon (windows) mein embed hote hain, dum gayab nahi hoti.
+
+Install (ek baar):  python -m pip install sentence-transformers faiss-cpu numpy scipy
+"""
+import argparse
 import json
-import pickle
+import re
+import time
+import zlib
+from array import array
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
-import faiss
-from sentence_transformers import SentenceTransformer
+import scipy.sparse as sp
+
+TOKEN_RE = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?|[a-z]+")
+
+
+def tok(text):
+    return TOKEN_RE.findall(text.lower())
+
+
+def section_str(c):
+    s = c.get("section_path", "")
+    parts = s if isinstance(s, list) else str(s or "").split(" > ")
+    parts = [str(x).strip() for x in parts if x is not None and str(x).strip() not in ("", "None")]
+    return " > ".join(parts)
+
+
+# ---------------- bekaar (junk) chunks ----------------
+# Sirf EXHIBIT LISTS (doosre documents ki fehrist: "3.1 Restated Certificate ... incorporated by reference to
+# Exhibit 3.1 of Form 10-Q ...") aur "See accompanying notes." jaisi khaali lines nikalti hain.
+# SIGNATURES aur POWER OF ATTORNEY nahi nikalte: in mein CEO / CFO / directors ke naam aur ohde hote hain.
+# Chhote chunks bhi nahi nikalte: kuch mein asli data hai ("Total long-term debt $ 15,696").
+EXHIBIT_LEAF = re.compile(r"^(index to )?exhibits?( index| list)?\.?$", re.I)
+EXHIBIT_TABLE = re.compile(r"Description of Document|Incorporated (?:by|herein by) Reference|Exhibit Number", re.I)
+INC_REF = re.compile(r"incorporated\s+(?:herein\s+)?by\s+reference", re.I)
+EXHIBIT_REF = re.compile(r"\bExhibit\s+\d{1,3}(?:\.\d{1,3})?", re.I)
+FORM_REF = re.compile(r"\bForm\s+(?:10-?K|10-?Q|8-?K|S-\d)", re.I)
+SIGNATURE_LIKE = re.compile(r"/s/|attorney-in-fact|Pursuant to the requirements of Section 13", re.I)
+BOILERPLATE = re.compile(
+    r"^(?:(?:see|refer to) (?:the )?accompanying notes(?: to (?:the )?(?:consolidated )?financial statements)?"
+    r"|the accompanying notes are an integral part of (?:these|the) (?:consolidated )?financial statements"
+    r"|\(?(?:in|dollars in|\$ in) (?:millions|thousands)[^)]{0,40}\)?)\.?$", re.I)
+
+
+def junk_reason(c):
+    """None = rakho. Warna wajah (string)."""
+    t = (c.get("text") or "").strip()
+    if not t:
+        return "empty"
+    if len(t) < 120 and BOILERPLATE.match(t):
+        return "boilerplate"
+    sec = section_str(c)
+    if EXHIBIT_LEAF.match(sec.split(">")[-1].strip()):
+        return "exhibit list"
+    if c.get("chunk_type") == "table" and EXHIBIT_TABLE.search(t[:600]):
+        return "exhibit list"
+    if SIGNATURE_LIKE.search(t):          # signatures / power of attorney: naam aur ohde -> rakho
+        return None
+    n_inc, n_ex, n_form = len(INC_REF.findall(t)), len(EXHIBIT_REF.findall(t)), len(FORM_REF.findall(t))
+    if n_ex >= 3 or (n_ex >= 2 and n_inc >= 2):                       # "filed as Exhibit 10.4 to Form 8-K ..."
+        return "exhibit list"
+    if re.search(r"exhibit", sec, re.I) and (n_inc >= 2 or n_ex + n_form >= 4):
+        return "exhibit list"
+    return None
+
+
+def is_junk(c):
+    return junk_reason(c) is not None
+
+
+class _Stub:
+    """Sirf code test karne ke liye (asli search ke liye nahi)."""
+    dim = 384
+
+    def encode(self, texts, batch_size=32):
+        out = np.zeros((len(texts), self.dim), dtype=np.float32)
+        for i, t in enumerate(texts):
+            for w in tok(t):
+                h = zlib.crc32(w.encode())
+                out[i, h % self.dim] += 1.0 if (h >> 9) & 1 else -1.0
+        n = np.linalg.norm(out, axis=1, keepdims=True)
+        n[n == 0] = 1
+        return out / n
 
 
 class EmbeddingIndexBuilder:
-    """
-    Loads ALL chunk files (across every company/report already
-    chunked), embeds them with BGE-base-en-v1.5, and builds a FAISS
-    index. A separate metadata sidecar list is saved alongside the
-    index so that a FAISS result (a row number) can be mapped back
-    to its actual text + company/year/section_path/page_numbers.
+    MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
-    BGE models are trained with an asymmetric convention: passages
-    (the chunks we're indexing) are embedded as-is, but QUERIES at
-    retrieval time need a specific instruction prefix prepended --
-    this is documented behavior for BGE and materially affects
-    retrieval quality if skipped. See `embed_query()` below.
-    """
+    # BGE ka asymmetric rule: passages jaise hain, QUERY ke aage ye instruction lagti hai.
+    QUERY_INSTRUCTION = "Represent this sentence for searching relevant passages: "
 
-    MODEL_NAME = "BAAI/bge-base-en-v1.5"
+    # Model 512 token se zyada chupke se kaat deta hai, isliye lambe chunks tukdon mein.
+    # Tables mein numbers bohat tokens lete hain, isliye table ke tukde chhote (150 words).
+    WINDOW_WORDS_TEXT = 300
+    WINDOW_WORDS_TABLE = 150
+    OVERLAP_WORDS = 25
 
-    QUERY_INSTRUCTION = (
-        "Represent this sentence for searching relevant passages: "
-    )
-
-    # NEW: BGE-base-en-v1.5's underlying position embeddings were
-    # trained at a 512-token max sequence length -- SentenceTransformer
-    # silently TRUNCATES anything longer than this at encode time (no
-    # error, no warning), simply dropping every token past the limit.
-    #
-    # Confirmed against this project's actual chunk output across all
-    # 15 companies checked so far: 218 of 10,348 chunks (about 2.1%)
-    # exceed this, almost all of them large financial TABLES --
-    # Segment Information breakdowns, multi-year Stockholders' Equity
-    # rollforwards, and Notes indexes -- some by a large margin (the
-    # worst case is roughly 3,300 tokens, more than 6x the limit).
-    #
-    # Without handling this, the embedded vector for an oversized
-    # chunk only ever "sees" its first ~512 tokens -- e.g. a 20-row
-    # Stockholders' Equity table would have its LAST several rows
-    # completely invisible to the embedding, even though the full
-    # text is still stored correctly in metadata and would display
-    # fine if retrieved. This isn't a crash or a visible error -- it
-    # just silently makes rows near the end of large tables
-    # undiscoverable by any query whose relevant keywords only appear
-    # in that truncated tail, which is exactly the kind of gap that
-    # won't show up until retrieval accuracy is measured and comes in
-    # lower than expected, with no obvious cause.
-    MAX_TOKENS = 512
-
-    # A conservative estimate (BGE uses a WordPiece-style tokenizer,
-    # where common English word average out to somewhat more than
-    # one token each due to punctuation and sub-word splitting).
-    # Erring low here is deliberately safe: it's fine to split a
-    # ~500-token chunk into two windows unnecessarily, but it is NOT
-    # fine to under-split and still truncate silently.
-    APPROX_TOKENS_PER_WORD = 1.3
-
-    OVERLAP_TOKENS = 50
-
-    def __init__(self):
-
-        print(f"Loading embedding model: {self.MODEL_NAME} ...")
-
-        self.model = SentenceTransformer(self.MODEL_NAME)
-
-        self.dimension = self.model.get_sentence_embedding_dimension()
-
+    def __init__(self, model_name=None, batch_size=32, max_len=512, include_section=True):
+        self.model_name = model_name or self.MODEL_NAME
+        self.batch_size = batch_size
+        self.include_section = include_section
+        print(f"Loading embedding model: {self.model_name} ...")
+        self._enc = self._load(self.model_name, max_len)
+        self.dimension = int(self._enc(["test"]).shape[1])
         print(f"Model loaded. Embedding dimension: {self.dimension}")
 
-    # =========================================================
-    # LOAD ALL CHUNKS (every company, every report)
-    # =========================================================
+    # ---------------- model ----------------
+    def _load(self, name, max_len):
+        if name == "stub":
+            m = _Stub()
+            return lambda texts: m.encode(texts)
+        try:
+            from sentence_transformers import SentenceTransformer
+            try:
+                m = SentenceTransformer(name, device="cpu", local_files_only=True)   # net ki zaroorat nahi
+            except Exception:
+                m = SentenceTransformer(name, device="cpu")
+            m.max_seq_length = max_len
 
-    def load_all_chunks(self, chunks_dir="STAGE_1/chunks"):
+            def enc(texts):
+                return np.asarray(m.encode(texts, batch_size=self.batch_size, normalize_embeddings=True,
+                                           show_progress_bar=False), dtype=np.float32)
+            return enc
+        except ImportError:
+            pass
+        try:
+            from fastembed import TextEmbedding
+            try:
+                m = TextEmbedding(model_name=name, local_files_only=True)
+            except Exception:
+                m = TextEmbedding(model_name=name)
 
-        chunks_dir = Path(chunks_dir)
+            def enc(texts):
+                v = np.array(list(m.embed(texts, batch_size=self.batch_size)), dtype=np.float32)
+                n = np.linalg.norm(v, axis=1, keepdims=True)
+                n[n == 0] = 1
+                return v / n
+            return enc
+        except ImportError:
+            raise SystemExit("Koi embedding library nahi mili. Chalao:  python -m pip install sentence-transformers")
 
-        all_chunks = []
-
-        for company_dir in sorted(chunks_dir.iterdir()):
-
-            if not company_dir.is_dir():
-                continue
-
-            for json_file in sorted(company_dir.glob("*_chunks.json")):
-
-                with open(json_file, "r", encoding="utf-8") as f:
-
-                    chunks = json.load(f)
-
-                    all_chunks.extend(chunks)
-
-        return all_chunks
-
-    # =========================================================
-    # NEW: SPLIT OVERSIZED CHUNKS INTO EMBEDDABLE WINDOWS
-    # =========================================================
-
-    def _split_oversized_text(self, text):
-        """
-        Splits `text` into overlapping word-windows sized to stay
-        safely under MAX_TOKENS once BGE's tokenizer processes them.
-        Returns [text] unchanged (a list of one) when it's already
-        short enough -- so this is a no-op for the 98% of chunks that
-        don't need it.
-
-        The overlap exists so that a fact sitting right at a window
-        boundary (e.g. a row label in one window, its value in the
-        next) still has a reasonable chance of appearing whole in at
-        least one window, rather than being cleanly severed exactly
-        where a query might need it most.
-        """
-
-        max_words = int(self.MAX_TOKENS / self.APPROX_TOKENS_PER_WORD)
-
-        overlap_words = int(
-            self.OVERLAP_TOKENS / self.APPROX_TOKENS_PER_WORD
-        )
-
-        words = text.split()
-
-        if len(words) <= max_words:
-            return [text]
-
-        windows = []
-
-        start = 0
-
-        while start < len(words):
-
-            end = start + max_words
-
-            windows.append(" ".join(words[start:end]))
-
-            if end >= len(words):
-                break
-
-            start = end - overlap_words
-
-        return windows
-
-    def prepare_embeddable_units(self, chunks):
-        """
-        Expands `chunks` into a (possibly longer) list of
-        "embeddable units" -- each unit has its own `text` for
-        embedding, but carries a reference back to the ORIGINAL
-        chunk's full metadata via `source_chunk`, plus a
-        `window_index`/`window_count` pair so a retrieved unit can be
-        traced back to exactly which slice of its parent chunk it
-        came from.
-
-        For the ~98% of chunks that are already short enough, this
-        produces exactly one unit per chunk, identical in spirit to
-        embedding `chunks` directly -- so nothing changes for the
-        common case, and the metadata sidecar this project already
-        relies on (section_path, page_numbers, chunk_type, etc.)
-        stays exactly as before.
-        """
-
-        units = []
-
-        oversized_count = 0
-
-        for chunk in chunks:
-
-            windows = self._split_oversized_text(chunk["text"])
-
-            if len(windows) > 1:
-                oversized_count += 1
-
-            for window_index, window_text in enumerate(windows):
-
-                units.append({
-                    "text": window_text,
-                    "source_chunk": chunk,
-                    "window_index": window_index,
-                    "window_count": len(windows),
-                })
-
-        if oversized_count:
-
-            print(
-                f"Note: {oversized_count} chunk(s) exceeded "
-                f"{self.MAX_TOKENS} tokens and were split into "
-                f"multiple overlapping windows so no content is "
-                f"silently truncated during embedding."
-            )
-
-        return units
-
-    # =========================================================
-    # EMBED PASSAGES (the chunks being indexed)
-    # =========================================================
-
-    def embed_passages(self, texts, batch_size=32):
-
-        embeddings = self.model.encode(
-            texts,
-            batch_size=batch_size,
-            show_progress_bar=True,
-            normalize_embeddings=True,  # required for cosine similarity via inner product
-            convert_to_numpy=True,
-        )
-
-        return embeddings.astype("float32")
-
-    # =========================================================
-    # EMBED A QUERY (asymmetric -- needs the instruction prefix)
-    # =========================================================
+    def embed_passages(self, texts):
+        if not texts:
+            return np.zeros((0, self.dimension), dtype=np.float32)
+        return np.vstack([self._enc(texts[j:j + 256]) for j in range(0, len(texts), 256)]).astype(np.float32)
 
     def embed_query(self, query_text):
+        prefix = self.QUERY_INSTRUCTION if "bge" in self.model_name.lower() else ""
+        return self._enc([prefix + query_text]).astype(np.float32)      # shape (1, dim)
 
-        prefixed = self.QUERY_INSTRUCTION + query_text
+    # ---------------- chunk -> embeddable units ----------------
+    def header(self, c):
+        """Embedding ke text ke upar: company | saal | section (heading). Section retrieval mein madad karta hai."""
+        base = f"{c.get('company', '')} | {c.get('year', '')} 10-K"
+        sec = section_str(c)
+        return f"{base} | {sec}\n" if (self.include_section and sec) else f"{base}\n"
 
-        embedding = self.model.encode(
-            [prefixed],
-            normalize_embeddings=True,
-            convert_to_numpy=True,
-        )
+    def windows(self, c):
+        words = c["text"].split()
+        size = self.WINDOW_WORDS_TABLE if c.get("chunk_type") == "table" else self.WINDOW_WORDS_TEXT
+        head = self.header(c)
+        if len(words) <= size:
+            return [head + c["text"]]
+        out, st = [], 0
+        while st < len(words):
+            out.append(head + " ".join(words[st:st + size]))
+            if st + size >= len(words):
+                break
+            st += size - self.OVERLAP_WORDS
+        return out
 
-        return embedding.astype("float32")
+    @staticmethod
+    def pages_str(c):
+        p = c.get("page_numbers") or []
+        if not p:
+            return ""
+        return str(min(p)) if min(p) == max(p) else f"{min(p)}-{max(p)}"
 
-    # =========================================================
-    # BUILD FAISS INDEX
-    # =========================================================
+    # ---------------- poora build ----------------
+    def build(self, chunks_dir="STAGE_1/chunks", out_dir="STAGE_1/vector_store", only="", keep_junk=False):
+        try:
+            import faiss                      # shuru mein hi check (9 ghante baad error na aaye)
+        except ImportError:
+            raise SystemExit("FAISS nahi mila. Chalao:  python -m pip install faiss-cpu")
+        out = Path(out_dir)
+        cache = out / "cache"
+        cache.mkdir(parents=True, exist_ok=True)
+        files = sorted(Path(chunks_dir).rglob("*_chunks.json"))
+        if only:
+            keys = [k.strip().lower() for k in only.split(",") if k.strip()]
+            files = [f for f in files if any(k in f.name.lower() for k in keys)]
+        if not files:
+            raise SystemExit(f"Koi *_chunks.json nahi mili: {Path(chunks_dir).resolve()}")
+        print(f"{len(files)} files mileen.")
 
-    def build_index(self, embeddings):
+        t0 = time.time()
+        TYPE_NAMES = ["text", "table", "other"]
+        comp_names, comp_code = [], {}
+        a_comp, a_year, a_type, a_gid, a_off = array("h"), array("h"), array("b"), array("i"), array("q")
+        a_dl = array("f")
+        vocab = {}
+        idx_parts, val_parts, len_parts, emb_files = [], [], [], []
+        skipped, chunk_counter, pos = {}, 0, 0
+        meta_fh = open(out / "meta.jsonl", "wb")
 
-        # Flat index with inner product = cosine similarity, since
-        # embeddings are normalized above. For a few thousand chunks
-        # (our scale), an exact flat index is fast enough -- no need
-        # for an approximate index (IVF/HNSW) at this size.
-        index = faiss.IndexFlatIP(self.dimension)
+        for i, f in enumerate(files, start=1):
+            safe = re.sub(r"[^A-Za-z0-9_.-]", "_", f.stem)
+            cache_npy, cache_sig = cache / (safe + ".npy"), cache / (safe + ".sig")
+            try:
+                chunks = json.load(open(f, encoding="utf-8"))
+            except Exception as e:
+                print("  Parh nahi saka:", f.name, e)
+                continue
+            if keep_junk:
+                keep = chunks
+            else:
+                keep = []
+                for c in chunks:
+                    r = junk_reason(c)
+                    if r:
+                        skipped[r] = skipped.get(r, 0) + 1
+                    else:
+                        keep.append(c)
+            meta, texts = [], []
+            for c in keep:
+                for wi, wt in enumerate(self.windows(c)):
+                    meta.append(dict(company=str(c.get("company", "")),
+                                     year=int(c["year"]) if str(c.get("year", "")).isdigit() else 0,
+                                     chunk_type=c.get("chunk_type", ""), page=self.pages_str(c),
+                                     page_numbers=c.get("page_numbers") or [], section_path=section_str(c),
+                                     file=f.name, win=wi, text=c["text"], _gid=chunk_counter))
+                    texts.append(wt)
+                chunk_counter += 1
+            sig = str(zlib.crc32("\x00".join(texts).encode("utf-8")))   # text badla to cache purana maana jayega
+            ok = False
+            if cache_npy.exists() and cache_sig.exists() and cache_sig.read_text(encoding="utf-8") == sig:
+                ok = np.load(cache_npy, mmap_mode="r").shape[0] == len(meta)
+            if ok:
+                how = "cache se"
+            else:
+                np.save(cache_npy, self.embed_passages(texts))
+                cache_sig.write_text(sig, encoding="utf-8")
+                how = f"{(time.time() - t0) / 60:.1f} min guzre"
+            emb_files.append((cache_npy, len(meta)))
 
-        index.add(embeddings)
+            cols, vals, lens = [], [], []
+            for m in meta:
+                gid = m.pop("_gid")
+                line = (json.dumps(m, ensure_ascii=False) + "\n").encode("utf-8")
+                meta_fh.write(line)
+                a_off.append(pos)
+                pos += len(line)
+                if m["company"] not in comp_code:
+                    comp_code[m["company"]] = len(comp_names)
+                    comp_names.append(m["company"])
+                a_comp.append(comp_code[m["company"]])
+                a_year.append(m["year"])
+                a_type.append(TYPE_NAMES.index(m["chunk_type"]) if m["chunk_type"] in TYPE_NAMES else 2)
+                a_gid.append(gid)
+                toks = tok(f"{m['company']} {m['year']} {m['section_path']} {m['text']}")
+                a_dl.append(len(toks))
+                cnt = Counter(toks)
+                lens.append(len(cnt))
+                for w, n in cnt.items():
+                    cols.append(vocab.setdefault(w, len(vocab)))
+                    vals.append(n)
+            idx_parts.append(np.array(cols, dtype=np.int32))
+            val_parts.append(np.array(vals, dtype=np.float32))
+            len_parts.append(np.array(lens, dtype=np.int64))
+            del cols, vals, lens, meta, texts, chunks, keep
+            print(f"[{i}/{len(files)}] {f.name}: {how}")
 
-        return index
+        meta_fh.close()
+        N = len(a_off)
+        if N == 0:
+            raise SystemExit("Koi chunk nahi bacha.")
 
-    # =========================================================
-    # SAVE INDEX + METADATA SIDECAR
-    # =========================================================
+        dim = next(np.load(p, mmap_mode="r").shape[1] for p, n in emb_files if n > 0)
+        print("FAISS index bana raha hoon...")
+        index = faiss.IndexFlatIP(dim)        # normalized vectors -> inner product = cosine (exact search)
+        for p, n in emb_files:
+            if n:
+                index.add(np.ascontiguousarray(np.load(p), dtype=np.float32))
+        if index.ntotal != N:
+            raise SystemExit(f"Gadbad: FAISS mein {index.ntotal} vectors, meta mein {N}")
+        faiss.write_index(index, str(out / "index.faiss"))
+        del index
 
-    def save(
-        self,
-        index,
-        units,
-        output_dir="STAGE_1/vector_store",
-    ):
+        print("BM25 bana raha hoon...")
+        indices, data = np.concatenate(idx_parts), np.concatenate(val_parts)
+        lens_all = np.concatenate(len_parts)
+        del idx_parts, val_parts, len_parts
+        indptr = np.zeros(N + 1, dtype=np.int64)
+        np.cumsum(lens_all, out=indptr[1:])
+        X = sp.csr_matrix((data, indices, indptr), shape=(N, len(vocab))).tocsc()
+        del data, indices
+        sp.save_npz(out / "bm25.npz", X, compressed=False)
+        np.save(out / "doclen.npy", np.frombuffer(a_dl, dtype=np.float32))
+        (out / "bm25_vocab.json").write_text(json.dumps(vocab), encoding="utf-8")
+        np.savez(out / "light.npz", company=np.frombuffer(a_comp, dtype=np.int16), year=np.frombuffer(a_year, dtype=np.int16),
+                 type=np.frombuffer(a_type, dtype=np.int8), gid=np.frombuffer(a_gid, dtype=np.int32),
+                 offset=np.frombuffer(a_off, dtype=np.int64))
+        (out / "config.json").write_text(json.dumps(dict(model=self.model_name, n_chunks=N, dim=int(dim),
+                                                         companies=comp_names, type_names=TYPE_NAMES,
+                                                         section_in_embedding=self.include_section,
+                                                         skipped=skipped)), encoding="utf-8")
+        print(f"\nHo gaya. {N} vectors index mein.")
+        print(f"Nahi daale (bekaar): {sum(skipped.values())}  {skipped}")
+        print(f"Folder: {out.resolve()}")
+        print('Ab test:  python STAGE_1/retriever.py "Woodward 2025 total assets"')
 
-        output_dir = Path(output_dir)
-
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        faiss.write_index(index, str(output_dir / "index.faiss"))
-
-        # NEW: the metadata sidecar now stores the ORIGINAL chunk
-        # (via source_chunk) for every unit, so a FAISS row -> a full
-        # citation lookup works exactly as before for the common
-        # case, while for a split chunk, EVERY window row points back
-        # to the SAME original chunk -- meaning a match on any window
-        # correctly surfaces the complete original text (not just the
-        # slice that happened to match), plus window_index/
-        # window_count in case you ever want to know which part of a
-        # long table actually matched.
-        metadata = [
-            {
-                **unit["source_chunk"],
-                "window_index": unit["window_index"],
-                "window_count": unit["window_count"],
-            }
-            for unit in units
-        ]
-
-        with open(output_dir / "metadata.pkl", "wb") as f:
-            pickle.dump(metadata, f)
-
-        print(f"\nSaved FAISS index and metadata to: {output_dir}")
-
-
-# =============================================================
-# MAIN
-# =============================================================
 
 if __name__ == "__main__":
-
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--chunks", default="STAGE_1/chunks")
+    ap.add_argument("--out", default="STAGE_1/vector_store")
+    ap.add_argument("--model", default=EmbeddingIndexBuilder.MODEL_NAME, help="'stub' = sirf test ke liye")
+    ap.add_argument("--only", default="", help="comma separated: sirf in companies ki files, jaise Woodward,Nordson")
+    ap.add_argument("--batch", type=int, default=32)
+    ap.add_argument("--keep-junk", action="store_true", help="exhibit lists waghera bhi daalo")
+    ap.add_argument("--no-section", action="store_true", help="section ka naam embedding mein mat daalo")
+    a = ap.parse_args()
     print("\n====================================")
     print(" Embedding Index Builder Started")
     print("====================================\n")
-
-    builder = EmbeddingIndexBuilder()
-
-    print("\nLoading all chunks...")
-
-    chunks = builder.load_all_chunks()
-
-    print(f"Loaded {len(chunks)} chunks total.")
-
-    if not chunks:
-
-        print("No chunks found. Run ChunkBuilder first.")
-
-    else:
-
-        units = builder.prepare_embeddable_units(chunks)
-
-        print(f"Prepared {len(units)} embeddable units (from {len(chunks)} chunks).")
-
-        texts = [u["text"] for u in units]
-
-        print("\nEmbedding chunks (this may take a few minutes)...")
-
-        embeddings = builder.embed_passages(texts)
-
-        print(f"\nEmbeddings shape: {embeddings.shape}")
-
-        print("\nBuilding FAISS index...")
-
-        index = builder.build_index(embeddings)
-
-        print(f"Index contains {index.ntotal} vectors.")
-
-        builder.save(index, units)
-
-        print("\n====================================")
-        print(" Embedding Index Building Completed")
-        print("======================================")
+    EmbeddingIndexBuilder(a.model, a.batch, include_section=not a.no_section).build(a.chunks, a.out, a.only, a.keep_junk)
