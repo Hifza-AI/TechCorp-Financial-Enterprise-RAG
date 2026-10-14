@@ -1,509 +1,316 @@
-import json as _json
-import pickle
+"""
+retriever.py  -  Tumhari wahi Retriever class (wahi search() aur wahi jawab ka format), naye index ke saath.
+
+Chalane ka tareeqa:
+    python STAGE_1/retriever.py "Woodward 2025 total assets"
+    python STAGE_1/retriever.py "net income" --company Nordson --year 2016
+    python STAGE_1/retriever.py --test          (neeche wale test sawal, retriever_test_results.json banata hai)
+
+Doosre code se (Gemini wale step mein):
+    from retriever import Retriever
+    r = Retriever()
+    resp = r.search("What was Woodward's total assets in 2025?", top_k=5)
+    # resp = {"matched": True/False, "reason": ..., "results": [ {score, rrf_score, company, year,
+    #          section_path, page_numbers, chunk_type, text}, ... ]}
+
+Purani retriever.py se kya badla:
+  * FAISS wahi (IndexFlatIP, exact search). Company/saal ka filter FAISS ke andar search se PEHLE lagta hai
+    (IDSelector) -> sirf wahi company-saal dhoondi jati hai.
+  * BM25 ab sparse matrix hai (rank_bm25 500 files par kai GB RAM leta).
+  * Company pehchan: pehla lafz tabhi jab wo sirf ek company ka ho (warna galat company chun leti thi).
+    Do companies ka sawal ("Woodward vs Nordson") dono ko filter karta hai.
+  * Saal: sawal mein jitne saal likhe hon sab (jaise "2019 and 2020"), sirf pehla nahi.
+  * Numbers (1,285) tukde nahi hote, exact number se bhi mil jate hain.
+  * Purani cheezein jaisi thin: recency ("latest"), unknown company guard, confidence gate (bina filter wale sawal),
+    "No data found for year ..." jawab.
+"""
+import argparse
+import json
 import re
 from pathlib import Path
 
 import faiss
-from rank_bm25 import BM25Okapi
+import numpy as np
+import scipy.sparse as sp
 
-from build_embeddings import EmbeddingIndexBuilder
+from build_embeddings import EmbeddingIndexBuilder, tok
 
 
 class Retriever:
 
-    # Words that signal the person wants the LATEST year specifically :
     RECENCY_KEYWORDS = re.compile(
-        r"\b(most recent|latest|current|this year|last fiscal year|"
-        r"newest|up[- ]to[- ]date)\b",
-        re.IGNORECASE,
-    )
-
-    # Non-capturing group used for exact 4-digit year match
+        r"\b(most recent|latest|current|this year|last fiscal year|newest|up[- ]to[- ]date)\b", re.IGNORECASE)
     YEAR_PATTERN = re.compile(r"\b(?:19|20)\d{2}\b")
 
-    # Minimum cosine similarity threshold. NOTE: this is checked
-    # against the raw DENSE score specifically (see search() below),
-    # never against the fused RRF score -- RRF scores live on a
-    # completely different scale (small fractions, typically
-    # 0.01-0.03) and were never meant to be compared against a
-    # cosine-similarity cutoff. Reusing 0.58 against an RRF score
-    # would make EVERY query fail the confidence gate.
+    # Dense cosine par check (RRF score par nahi). Model badla hai (bge-small), isliye eval mein dobara
+    # parakhna: agar sahi sawal bhi "nahi mila" aaye to ise 0.50 ke qareeb kar dena.
     MIN_CONFIDENCE_SCORE = 0.58
-
-    # Reciprocal Rank Fusion constant (standard value from IR literature --
-    # not something that needs per-corpus tuning)
     RRF_K = 60
+    POOL = 50
+
+    WELL_KNOWN_COMPANIES = [
+        "tesla", "microsoft", "jpmorgan", "citigroup", "pfizer", "coca-cola", "costco", "cvs", "disney",
+        "amazon", "google", "alphabet", "nvidia", "walmart", "netflix", "intel", "ibm", "oracle", "exxon",
+        "starbucks", "mcdonald", "ford", "general motors", "boeing", "apple", "meta platforms", "facebook",
+    ]
 
     def __init__(self, store_dir="STAGE_1/vector_store"):
-
-        store_dir = Path(store_dir)
-
+        d = Path(store_dir)
+        if not (d / "index.faiss").exists():
+            raise SystemExit(f"Index nahi mila: {d.resolve()}  (pehle build_embeddings.py chalao)")
         print("Loading FAISS index and metadata...")
+        cfg = json.loads((d / "config.json").read_text(encoding="utf-8"))
+        self.index = faiss.read_index(str(d / "index.faiss"))
+        L = np.load(d / "light.npz")
+        self.names = cfg["companies"]
+        self.type_names = cfg["type_names"]
+        self.ccode, self.year, self.tcode = L["company"], L["year"], L["type"]
+        self.gid, self.offset = L["gid"], L["offset"]
+        self.N = len(self.offset)
+        if self.index.ntotal != self.N:
+            raise SystemExit("Index aur metadata ka size match nahi karta -- build_embeddings.py dobara chalao.")
+        self._mf = open(d / "meta.jsonl", "rb")
+        print("Loading keyword (BM25) index...")
+        self.X = sp.load_npz(d / "bm25.npz").tocsc()
+        self.dl = np.load(d / "doclen.npy")
+        self.vocab = json.loads((d / "bm25_vocab.json").read_text(encoding="utf-8"))
+        self.avgdl = float(self.dl.mean())
+        self.df = np.diff(self.X.indptr)
 
-        self.index = faiss.read_index(str(store_dir / "index.faiss"))
+        self.embedder = EmbeddingIndexBuilder(cfg["model"])
 
-        with open(store_dir / "metadata.pkl", "rb") as f:
-            self.metadata = pickle.load(f)
-
-        self.embedder = EmbeddingIndexBuilder()
-
-        # -----------------------------------------------------
-        # BM25 (sparse/keyword) index -- built over the SAME chunks
-        # as the dense FAISS index, so row i in both always refers
-        # to the same chunk (metadata[i]). This lets us fuse rankings
-        # from both retrieval methods without any extra bookkeeping.
-        # -----------------------------------------------------
-
-        print("Building BM25 keyword index...")
-
-        tokenized_corpus = [
-            self._tokenize(chunk.get("text", "")) for chunk in self.metadata
-        ]
-
-        self.bm25 = BM25Okapi(tokenized_corpus)
-
-        # Unique set of indexed companies
-        self.known_companies = sorted({
-            chunk.get("company") for chunk in self.metadata
-            if chunk.get("company")
-        })
-
-        # Resolve recency against the FULL corpus metadata
+        self.known_companies = sorted(self.names)
         self.latest_year_by_company = {}
-        for chunk in self.metadata:
-            company = chunk.get("company")
-            year = chunk.get("year")
-            if company and year:
-                current = self.latest_year_by_company.get(company, 0)
-                self.latest_year_by_company[company] = max(current, year)
+        for ci, n in enumerate(self.names):
+            ys = self.year[self.ccode == ci]
+            ys = ys[ys > 0]
+            if ys.size:
+                self.latest_year_by_company[n] = int(ys.max())
+        self.global_latest_year = max(self.latest_year_by_company.values()) if self.latest_year_by_company else None
+        self._years_by_company = {n: sorted({int(y) for y in set(self.year[self.ccode == ci].tolist()) if y > 0})
+                                  for ci, n in enumerate(self.names)}
+        self._build_aliases()
 
-        self.global_latest_year = (
-            max(self.latest_year_by_company.values())
-            if self.latest_year_by_company else None
-        )
+    def _meta(self, i):
+        self._mf.seek(int(self.offset[i]))
+        return json.loads(self._mf.readline())
 
-    def _tokenize(self, text):
-        return re.findall(r"[a-z0-9]+", text.lower())
+    # ------------------------------------------------------------------
+    # company / saal pehchan
+    # ------------------------------------------------------------------
+    def _build_aliases(self):
+        first = {}
+        for n in self.known_companies:
+            clean = re.sub(r"\(.*?\)", "", n).strip().lower()
+            w = re.findall(r"[a-z0-9&]+", clean)
+            first.setdefault(w[0] if w else clean, set()).add(n)
+        self.aliases = {}
+        for n in self.known_companies:
+            clean = re.sub(r"\(.*?\)", "", n).strip().lower()
+            clean = re.sub(r"[^a-z0-9& ]+", " ", clean).strip()
+            self.aliases[clean] = {n}
+            w = re.findall(r"[a-z0-9&]+", clean)
+            if w and len(w[0]) >= 3 and len(first[w[0]]) == 1:
+                self.aliases[w[0]] = {n}
+            m = re.search(r"\((.*?)\)", n)
+            if m and len(m.group(1)) >= 2:
+                self.aliases[m.group(1).lower()] = {n}
 
-    def _detect_company(self, query):
+    def _detect_companies(self, query):
+        q = " " + re.sub(r"[^a-z0-9&]+", " ", query.lower()) + " "
+        found = set()
+        for a, ns in self.aliases.items():
+            if a and re.search(r"\b" + re.escape(a) + r"\b", q):
+                found |= ns
+        return found
 
-        query_lower = query.lower()
-
-        # NEW (confirmed via real test_multi_company_results.txt output):
-        # requiring the FULL stored company name to appear in the query
-        # silently fails for any company whose stored name has extra
-        # words beyond what people actually type. Confirmed concretely:
-        # "Chipotle Mexican Grill" is the stored name, but real queries
-        # just say "Chipotle" -- "chipotle mexican grill" is NOT a
-        # substring of "what was chipotle's revenue", so _detect_company
-        # returned None every single time a query used the short form.
-        # With no company filter applied, the query then searched the
-        # ENTIRE corpus unfiltered, and three separate real test queries
-        # ("Chipotle's most recent total revenue", "...net income",
-        # "...latest reported revenue") all confidently returned
-        # Salesforce or Walmart data instead -- a severe, silent
-        # cross-company contamination bug. "Palo Alto Networks" queries
-        # were unaffected only because people happen to type that
-        # company's full name in practice.
-        #
-        # Fix: also match on just the company's FIRST WORD (e.g.
-        # "Chipotle", "Palo"), not only the complete stored name. This
-        # keeps the existing full-name match as the first, more precise
-        # check (so "Palo Alto Networks" still can't accidentally match
-        # on some unrelated company that also starts with a shared first
-        # word), and only falls back to the short form when the full
-        # name genuinely isn't present.
-        for company in self.known_companies:
-            if company.lower() in query_lower:
-                return company
-
-        for company in self.known_companies:
-            first_word = company.split()[0].lower()
-            if len(first_word) >= 4 and re.search(
-                r"\b" + re.escape(first_word) + r"\b", query_lower
-            ):
-                return company
-
-        return None
+    def _detect_company(self, query):          # purane naam ke liye (ek company ya None)
+        f = self._detect_companies(query)
+        return sorted(f)[0] if len(f) == 1 else None
 
     def _mentions_unknown_company(self, query):
-
-        WELL_KNOWN_COMPANIES = [
-            "tesla", "microsoft", "jpmorgan", "citigroup", "pfizer",
-            "coca-cola", "costco", "cvs", "boeing", "disney",
-        ]
-
-        query_lower = query.lower()
-
-        for name in WELL_KNOWN_COMPANIES:
-            if name in query_lower:
-                if not any(name in c.lower() for c in self.known_companies):
-                    return name
-
+        q = query.lower()
+        known = " ".join(c.lower() for c in self.known_companies)
+        for name in self.WELL_KNOWN_COMPANIES:
+            if re.search(r"\b" + re.escape(name) + r"\b", q) and name not in known:
+                return name
         return None
 
-    # =========================================================
-    # NEW: DEDUPLICATION KEY FOR SPLIT-CHUNK WINDOWS
-    #
-    # build_embeddings.py's EmbeddingIndexBuilder now splits any
-    # chunk longer than BGE's 512-token limit into multiple
-    # overlapping windows (confirmed on real data: ~2% of chunks,
-    # almost all large financial tables like Segment Information
-    # breakdowns and multi-year Stockholders' Equity rollforwards).
-    # Each window becomes its OWN row in the FAISS index and its OWN
-    # entry in metadata.pkl -- but every window's metadata entry
-    # carries the SAME full "text", "section_path", "company", and
-    # "year" as its siblings (only window_index/window_count differ),
-    # since metadata is built from the ORIGINAL chunk dict, not the
-    # sliced window text.
-    #
-    # Without deduplicating on this before truncating to top_k, a
-    # single large table can occupy 2-3 of a caller's requested
-    # top_k slots simultaneously whenever several of its windows
-    # independently rank well (very plausible, since they're
-    # overlapping slices of the same semantic content) -- crowding
-    # out genuinely different, relevant chunks and silently reducing
-    # both the diversity and the effective recall of every top-k
-    # result, specifically for the long, information-dense tables
-    # this project cares most about getting right.
-    # =========================================================
-
-    def _dedupe_key(self, chunk):
-
-        section_path = chunk.get("section_path")
-
-        if isinstance(section_path, list):
-            section_path = tuple(section_path)
-
-        return (
-            chunk.get("company"),
-            chunk.get("year"),
-            chunk.get("chunk_type"),
-            section_path,
-            chunk.get("text"),
-        )
-
-    # =========================================================
-    # DENSE RETRIEVAL (whole corpus, so every chunk gets a rank)
-    # =========================================================
-
-    def _dense_search(self, query):
-
-        query_vector = self.embedder.embed_query(query)
-
-        scores, indices = self.index.search(query_vector, self.index.ntotal)
-
-        rank_by_idx = {}
-        score_by_idx = {}
-
-        for rank, (score, idx) in enumerate(zip(scores[0], indices[0])):
-
-            if idx == -1:
+    # ------------------------------------------------------------------
+    # bm25
+    # ------------------------------------------------------------------
+    def _bm25(self, query, k1=1.5, b=0.75):
+        score = np.zeros(self.N, dtype=np.float32)
+        for w in set(tok(query)):
+            j = self.vocab.get(w)
+            if j is None:
                 continue
+            s, e = self.X.indptr[j], self.X.indptr[j + 1]
+            rows, tf = self.X.indices[s:e], self.X.data[s:e]
+            idf = np.log(1 + (self.N - self.df[j] + 0.5) / (self.df[j] + 0.5))
+            score[rows] += idf * tf * (k1 + 1) / (tf + k1 * (1 - b + b * self.dl[rows] / self.avgdl))
+        return score
 
-            rank_by_idx[int(idx)] = rank
-            score_by_idx[int(idx)] = float(score)
+    # ------------------------------------------------------------------
+    # search
+    # ------------------------------------------------------------------
+    def search(self, query, top_k=5, company=None, year=None, chunk_type=None):
 
-        return rank_by_idx, score_by_idx
+        unknown = self._mentions_unknown_company(query)
+        if unknown:
+            return {"matched": False, "reason": f"No indexed data for '{unknown}'.", "results": []}
 
-    # =========================================================
-    # BM25 RETRIEVAL (whole corpus, so every chunk gets a rank)
-    # =========================================================
+        comps = self._detect_companies(query)
+        if company:
+            comps = {n for n in self.known_companies if company.lower() in n.lower()}
+        years = {int(y) for y in self.YEAR_PATTERN.findall(query)}
+        if year:
+            years = {int(year)}
+        wants_recent = bool(self.RECENCY_KEYWORDS.search(query)) and not years
 
-    def _bm25_search(self, query):
+        needs_hard_filter = bool(comps or years or wants_recent)
+        mask = np.ones(self.N, dtype=bool)
 
-        tokenized_query = self._tokenize(query)
+        if comps:
+            mask &= np.isin(self.ccode, [self.names.index(c) for c in comps])
+            if not mask.any():
+                return {"matched": False, "reason": f"No data found for company '{sorted(comps)}'.", "results": []}
+        if years:
+            m2 = mask & np.isin(self.year, list(years))
+            if not m2.any():
+                avail = {c: self._years_by_company.get(c, []) for c in (comps or [])}
+                extra = f" Available years: {avail}" if avail else ""
+                return {"matched": False, "reason": f"No data found for year(s) {sorted(years)}.{extra}", "results": []}
+            mask = m2
+        elif wants_recent:
+            latest = np.array([self.latest_year_by_company.get(n, 0) for n in self.names], dtype=np.int16)[self.ccode]
+            mask &= (self.year == latest)
+        if chunk_type:
+            mask &= (self.tcode == self.type_names.index(chunk_type))
 
-        scores = self.bm25.get_scores(tokenized_query)
+        idx = np.where(mask)[0]
+        if idx.size == 0:
+            return {"matched": False, "reason": "No sufficiently relevant data found for this query.", "results": []}
 
-        ranked_indices = sorted(
-            range(len(scores)),
-            key=lambda i: scores[i],
-            reverse=True,
-        )
+        # ---- dense (FAISS) : filter ke andar top POOL ----
+        q = np.ascontiguousarray(self.embedder.embed_query(query), dtype=np.float32)      # (1, dim)
+        k = int(min(self.POOL, idx.size))
+        if idx.size == self.N:
+            D, I = self.index.search(q, k)
+        else:
+            ids = np.ascontiguousarray(idx, dtype=np.int64)
+            params = faiss.SearchParameters()
+            params.sel = faiss.IDSelectorBatch(len(ids), faiss.swig_ptr(ids))
+            D, I = self.index.search(q, k, params=params)
+        dense_hits = [(int(i), float(s)) for i, s in zip(I[0], D[0]) if i >= 0]
+        rd = {doc: r for r, (doc, _) in enumerate(dense_hits)}
+        dscore = dict(dense_hits)
+        best_dense = dense_hits[0][1] if dense_hits else 0.0
 
-        rank_by_idx = {idx: rank for rank, idx in enumerate(ranked_indices)}
+        # ---- keyword (BM25) : filter ke andar top POOL ----
+        bm = self._bm25(query)[idx]
+        rb = {int(idx[i]): r for r, i in enumerate(np.argsort(-bm)[:self.POOL]) if bm[i] > 0}
 
-        return rank_by_idx
+        rrf = {}
+        for doc in set(rd) | set(rb):
+            rrf[doc] = (1.0 / (self.RRF_K + rd[doc] + 1) if doc in rd else 0.0) + \
+                       (1.0 / (self.RRF_K + rb[doc] + 1) if doc in rb else 0.0)
 
-    # =========================================================
-    # RECIPROCAL RANK FUSION
-    #
-    # RRF combines two (or more) different ranked lists WITHOUT
-    # needing their raw scores to be on comparable scales -- each
-    # method only contributes 1/(k + rank) for however it ranked a
-    # given chunk, so a chunk that ranks well in EITHER method (exact
-    # keyword match via BM25, OR semantic similarity via dense) gets
-    # pulled up, and a chunk that ranks well in BOTH gets pulled up
-    # even further.
-    # =========================================================
-
-    def _reciprocal_rank_fusion(self, dense_rank_by_idx, bm25_rank_by_idx):
-
-        all_indices = set(dense_rank_by_idx) | set(bm25_rank_by_idx)
-
-        rrf_scores = {}
-
-        for idx in all_indices:
-
-            score = 0.0
-
-            if idx in dense_rank_by_idx:
-                score += 1.0 / (self.RRF_K + dense_rank_by_idx[idx] + 1)
-
-            if idx in bm25_rank_by_idx:
-                score += 1.0 / (self.RRF_K + bm25_rank_by_idx[idx] + 1)
-
-            rrf_scores[idx] = score
-
-        return rrf_scores
-
-    def search(self, query, top_k=5):
-
-        # Company check for unindexed target entity
-        unknown_company = self._mentions_unknown_company(query)
-
-        if unknown_company:
-            return {
-                "matched": False,
-                "reason": f"No indexed data for '{unknown_company}'.",
-                "results": [],
-            }
-
-        wanted_company = self._detect_company(query)
-        wants_recent = bool(self.RECENCY_KEYWORDS.search(query))
-
-        year_match = self.YEAR_PATTERN.search(query)
-        wanted_year = int(year_match.group()) if year_match else None
-
-        # Anchor recency intent directly to full corpus actual latest year
-        if wants_recent and wanted_year is None:
-            if wanted_company and wanted_company in self.latest_year_by_company:
-                wanted_year = self.latest_year_by_company[wanted_company]
-            else:
-                wanted_year = self.global_latest_year
-
-        # Used below to relax the confidence gate once we've
-        # deterministically confirmed (via metadata, not fuzzy
-        # matching) that this company/year combination is in the
-        # corpus at all -- see the confidence-gate comment further
-        # down for the full rationale.
-        needs_hard_filter = bool(wanted_company or (wanted_year is not None))
-
-        # -----------------------------------------------------
-        # Run BOTH retrieval methods over the WHOLE corpus (needed
-        # so RRF has a real rank for every chunk, and so post-hoc
-        # company/year filtering never truncates recall the way a
-        # small top_k pool would).
-        # -----------------------------------------------------
-
-        dense_rank_by_idx, dense_score_by_idx = self._dense_search(query)
-
-        bm25_rank_by_idx = self._bm25_search(query)
-
-        rrf_scores = self._reciprocal_rank_fusion(
-            dense_rank_by_idx, bm25_rank_by_idx
-        )
-
-        # NEW: dedupe by ORIGINAL source chunk while building
-        # candidates, keeping only the highest-rrf-scoring window for
-        # any chunk that got split into multiple windows by
-        # build_embeddings.py. See _dedupe_key()'s docstring above
-        # for the full rationale -- this is what stops one large
-        # table's several windows from occupying multiple slots in
-        # the same top-k result list.
-        candidates_by_key = {}
-
-        for idx, rrf_score in rrf_scores.items():
-
-            chunk = self.metadata[idx]
-
-            key = self._dedupe_key(chunk)
-
-            existing = candidates_by_key.get(key)
-
-            if existing is not None and existing["rrf_score"] >= rrf_score:
+        results, seen = [], set()
+        for doc in sorted(rrf, key=lambda x: -rrf[x]):
+            g = int(self.gid[doc])
+            if g in seen:                    # lambe table ke kai tukde -> ek hi baar
                 continue
+            seen.add(g)
+            m = self._meta(doc)
+            results.append({
+                "score": dscore[doc] if doc in dscore else float(self.index.reconstruct(doc) @ q[0]),
+                "rrf_score": rrf[doc],
+                "company": m["company"],
+                "year": m["year"],
+                "section_path": m["section_path"],
+                "page_numbers": m["page_numbers"],
+                "chunk_type": m["chunk_type"],
+                "text": m["text"],
+            })
+            if len(results) == top_k:
+                break
 
-            candidates_by_key[key] = {
-                "score": dense_score_by_idx.get(idx, 0.0),
-                "rrf_score": rrf_score,
-                "company": chunk.get("company"),
-                "year": chunk.get("year"),
-                "section_path": chunk.get("section_path"),
-                "page_numbers": chunk.get("page_numbers"),
-                "chunk_type": chunk.get("chunk_type"),
-                "text": chunk.get("text"),
-            }
+        if not results:
+            return {"matched": False, "reason": "No sufficiently relevant data found for this query.", "results": []}
+        if not needs_hard_filter:
+            if best_dense < self.MIN_CONFIDENCE_SCORE:
+                return {"matched": False, "reason": "No sufficiently relevant data found for this query.", "results": []}
+        return {"matched": True, "reason": None, "results": results}
 
-        candidates = list(candidates_by_key.values())
 
-        # Hard filter without silent fallbacks
-        if wanted_company:
-            candidates = [c for c in candidates if c["company"] == wanted_company]
-            if not candidates:
-                return {
-                    "matched": False,
-                    "reason": f"No data found for company '{wanted_company}'.",
-                    "results": [],
-                }
+TEST_QUESTIONS = {
+    "Numbers (table lookup)": [
+        "What was Woodward's total assets in 2025?",
+        "What was Nordson's net income in 2016?",
+        "What was Caterpillar's total sales and revenues in 2025?",
+    ],
+    "Conceptual / risk": [
+        "What supply chain risks does Caterpillar disclose in 2025?",
+        "What competitive conditions does Nordson describe in 2020?",
+    ],
+    "Business description": [
+        "What business segments does Woodward operate?",
+    ],
+    "Comparison (two years / two companies)": [
+        "How did Woodward's net sales change between 2022 and 2023?",
+        "Compare Woodward and Nordson total assets in 2024",
+    ],
+    "Recency": [
+        "What is Woodward's most recent total net sales?",
+    ],
+    "Out-of-scope (should NOT match)": [
+        "Who is the CEO of Tesla?",
+        "What is the weather in Cupertino?",
+        "What was Woodward's revenue in 2031?",
+    ],
+}
 
-        if wanted_year is not None:
-            candidates = [c for c in candidates if c["year"] == wanted_year]
-            if not candidates:
-                return {
-                    "matched": False,
-                    "reason": f"No data found for year {wanted_year}.",
-                    "results": [],
-                }
 
-        # Rank by the FUSED score now, not the raw dense score --
-        # this is what actually lets BM25 influence which chunks
-        # surface and in what order.
-        candidates.sort(key=lambda c: c["rrf_score"], reverse=True)
-
-        results = candidates[:top_k]
-
-        # Confidence gate STILL checks the raw DENSE cosine-similarity
-        # of the top result (never the RRF score -- see the
-        # MIN_CONFIDENCE_SCORE docstring above). This preserves the
-        # already-verified out-of-scope rejection behavior (unknown
-        # topics, irrelevant queries) exactly as it worked before
-        # hybrid retrieval was wired in.
-        #
-        # Skip the numeric threshold ENTIRELY when a hard company/year
-        # filter was applied -- once we've already deterministically
-        # confirmed via metadata (not fuzzy/semantic matching) that
-        # this exact company+year combination IS in the corpus, the
-        # threshold's actual purpose (catching queries about things
-        # not in the corpus at all) is already ruled out.
-        if needs_hard_filter:
-            if not results:
-                return {
-                    "matched": False,
-                    "reason": "No sufficiently relevant data found for this query.",
-                    "results": [],
-                }
-        elif not results or results[0]["score"] < self.MIN_CONFIDENCE_SCORE:
-            return {
-                "matched": False,
-                "reason": "No sufficiently relevant data found for this query.",
-                "results": [],
-            }
-
-        return {
-            "matched": True,
-            "reason": None,
-            "results": results,
-        }
+def _show(question, response):
+    print("\n" + "=" * 70)
+    print("Q:", question)
+    print("=" * 70)
+    if not response["matched"]:
+        print("    ⚠️  ", response["reason"])
+        return
+    for i, r in enumerate(response["results"], 1):
+        pg = r["page_numbers"]
+        pg = (f"{min(pg)}-{max(pg)}" if pg and min(pg) != max(pg) else (str(pg[0]) if pg else "?"))
+        print(f"\n[{i}] dense={r['score']:.3f} rrf={r['rrf_score']:.4f} | {r['company']} {r['year']} | "
+              f"{r['chunk_type']} | PDF page {pg}")
+        print("    Section:", r["section_path"][-110:])
+        print("    " + r["text"][:300].replace("\n", " / "))
 
 
 if __name__ == "__main__":
-
-    retriever = Retriever()
-
-    test_questions = {
-        "Simple Numeric (single year) -- ALL 4 COMPANIES": [
-            "What was Apple's total net sales in 2020?",
-            "What was Microsoft's total revenue in 2022?",
-            "What was CVS's net income?",
-            "What was Costco's total revenue?",
-        ],
-        "Table-Based Lookup -- ALL 4 COMPANIES": [
-            "What was Apple's total assets on the balance sheet?",
-            "What was Microsoft's total liabilities?",
-            "What was CVS's earnings per share (EPS)?",
-            "What was Costco's operating income?",
-        ],
-        "Trend / Comparison (multi-year)": [
-            "How did Apple's iPhone sales change between 2019 and 2020?",
-            "How has Microsoft's cloud revenue grown over the years?",
-        ],
-        "Conceptual / Risk Factors -- ALL 4 COMPANIES": [
-            "What risks does Apple face from supply chain disruptions?",
-            "What risks does Microsoft disclose related to cybersecurity?",
-            "What litigation risks does CVS disclose?",
-            "What competitive risks does Costco mention?",
-        ],
-        "Geographic / Segment -- ALL 4 COMPANIES": [
-            "How much revenue did Apple generate in Greater China?",
-            "What were Microsoft's segment revenues?",
-            "What were Costco's operating income by geographic region?",
-        ],
-        "Business Description -- ALL 4 COMPANIES": [
-            "What products and services does Apple sell?",
-            "What is Microsoft's business strategy?",
-            "What business segments does CVS operate?",
-            "What is Costco's membership warehouse business model?",
-        ],
-        "Recency-Aware": [
-            "What is Apple's most recent total net sales?",
-            "What is Microsoft's latest reported revenue?",
-        ],
-        "Cross-Company Differentiation (company-filter sanity check)": [
-            "What was Microsoft's revenue?",  # should NOT return Apple data
-            "What was CVS's net income?",     # should NOT return Costco data
-        ],
-        "Out-of-Scope (should NOT confidently match)": [
-            "What is Apple's current stock price today?",
-            "Who is the CEO of Tesla?",
-            "What is the weather in Cupertino?",
-        ],
-    }
-
-    all_results_log = []
-
-    for category, questions in test_questions.items():
-
-        print("\n" + "#" * 70)
-        print(f"# CATEGORY: {category}")
-        print("#" * 70)
-
-        for question in questions:
-
-            print("\n" + "=" * 70)
-            print("Q:", question)
-            print("=" * 70)
-
-            response = retriever.search(question, top_k=3)
-
-            if not response["matched"]:
-
-                print(f"    \u26a0\ufe0f  {response['reason']}")
-
-                all_results_log.append({
-                    "category": category,
-                    "question": question,
-                    "matched": False,
-                    "reason": response["reason"],
-                    "results": [],
-                })
-
-                continue
-
-            results = response["results"]
-
-            for i, r in enumerate(results, 1):
-
-                print(
-                    f"\n[{i}] dense={r['score']:.3f} rrf={r['rrf_score']:.4f} | "
-                    f"{r['company']} {r['year']} | "
-                    f"{r['chunk_type']} | {r['section_path']}"
-                )
-
-                preview = r["text"][:200].replace("\n", " ")
-
-                print(f"    {preview}...")
-
-            all_results_log.append({
-                "category": category,
-                "question": question,
-                "matched": True,
-                "reason": None,
-                "results": results,
-            })
-
-    with open("retriever_test_results.json", "w", encoding="utf-8") as f:
-        _json.dump(all_results_log, f, indent=4, ensure_ascii=False)
-
-    print("\n\nFull results also saved to: retriever_test_results.json")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("query", nargs="?")
+    ap.add_argument("-k", type=int, default=5)
+    ap.add_argument("--company")
+    ap.add_argument("--year", type=int)
+    ap.add_argument("--type", choices=["text", "table"])
+    ap.add_argument("--store", default="STAGE_1/vector_store")
+    ap.add_argument("--test", action="store_true")
+    a = ap.parse_args()
+    retriever = Retriever(a.store)
+    if a.test:
+        log = []
+        for cat, qs in TEST_QUESTIONS.items():
+            print("\n" + "#" * 70 + f"\n# CATEGORY: {cat}\n" + "#" * 70)
+            for qn in qs:
+                resp = retriever.search(qn, top_k=3)
+                _show(qn, resp)
+                log.append({"category": cat, "question": qn, **resp})
+        with open("retriever_test_results.json", "w", encoding="utf-8") as f:
+            json.dump(log, f, indent=4, ensure_ascii=False)
+        print("\n\nFull results also saved to: retriever_test_results.json")
+    elif a.query:
+        _show(a.query, retriever.search(a.query, top_k=a.k, company=a.company, year=a.year, chunk_type=a.type))
+    else:
+        ap.error("query do, ya --test lagao")
