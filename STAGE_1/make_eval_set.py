@@ -13,10 +13,21 @@ Sawalon ki 5 qismein:
   section_topic  (~25%)  "What does Nordson's 2020 10-K say about Competitive Conditions?" -> sahi = wo section
   risk_factor    (~12%)  risk factors ke unwaan se
   natural_topic  (~15%)  aam insaan jaise: "How many employees does Graco have according to its 2025 10-K?"
-  out_of_scope   (~8%)   jo data mein hai hi nahi (Tesla, 2031, mausam) -> sahi = "kuch nahi mila"
+  out_of_scope   (~8%)   jo data mein hai hi nahi (Tesla, Sony, 2031, mausam) -> sahi = "kuch nahi mila"
 
 Note: table/section sawalon mein chunk ke apne alfaaz aate hain, isliye ye asli users se thore aasaan hain.
 natural_topic wale asli users ke qareeb hain. Report mein dono alag dikhte hain.
+
+v2 (v1 ke 441 sawalon ke 66 fail haath se dekhe -- 9 sawal khud galat the; unhein paida karne wale rule theek kiye):
+  * Number sirf ASLI statement se, aur sahi statement se: balance sheet wali cheez (total assets, inventories,
+    goodwill...) sirf balance sheet se, income wali sirf income statement se, D&A / capex cash flow se.
+    (v1: "inventories" cash flow ki "inventories mein tabdeeli" se bana; Emerson ka "gross profit" ek doosri
+    company ki table se.) Toota hua header ("Columns: 2021 733,117, ...") wali table chhod di jati hai.
+  * Section sawal: heading mein saal ho ("2018 compared to 2017"), "%" ho, ya poora bada Item ho (MD&A) -> nahi.
+    Fehrist / exhibit tukde (retriever.clutter_reason) kabhi sahi jawab nahi bante.
+  * "suppliers" sawal ab "Supplemental ..." heading ko sahi nahi maanta; "environment" ki jagah "environmental".
+  * Anjaan companies mein naye naam (Sony, Tencent, Adidas, ...) jo retriever ke code mein kahin nahi likhe --
+    taake guard ka asli imtihan ho, rate kiya hua nahi.
 """
 import argparse
 import json
@@ -26,31 +37,39 @@ from collections import defaultdict
 from pathlib import Path
 
 from build_embeddings import junk_reason, section_str
-from retriever import DISPLAY_NAMES, EXTRA_ALIASES
+from retriever import DISPLAY_NAMES, EXTRA_ALIASES, clutter_reason, statement_type
+
+SET_NAME = "v2"
 
 COLS = re.compile(r"^Columns:\s*(.+)$", re.M)
 TITLE = re.compile(r"^The following table shows (.+?) data for ", re.M)
 NUM = r"\(?\$?\s?-?\d[\d,]*(?:\.\d+)?\s?\)?%?"
 PAIR = re.compile(r"([^:]+?):\s*(" + NUM + r"|-|—)\s*(?:,\s*|$)")
 
+# (row ka naam, kis statement mein hona chahiye: 1 = balance sheet, 2 = income statement, 3 = cash flow)
 KEY_ROWS = [
-    r"total assets", r"total liabilities", r"total current assets", r"total current liabilities",
-    r"net (?:income|earnings)(?: attributable to [a-z .,&'-]{3,60})?", r"net sales", r"(?:total )?net revenues?",
-    r"total revenues?", r"revenues?", r"sales", r"total sales(?: and revenues)?", r"operating (?:income|profit)",
-    r"gross (?:profit|margin)", r"cash and cash equivalents", r"total (?:stockholders|shareholders|shareowners)'? equity",
-    r"total equity", r"research(?:,)? and development(?: expenses?| costs?)?", r"capital expenditures",
-    r"long-term debt", r"provision for income taxes|income tax expense", r"inventories(?:, net| - net)?",
-    r"goodwill", r"cost of (?:sales|goods sold|revenues?)", r"selling, general and administrative(?: expenses)?",
-    r"total operating expenses", r"depreciation and amortization", r"interest expense(?:, net)?",
+    (r"total assets", {1}), (r"total liabilities", {1}), (r"total current assets", {1}),
+    (r"total current liabilities", {1}), (r"cash and cash equivalents", {1}),
+    (r"total (?:stockholders|shareholders|shareowners)'? equity", {1}), (r"total equity", {1}),
+    (r"long-term debt", {1}), (r"inventories(?:, net| - net)?", {1}), (r"goodwill", {1}),
+    (r"net (?:income|earnings)(?: attributable to [a-z .,&'-]{3,60})?", {2}), (r"net sales", {2}),
+    (r"(?:total )?net revenues?", {2}), (r"total revenues?", {2}), (r"revenues?", {2}), (r"sales", {2}),
+    (r"total sales(?: and revenues)?", {2}), (r"operating (?:income|profit)", {2}), (r"gross (?:profit|margin)", {2}),
+    (r"research(?:,)? and development(?: expenses?| costs?)?", {2}), (r"provision for income taxes|income tax expense", {2}),
+    (r"cost of (?:sales|goods sold|revenues?)", {2}), (r"selling, general and administrative(?: expenses)?", {2}),
+    (r"total operating expenses", {2}), (r"interest expense(?:, net)?", {2}),
+    (r"depreciation and amortization", {2, 3}), (r"capital expenditures", {3}),
 ]
-KEY_RE = re.compile(r"^(?:" + "|".join(KEY_ROWS) + r")$")
-MAIN_STMT = re.compile(r"balance sheets?|financial position|statements? of (?:consolidated )?(?:income|operations|earnings)|"
-                       r"cash flows?|income statements?", re.I)
+KEY_RES = [(re.compile(r"^(?:" + rx + r")$"), types) for rx, types in KEY_ROWS]
 
 GENERIC_LEAF = {"overview", "general", "introduction", "background", "other", "none", "summary", "business",
                 "table of contents", "continued", "(continued)", "notes", "description", "index"}
 BAD_LEAF = re.compile(r"\bended\b|in (?:millions|thousands)|\$|^\(?[a-z0-9]\)\s*$|^(?:item|part|note)\s*[\divx]+[a-z]?\.?$|"
                       r"\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d", re.I)
+# Poora bada Item (sawal itna khula ke har chunk "sahi" ho jaye) -> sawal nahi banta
+BIG_ITEM_LEAF = re.compile(r"^(?:management.s discussion and analysis\b.*|financial statements and supplementary data\b.*|"
+                           r"exhibits?\b.*schedules?\b.*|notes to (?:the )?(?:consolidated )?financial statements\b.*|"
+                           r"signatures?|part\s+[iv]+\b.*|form 10-k\b.*|annual report\b.*)$", re.I)
 NUMBER_PREFIX = re.compile(r"^(?:(?:item|note)\s*\d+[a-z]?\s*[.:-]?\s*|\(?[a-z0-9]{1,3}\)\s*|\d+[.)]\s*)", re.I)
 
 NATURAL = [
@@ -63,19 +82,24 @@ NATURAL = [
     ("Did {co} buy back any of its own shares", r"repurchase|purchases of equity securities"),
     ("What dividends does {co} pay to shareholders", r"dividend"),
     ("What are {co}'s business segments", r"segment"),
-    ("Which raw materials or suppliers is {co} dependent on", r"raw material|suppl"),
-    ("What environmental rules affect {co}", r"environment"),
+    ("Which raw materials or suppliers is {co} dependent on",
+     r"raw material|supplier|supply chain|\bsuppl(?:y|ies)\b|sources? of (?:raw )?materials"),
+    ("What environmental rules affect {co}", r"environmental"),
     ("What is {co}'s order backlog", r"backlog"),
     ("How does {co} use derivatives to hedge risk", r"derivative|hedg"),
     ("What are {co}'s critical accounting estimates", r"critical accounting"),
     ("What does {co} disclose about income taxes", r"income tax"),
 ]
 
-# Pehli list retriever ki "unknown company" list mein hai; doosri (Siemens...) nahi -- ye asli imtihan hai
-# ke retriever anjaan company par bhi "nahi mila" kehta hai ya kisi aur company ka data de deta hai.
+# Pehli line retriever ki "unknown company" list mein hai. Baqi naam retriever ke code mein KAHIN nahi likhe --
+# ye asli imtihan hai ke anjaan company par "nahi mila" kehta hai ya kisi aur company ka data de deta hai.
 OOS_COMPANIES = ["Tesla", "Netflix", "Nvidia", "Starbucks", "Walmart", "Ford", "Pfizer", "Disney", "Coca-Cola",
                  "JPMorgan", "Amazon", "Alphabet", "Meta Platforms", "Intel", "IBM", "Oracle", "Exxon",
-                 "Siemens", "Toyota", "Samsung", "Unilever", "Nestle", "Alibaba"]
+                 "Siemens", "Toyota", "Samsung", "Unilever", "Nestle", "Alibaba",
+                 "Sony", "Tencent", "Volkswagen", "Adidas", "Infosys", "HSBC", "BYD", "Aramco", "Shopify", "Spotify"]
+OOS_TEMPLATES = ["What was {p} revenue in 2024?", "What risks does {c} face?", "How many employees does {c} have?",
+                 "Who audits {p} financial statements?", "{c} 2024 total assets", "Does {c} pay dividends to shareholders?",
+                 "What does {c} say about competition?"]
 OOS_IRRELEVANT = ["What is the weather in Lahore today?", "Give me a recipe for chicken biryani.",
                   "Who won the last cricket world cup?", "What is the capital of France?",
                   "Write a short poem about the sea.", "How do I learn to swim?"]
@@ -106,10 +130,14 @@ def norm(t):
 
 
 def table_candidates(c, year):
+    """Sirf asli statement (balance sheet / income / cash flow) ki table, aur row usi statement ki ho."""
     out = []
+    stype = statement_type(c)
+    if stype not in (1, 2, 3):
+        return out
     t = c.get("text") or ""
     m = COLS.search(t)
-    if not m:
+    if not m or re.search(r"\d,\d{3}", m.group(1)):        # "Columns: 2021 733,117, ..." = toota hua header
         return out
     title = (TITLE.search(t).group(1) if TITLE.search(t) else "")
     for line in t.splitlines():
@@ -117,7 +145,8 @@ def table_candidates(c, year):
             continue
         label, rest = line.split(" -- ", 1)
         lab = clean_label(label)
-        if not KEY_RE.match(lab.lower()):
+        types = next((ty for rx, ty in KEY_RES if rx.match(lab.lower())), None)
+        if not types or stype not in types:
             continue
         for pm in PAIR.finditer(rest):
             col, val = pm.group(1).strip(" ,"), pm.group(2).strip()
@@ -130,9 +159,17 @@ def table_candidates(c, year):
             digits = mnum.group(0).rstrip(",") if mnum else ""
             if "," not in digits:              # sirf >= 1,000 wale numbers (pehchaan mein aasaan)
                 continue
-            out.append(dict(label=lab, value=digits, main=bool(MAIN_STMT.search(title)), title=title))
+            out.append(dict(label=lab, value=digits, stmt=stype, title=title))
             break
     return out
+
+
+def good_leaf(leaf, sec):
+    words = re.findall(r"[A-Za-z]{2,}", leaf)
+    return (2 <= len(words) <= 14 and leaf.lower() not in GENERIC_LEAF and not BAD_LEAF.search(leaf)
+            and "|" not in leaf and "%" not in leaf and re.match(r"[A-Za-z]", leaf)
+            and not re.search(r"\b(?:19|20)\d{2}\b", leaf) and not BIG_ITEM_LEAF.match(leaf)
+            and not re.search(r"risk factors", sec, re.I))
 
 
 def main():
@@ -161,7 +198,7 @@ def main():
         tabs, secs, risks = [], [], []
         sections_here = set()
         for c in ch:
-            if junk_reason(c):
+            if junk_reason(c) or clutter_reason(c):
                 continue
             sec = section_str(c)
             sections_here.add(sec)
@@ -181,12 +218,10 @@ def main():
             if re.search(r"risk factors", sec, re.I) and len(words) >= 6:
                 topic = " ".join(leaf.split()[:14]).rstrip(" .,;:")
                 risks.append(dict(topic=topic, section=sec, anchor=anchor, src=src))
-            elif (2 <= len(words) <= 14 and leaf.lower() not in GENERIC_LEAF and not BAD_LEAF.search(leaf)
-                  and "|" not in leaf and not re.search(r"risk factors", sec, re.I)):
+            elif good_leaf(leaf, sec):
                 secs.append(dict(leaf=leaf, section=sec, anchor=anchor, src=src))
         # per file: kuch hi rakho (yaddasht kam, saal zyada)
-        main_tabs = [t for t in tabs if t["main"]] or tabs
-        for t in rnd.sample(main_tabs, min(4, len(main_tabs))):
+        for t in rnd.sample(tabs, min(4, len(tabs))):
             cand["table_number"][co_raw].append(dict(t, year=yr))
         for s in rnd.sample(secs, min(4, len(secs))):
             cand["section_topic"][co_raw].append(dict(s, year=yr))
@@ -217,7 +252,7 @@ def main():
     qs = []
 
     def add(cat, q, co, yr, gold, src=None):
-        qs.append(dict(id=f"{cat[:3].upper()}-{len(qs) + 1:04d}", category=cat, question=q,
+        qs.append(dict(id=f"{cat[:3].upper()}-{len(qs) + 1:04d}", set=SET_NAME, category=cat, question=q,
                        company=co, year=yr, gold=gold, source=src or {}))
 
     for co, t in round_robin("table_number", quota["table_number"]):
@@ -247,8 +282,7 @@ def main():
     k_oos = quota["out_of_scope"]
     items = []
     for c in oos_cos:
-        items.append(rnd.choice([f"What was {poss(c)} revenue in 2024?", f"What risks does {c} face?",
-                                 f"How many employees does {c} have?"]))
+        items.append(rnd.choice(OOS_TEMPLATES).format(c=c, p=poss(c)))
     some = sorted(years_by_co)
     for _ in range(6):
         co = rnd.choice(some)
@@ -267,10 +301,10 @@ def main():
     cnt = defaultdict(int)
     for q in qs:
         cnt[q["category"]] += 1
-    print(f"\n{len(qs)} sawal bane: {dict(cnt)}")
+    print(f"\n{len(qs)} sawal bane ({SET_NAME}): {dict(cnt)}")
     print(f"Companies: {len({q['company'] for q in qs if q['company']})}")
     print(f"File: {out.resolve()}")
-    print("Ab chalao:  python STAGE_1/eval_retriever.py")
+    print("Ab chalao:  python STAGE_1/eval_retriever.py --ablation")
 
 
 if __name__ == "__main__":
