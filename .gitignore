@@ -20,3 +20,4 @@ STAGE_1/chk_output
 STAGE_1_old_duplicates
 STAGE_1/vector_store/
 STAGE_1/chunks_backup_yearfix/
+STAGE_1/eval*/
