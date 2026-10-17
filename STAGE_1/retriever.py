@@ -36,6 +36,47 @@ import scipy.sparse as sp
 from build_embeddings import EmbeddingIndexBuilder, tok
 
 
+# ---------------------------------------------------------------------------------------------
+# Company ke doosre naam / ticker -> index wala naam. Sirf tab lagta hai jab wo company index mein ho.
+# (Google = Alphabet, META = Facebook, Block = Square, waghera.)  Naya naam chahiye to yahan likh do.
+# ---------------------------------------------------------------------------------------------
+EXTRA_ALIASES = {
+    "alphabet": "Google", "googl": "Google", "goog": "Google",
+    "facebook": "META", "meta platforms": "META",
+    "square": "Block",
+    "watts": "WATTS WATER TECHNOLOGIES", "watts water": "WATTS WATER TECHNOLOGIES", "wts": "WATTS WATER TECHNOLOGIES",
+    "northrop grumman": "NORTHROP", "noc": "NORTHROP",
+    "rockwell automation": "Rockwell Auomation", "rok": "Rockwell Auomation",
+    "kimberly clark": "KImberly_Clark", "kmb": "KImberly_Clark",
+    "colgate palmolive": "Colgate_Palmolive",
+    "cmg": "Chipotle Mexican Grill", "panw": "Palo Alto Networks",
+    "southwest airlines": "Southwest", "luv": "Southwest", "union pacific": "Union Pacific", "unp": "Union Pacific",
+    "home depot": "Home Depot", "the home depot": "Home Depot",
+    "aapl": "Apple", "amzn": "Amazon", "msft": "Microsoft", "nvda": "Nvidia", "nflx": "Netflix", "intc": "Intel",
+    "adbe": "Adobe", "wday": "Workday", "pypl": "Paypal", "wmt": "Walmart", "sbux": "Starbucks", "nke": "Nike",
+    "lmt": "Lockheed Martin", "mmm": "3M", "emr": "Emerson Electric", "rop": "Roper Technologies",
+    "ggg": "Graco", "ndsn": "NORDSON", "kmt": "KENNAMETAL", "dci": "Donaldson", "fele": "Franklin Electric",
+    "csl": "Carlisle", "xyl": "Xylem Inc", "pnr": "Pentair plc", "wwd": "Woodward Inc", "cvx": "CHEVRON",
+    "intu": "Intuit", "salesforce": "SalesForce",
+}
+# Jawab / citation mein dikhane wala saaf naam (index ka naam waisa hi rehta hai).
+DISPLAY_NAMES = {
+    "CHEVRON": "Chevron", "NORDSON": "Nordson", "NORTHROP": "Northrop Grumman", "KENNAMETAL": "Kennametal",
+    "WATTS WATER TECHNOLOGIES": "Watts Water Technologies", "Colgate_Palmolive": "Colgate-Palmolive",
+    "KImberly_Clark": "Kimberly-Clark", "Rockwell Auomation": "Rockwell Automation", "META": "Meta Platforms",
+    "SalesForce": "Salesforce", "Ebay": "eBay", "Paypal": "PayPal", "Google": "Alphabet (Google)",
+    "Woodward Inc": "Woodward", "Xylem Inc": "Xylem", "Pentair plc": "Pentair",
+}
+# Ye naam aam English lafz bhi hain -- sirf tab company maano jab sawal mein Capital se likhe hon (Block, Workday...)
+AMBIGUOUS = {"block", "workday", "southwest", "apple", "amazon", "meta", "graco", "intel", "nike"}
+# Pehla lafz alias na banao (bohat aam lafz): "union" (labor union), "home", "palo"...
+NO_FIRST_WORD = {"union", "home", "general", "united", "american", "first", "national"}
+
+
+def display_name(company):
+    return DISPLAY_NAMES.get(company, company)
+
+
 class Retriever:
 
     RECENCY_KEYWORDS = re.compile(
@@ -110,17 +151,22 @@ class Retriever:
             clean = re.sub(r"[^a-z0-9& ]+", " ", clean).strip()
             self.aliases[clean] = {n}
             w = re.findall(r"[a-z0-9&]+", clean)
-            if w and len(w[0]) >= 3 and len(first[w[0]]) == 1:
+            if w and len(w[0]) >= 3 and len(first[w[0]]) == 1 and w[0] not in NO_FIRST_WORD:
                 self.aliases[w[0]] = {n}
             m = re.search(r"\((.*?)\)", n)
             if m and len(m.group(1)) >= 2:
                 self.aliases[m.group(1).lower()] = {n}
+        for a, target in EXTRA_ALIASES.items():
+            if target in self.known_companies:
+                self.aliases[a] = self.aliases.get(a, set()) | {target}
 
     def _detect_companies(self, query):
         q = " " + re.sub(r"[^a-z0-9&]+", " ", query.lower()) + " "
         found = set()
         for a, ns in self.aliases.items():
             if a and re.search(r"\b" + re.escape(a) + r"\b", q):
+                if a in AMBIGUOUS and not re.search(r"\b(?:" + re.escape(a.capitalize()) + "|" + re.escape(a.upper()) + r")\b", query):
+                    continue                         # "block of shares" -> Block company nahi
                 found |= ns
         return found
 
@@ -130,9 +176,10 @@ class Retriever:
 
     def _mentions_unknown_company(self, query):
         q = query.lower()
-        known = " ".join(c.lower() for c in self.known_companies)
         for name in self.WELL_KNOWN_COMPANIES:
-            if re.search(r"\b" + re.escape(name) + r"\b", q) and name not in known:
+            if re.search(r"\b" + re.escape(name) + r"\b", q):
+                if self._detect_companies(name.title()):      # index mein kisi naam se hai (jaise Alphabet = Google)
+                    continue
                 return name
         return None
 
@@ -227,6 +274,7 @@ class Retriever:
                 "score": dscore[doc] if doc in dscore else float(self.index.reconstruct(doc) @ q[0]),
                 "rrf_score": rrf[doc],
                 "company": m["company"],
+                "company_display": display_name(m["company"]),
                 "year": m["year"],
                 "section_path": m["section_path"],
                 "page_numbers": m["page_numbers"],
@@ -282,7 +330,7 @@ def _show(question, response):
     for i, r in enumerate(response["results"], 1):
         pg = r["page_numbers"]
         pg = (f"{min(pg)}-{max(pg)}" if pg and min(pg) != max(pg) else (str(pg[0]) if pg else "?"))
-        print(f"\n[{i}] dense={r['score']:.3f} rrf={r['rrf_score']:.4f} | {r['company']} {r['year']} | "
+        print(f"\n[{i}] dense={r['score']:.3f} rrf={r['rrf_score']:.4f} | {r['company_display']} {r['year']} | "
               f"{r['chunk_type']} | PDF page {pg}")
         print("    Section:", r["section_path"][-110:])
         print("    " + r["text"][:300].replace("\n", " / "))
