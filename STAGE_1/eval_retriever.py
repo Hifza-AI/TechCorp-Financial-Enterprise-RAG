@@ -2,7 +2,7 @@
 eval_retriever.py  -  Saare sawal retriever par chalata hai aur khud check karta hai ke sahi jawab aaya ya nahi.
 
 Chalao:   python STAGE_1/eval_retriever.py              (retriever.py ke FEATURES jaise hain, waise)
-          python STAGE_1/eval_retriever.py --ablation   (har sudhaar ka asar alag naapta hai: 6 dafa, ~2-3 min)
+          python STAGE_1/eval_retriever.py --ablation   (har sudhaar ka asar alag naapta hai: 7 dafa, ~2-3 min)
 Pehle:    python STAGE_1/make_eval_set.py   (sawal banane ke liye)
 
 Banata (STAGE_1/eval/ mein):
@@ -148,14 +148,10 @@ def scores(rows):
     return s
 
 
-VARIANTS = [
-    ("pehle jaisa (sab off)", dict(guard=False, clutter=False, strip=False, stmt=False)),
-    ("+ guard", dict(guard=True, clutter=False, strip=False, stmt=False)),
-    ("+ clutter", dict(guard=False, clutter=True, strip=False, stmt=False)),
-    ("+ strip", dict(guard=False, clutter=False, strip=True, stmt=False)),
-    ("+ stmt", dict(guard=False, clutter=False, strip=False, stmt=True)),
-    ("sab on", dict(guard=True, clutter=True, strip=True, stmt=True)),
-]
+_OFF = dict(guard=False, clutter=False, strip=False, stmt=False, dedup=False)
+VARIANTS = [("pehle jaisa (sab off)", dict(_OFF))] + \
+           [(f"+ {f}", dict(_OFF, **{f: True})) for f in _OFF] + \
+           [("sab on", {f: True for f in _OFF})]
 
 
 def ablation_table(results, nq, qset):
