@@ -1,231 +1,227 @@
-Known Limitation: Sirf "Year" Headers Auto-Detect Honge
-Sahi Kaam Kaha Karega:
-Financial Statements jahan headers 2016, 2015, 2014 honge, wahan automatic header match perfect hoga.
+# Known Limitations
 
-Limitation:
-In non-year tables (jaise "Q1/Q2/Q3", "Domestic vs International"), code _parse_without_header() wale fallback mechanism par jayega.
+**Project:** TechCorp Financial Enterprise RAG: 500 SEC 10-K filings (50 companies × 10 fiscal years)
+**Last updated:** 17 Oct 2026
 
-Lead Strategy:
-Yeh baseline MVP ke liye bilkul acceptable hai, isko as a "Known Limitation" note kar lo.
+**How to read this file**
+- **Impact:** *Data* = a value or label is wrong or missing · *Structure* = text is intact but sits under a wrong or split heading · *Cosmetic* = display only, no effect on answers.
+- **Tier** (as used in the audits): 1 = core financial statements · 2 = notes and MD&A tables · 3 = rarely queried detail.
+- **Status:** Open · Deferred (known, not fixed on purpose) · Mitigated (handled at a later stage) · Resolved (kept for regression tracking) · By design.
 
-Observation: Item 7. Management's Discussion... Missing Hai 2021 Mein
+**Top open items**
+1. H2: Apple FY2021 MD&A content sits under "Item 6. [Reserved]".
+2. R1: Wrong parent headings in several filings (Colgate-Palmolive, Watts Water, Parker Hannifin, Chevron, Block, Alphabet).
+3. T4: Blank row labels recur across five companies (Meta, Nvidia, Rockwell Automation, Nordson, Lockheed Martin).
+4. R4: A few line-item questions miss the primary statement (planned: SQL track).
 
-2016 mein Item 7. (MD&A section) 25 children ke saath tha. 2021 mein wo heading khud nahi mila — lekin "Item 6. [Reserved]" (jo genuinely khaali hona chahiye, "Reserved" ka matlab hi khaali hai) mein 9 children hain. Ye suggest karta hai ke Item 7. ka MD&A content galti se Item 6.ke andar chala gaya — kyunki Item 7. wali heading line detect hi nahi hui us report mein (shayad line-wrap ya spacing thoda alag tha 2021 ke PDF mein).
+---
 
-Ye important hai kyunki: jab hum Chunking mein "section_title" ko metadata banayenge, to us MD&A content (Products, Segments, iPhone sales waghera) ka metadata galti se "Item 6. [Reserved]" keh dega — jo confusing hoga agar koi query karega "Apple ka MD&A section kya kehta hai."
+## 1. Scope of the corpus
 
-1. Tesla query — confirmed problem, aur bhi clear ho gaya
-Score 0.657-0.668 hai — ye legitimate Apple queries (jaise "dividend" 0.670, "executive officers" 0.609) ke range ke andar hai. Matlab sirf ek simple threshold (jaise "0.6 se neeche reject karo") kaam nahi karega, kyunki Tesla ka score legitimate low-confidence Apple answers se bhi zyada hai. Ye important finding hai — threshold akela solution nahi, isko note kar lo Stage 4 ke liye.
+**S1: 10-K filings only** · Status: By design
+The corpus contains annual reports (Form 10-K) only: no 10-Q, 8-K or proxy statements. Part III items (executive compensation, director details) are usually "incorporated by reference" to the proxy statement, so those details are not available. Real-time data (for example today's stock price) is never in a 10-K; the answer stage must reply that it is not available.
 
-Ye Stage 4 (LLM/threshold fix) ke waqt handle hoga — abhi ke liye bas note kar lo ke retriever kabhi-kabhi wrong-but-similar-sounding section pick kar leta hai. Koi urgent fix nahi chahiye abhi.
+**S2: Fiscal-year labels follow each company's own fiscal-year name** · Status: Resolved (relabeled); the limitation remains
+21 files were relabeled with `fix_years.py` after `check_data.py` compared each file's label with the years inside its data: Home Depot names its fiscal year by the calendar year in which it starts (2017–2026 → 2016–2025), Workday by the year in which it ends (2016–2025 → 2017–2026), and one Southwest file (2026 → 2025). Originals are in `STAGE_1/chunks_backup_yearfix/`; the change log is `STAGE_1/eval/year_fixes.json`.
+Ranges: most companies FY2016–2025; Dell, Donaldson, Intuit, Kennametal, Microsoft, Nike, Nvidia, Parker Hannifin, Salesforce, Walmart and Workday FY2017–2026. The same label is not the same calendar period across companies (for example, Walmart FY2026 ends on 31 Jan 2026). "Latest" means the newest fiscal year available for that company. The year-detection heuristic (column years in the tables plus "fiscal YYYY" mentions, with exceptions for start-year naming and programme names such as "Fiscal 2020 Restructuring") should be re-checked when new companies are added.
 
-Apple-only corpus → semantic similarity
-↓
-Multi-company corpus → entity filtering + retrieval
-↓
-Stage 2 mein exactly isi cheez ko validate karna hai.
+**S3: Company names are stored as they appear in the source files** · Status: Mitigated
+Stored names include typos and mixed styles ("Rockwell Auomation", "KImberly_Clark", "WATTS WATER TECHNOLOGIES", "Google" for Alphabet, "META", "SalesForce"). The retriever maps tickers and alternate names (`EXTRA_ALIASES`) and shows clean names in results (`DISPLAY_NAMES`). A future rebuild should normalise the stored names.
 
-## 🔴 4 Genuine Issues Mile — Ye Note Karne Layak Hain
+---
 
-1. **"Cash and cash equivalents 2022"** — Top-3 mein cash ka koi number nahi aaya, sirf "net sales" aur unrelated segment-tables aayi
+## 2. PDF extraction and cleaning
 
-2. **"Net income 2019"** — Revenue-recognition aur highlights aaye, exact "net income" figure nahi
+**E1: Page numbers are physical PDF pages, not printed page numbers** · Status: By design
+Printed footers (for example "Apple Inc. | Page 43") drift from the physical page because of how EDGAR HTML is converted to PDF, so printed numbers are ignored. "Page 61" in the metadata always means page 61 of the trimmed PDF file, which is the page the viewer opens when a citation is clicked. A citation can therefore differ from the number printed on the page.
 
-3. **"Latest R&D spending"** — Bilkul galat (Product-announcements, Employee-Stock-Plan aaye — R&D nahi)
+**E2: URLs are removed** · Impact: Data (minor) · Status: Deferred
+The cleaner removes URLs at the end of the document and inside paragraphs. Questions such as "What is Apple's investor-relations website?" cannot be answered. Such questions are rare.
 
-4. **"Current stock price"** — 0.755 score ke saath **confidently galat** result (balance-sheet data) — ye wahi "no threshold" wala pehle-se-known 
-issue hai
+**E3: Repeating page-header captions (Costco, Item 7)** · Impact: Cosmetic · Tier 2/3 · Status: Open
+Captions such as "(In millions ...) (Continued)" remain as small paragraph clutter. Root cause in `paragraph_parser.py`; pending raw JSON verification.
 
-Key Reality: Printed Footers vs Physical PDF Pages
-Printed Footer Number ko Ignore Karna Hi Standard Hai:
-SEC EDGAR filings jab HTML se PDF banti hain, to unke footers (e.g., Apple Inc. | Page 43) printer margins ki waja se drift hotay rehte hain. Agar hum printed footers par rely karenge, to code har dusri file par crash karega. Is liye printed numbers ko zero weightage di jati hai.
+---
 
-Ground Truth Is Your Trimmed PDF Page Index:
-RAG pipeline mein "Page 61" ka matlab hamesha aap ki Apple_2016_10K.pdf ka Physical Viewer Page Index 61 hoga.
+## 3. Heading detection and hierarchy
 
-Extractor text Page 61 se uthayega
+**H1: Heading detection is visual (font-based), not semantic** · Impact: Structure · Status: Accepted
+In narrative sections, sub-topics styled like body text or like their siblings are not detected as headings (Apple FY2016 Item 1: "iOS", "macOS", "Services"); their text is absorbed into the nearest parent heading. No data loss. Audit: 13 level-4 heading clusters in Apple FY2016; only 1 ("Products", p. 5) affected.
 
-Metadata mein page: 61 likhega.
+**H2: Apple FY2021, Item 7 (MD&A) heading not detected** · Impact: Structure · Tier 1/2 · Status: Open
+In FY2016 Item 7 had 25 children. In FY2021 the Item 7 heading was not detected and the MD&A content (products, segments, iPhone sales ...) sits under "Item 6. [Reserved]" (9 children), probably because of different line wrapping or spacing in that PDF. These chunks carry "Item 6. [Reserved]" as their section, which is misleading in citations and for questions such as "What does Apple's MD&A say ...".
 
-Jab UI par "Source: Page 61" par click hoga, to Viewer Page 61 hi kholega.
+**H3: Oversized sub-headings flatten the tree (Intel FY2025, Palo Alto Networks FY2025)** · Impact: Structure · Status: Open (observing)
+Newer 10-K styling uses large fonts for sub-headings, which become level-1 nodes (for example Item 8 → Notes, Audit Report → Critical Audit Matters). Direct questions are unaffected; requests for a whole subtree (all children of Item 8) may return partial results. A layout-aware rule will be added after more samples, to avoid over-segmentation.
 
-User ko wahi exact text wahan milega.
+**H4: Titles split across nodes or left blank** · Impact: Cosmetic / Structure · Status: Deferred
+- Ametek FY2016: titles of Items 1, 1A, 2, 3 and 5 wrap into a separate child node (formerly #35).
+- eBay FY2016: titles of Items 5, 7, 9, 12 and 13 wrap into separate child nodes (no item-title continuation logic).
+- Kimberly-Clark FY2016 and FY2025: the ITEM 8 node has a blank title (title continuation not merged); it still works as the parent.
+- Nike FY2025: the Shareholders' Equity statement title is cut to "CONSOLIDATED STATEMENTS OF" (the title wraps over more than two lines); data intact.
+- Meta FY2025: a two-column Critical Audit Matter title splits into "Description of the" / "Matter" (two empty nodes).
+- PayPal FY2025: the Item 16 exhibit-listing sentence splits into two small headings ("Consolidated Statements of Income (Loss), (iii) the Consolidated" / "... Stockholders' Equity, (v) the"); boilerplate only.
 
+**H5: Captions and dividers promoted to child headings** · Impact: Cosmetic / Structure · Status: Deferred
+- Emerson FY2016 and FY2025: "EMERSON ELECTRIC CO. & SUBSIDIARIES" becomes a child heading under all five core statements (same pattern as Union Pacific).
+- Union Pacific FY2025: "Millions, except share and per share amounts ..." under the Balance Sheet; "Union Pacific Corporation and Subsidiary Companies" under the Cash Flow statement.
+- Rockwell Automation FY2016 and FY2025: the "Liabilities and Shareowners' Equity" divider forms its own empty node, so the Balance Sheet is split across two sibling nodes; values are complete (Total Assets = Total Liabilities + Equity in both years) (formerly #31).
 
-Actually no urls last ma nos ehote hen cleaner unko remove kar raha sath hi agr urls paragraph ma aa jayen to wo bhi remove ho rahe hen lekin ye risk bohat kam ha user bohat kam inke bare ma sawal karta ha Apple ki investor-relations URL kya hai?
+The retriever's statement detector checks the parent heading when the last heading is such a caption, so these statements are still recognised.
 
-Limitations at Stage 2 on the Table Analysis and Table PArsing stage
-1. Segment-tables: explicit % change-columns not extracted 
-   (derivable from year-over-year raw values already present)
-2. Some rows with parenthesized-values ("(228)") may show missing 
-   values instead of extracted numbers (isolated cases, not systemic)
-3. Wide text-label headers occasionally split into 2 redundant 
-   columns instead of merging into 1 (cosmetic, data itself correct)
+**H6: Spurious or merged nodes** · Impact: Cosmetic · Status: Deferred
+- Intuit: stock-performance chart legends ("S&P 500", "S&P 500 Information Technology Index") create empty heading nodes.
+- PayPal FY2016: the signature blocks of two directors (Wences Casares, John J. Donahoe) sit under one concatenated heading.
 
-   Multi-line date-header fragments occasionally form a separate, content-less table-object; harmless, safe to ignore
+**H7: Emerson "ITEM 6 [RESERVED]" not matched as an Item marker** · Impact: None (the section is empty) · Status: Deferred
+The bracketed format without trailing punctuation bypasses the `is_top_level_marker` regex.
 
+**H8: Wrong parent headings found during the retrieval evaluation** · Status: Open
+See R1 (Colgate-Palmolive, Watts Water, Block, Alphabet, Parker Hannifin, Chevron) and R3 (Caterpillar FY2016 cash-flow statement).
 
-   Adjacent non-numeric descriptive lines (e.g. share-class details) may occasionally merge into one combined label when neither carries its own value; all underlying text/information remains intact and retrievable
+**H9: Resolved (kept for regression tracking)**
+- AMD FY2025: a cash-flow statement repeated over page breaks without "(Continued)" created duplicate sibling nodes; fixed with node-reopening logic in `hierarchy_builder.py`.
+- Rockwell Automation FY2016: the Item 5 heading was not recognised (its title exceeded a length threshold); fixed, and Items 4A / 5 / 6 now nest correctly.
 
+---
 
-   "Batch 2 selected for structural comparability (standard single-level year-header segment tables); companies with non-standard multi-level headers or embedded-narrative tables (e.g. insurance-style Insured/ASC/Total breakdowns) deferred to documented future work — see Section X."
+## 4. Table analysis and parsing
 
+**T1: Only year headers are auto-detected** · Status: Accepted for the MVP
+Headers such as 2016 / 2015 / 2014 are matched automatically. Tables with other headers (Q1 / Q2 / Q3, Domestic vs International) use the `_parse_without_header()` fallback.
 
-   Known Limitation: Narrative Section Heading Depth (Item 1 "Business")
+**T2: Batch scope, multi-level headers deferred** · Status: Deferred (future work)
+The table batch was chosen for comparable structure (single-level year headers). Non-standard multi-level headers and narrative-embedded tables (for example insurance-style Insured / ASC / Total breakdowns) are future work.
 
-- Issue: In narrative sections (e.g., Apple 2016 Item 1 "Business"), certain sub-topics share identical font styling with their sibling items or render as plain body text (e.g., "iOS", "macOS", "Services"). 
-- Cause: `heading_detector.py` relies strictly on visual font signals rather than NLP/semantic analysis, making it unable to detect conceptual hierarchy changes when styling is identical.
-- Impact: Zero data loss. All text is fully preserved in paragraph content and retrievable via vector embeddings. The sub-topics are simply absorbed into the nearest parent heading node instead of forming independent heading nodes.
-- Scope: Audited 13 L4-heading clusters across Apple 2016 10-K; only 1 cluster ("Products" on p. 5) exhibited this ambiguity. Confirmed as an isolated edge case per Section 7 triage rules.
+**T3: Minor parsing gaps** · Impact: Cosmetic / Data (isolated) · Status: Deferred
+- Segment tables: explicit "% change" columns are not extracted (they can be derived from the year values).
+- Some rows with parenthesised values ("(228)") show a missing value (isolated cases).
+- Wide text-label headers occasionally split into two redundant columns (data correct).
+- Multi-line date-header fragments occasionally form an empty table object (harmless).
+- Adjacent non-numeric lines (for example share-class details) may merge into one label when neither has a value (text intact).
 
+**T4: Blank row labels (recurring)** · Impact: Data (label only) · Tier 1 · Status: Open, fix recommended
+Values are correct but the row label is empty in:
+- Meta FY2025 and Nvidia: the first data row after the "Columns:" line (for example "Revenue", "Net income").
+- Rockwell Automation FY2016 and FY2025: two subtotal rows per year (Statement of Operations and Comprehensive Income) (formerly #32).
+- Nordson FY2016 and FY2025: Balance Sheet "Total assets" and "Total liabilities and shareholders' equity".
+- Lockheed Martin FY2025: one Comprehensive Income line (177 / -65 / 58).
 
+The Meta audit said to wait for a third occurrence before fixing. It has now appeared in five companies, so a systematic fix in the table parser is recommended.
 
+**T5: Adjacent small tables merge (Alphabet FY2025, note "Leases")** · Impact: Data · Tier 2 · Status: Deferred (low priority)
+The lease-term and discount-rate tables merge: row values attach to the other table's labels, and one title swaps with a nearby caption. Cause: `table_parser` region splitting when two small tables sit close together on one page. The rest of the Tier-2 audit is clean.
 
-Retrieval Accuracy — Summary
+**T6: Year inside row labels (Amazon, Note 8 RSU / stock-award activity)** · Impact: Data · Tier 3 · Status: Deferred
+Row labels such as "Outstanding as of January 1, 2023" contain a standalone year, so the table (really Units / Fair Value) is read as a year-comparison table; values are garbled or incomplete.
 
-Recall@3: ~95% (21/22) — top-3 mein sahi answer maujood hai
-Precision@1: ~54% (13/24) — sirf #1 pe sahi
+**T7: Caption rows inside tables** · Impact: Cosmetic · Status: Deferred
+- Nvidia: "(In millions)" leaks into the middle of 3 of 41 raw-fallback tables (Segment Info year blocks, Leases schedule, valuation-allowance rollforward); values traceable.
+- eBay FY2025: "(In millions, except par value)" becomes an empty-label row at the top of the five core statements.
+- Chevron FY2025: a footnote marker creates a spurious "1" column header in the Stockholders' Equity table.
+- Nordson FY2016: the page-footer row "Nordson Corporation, 36" appears inside the Balance Sheet.
+- Chipotle (MD&A, "Provision for Income Taxes"): one garbage caption row; values correct.
 
-Honest Caveats
-Chhota sample — 24 queries statistically weak signal hai, agla batch alag number de sakta hai
-Sirf Apple pe test hua — fixes pattern-based/company-agnostic hain (Item N., Note N, PART N — koi hardcoded Apple-text nahi), is wajah se generalize hone ki umeed hai, lekin confirm nahi
-Precision-gap "solve" nahi hua, LLM pe shift hua hai — agar Stage-4 ka prompt weak raha, real accuracy 95% ki jagah 54% jaisi lag sakti hai
+**T8: Header or first row absorbed incorrectly** · Impact: Data · Status: Deferred
+- Chipotle (Note 6, "Income Taxes Paid"): the intro sentence becomes a column name; 2024 / 2023 data look incomplete (2025 values correct). Tier 3.
+- Walmart FY2026 (Note 8, effective tax rate reconciliation, FY2026 sub-table): the first row "U.S. statutory tax rate" is swept into the column header ($6,188M / 21.0% appear in the column name, not in the row). Tier 2.
+- Netflix (Stockholders' Equity): the group title "Common Stock and Additional Paid-in Capital" sits 24.8 pt away, beyond the 20 pt x-clustering tolerance, so "Amount" becomes a standalone column and the Treasury Stock value falls under it; share counts are correct. Tier 1, one table. Not fixed: changing the tolerance risks regressions in other companies.
+- Parker Hannifin FY2021 Balance Sheet: see R2.
 
-Deferred (jaan-boojh kar)
-Reranking — Precision@1 improve karne ke liye chahiye, lekin naya bada component hai, abhi cost-benefit justify nahi karta
-Table vs narrative-text trade-off — table-lead-in fix ne numeric-queries help ki, lekin kabhi-kabhi conceptual-answer wali query pe table over-rank ho jaati hai (reranking-level nuance)
+**T9: Text-only tables become paragraphs (Meta FY2025)** · Impact: Cosmetic · Tier 3 · Status: Deferred
+Tables without numbers (for example "Useful Life: Five to 5.5 years") become bullet paragraphs; the text is present.
 
-GOOGLE 2025 — TIER-2 AUDIT RESULT (verified vs real PDF)
+**T10: Table title uses the nearest heading** · Impact: Cosmetic · Status: Mitigated
+Each table chunk starts with "The following table shows X data for ...", where X is the nearest heading. When that heading is a cover line, address or caption, the title is misleading (for example "44,202,147 shares" for Franklin Electric, "Pittsburgh, Pennsylvania" for Kennametal, "16430 North Scottsdale Road ..." for Carlisle, "(In thousands, except per share amounts)" for Woodward FY2016). The retriever's statement detector checks the parent heading in these cases.
 
-✅ Clean (exact match): Core 4 statements, Segment/Executive-Overview,
-   Cost/R&D/S&M/G&A, Provision-for-Tax, Share-Repurchase, most Lease-tables
+**T11: Resolved (kept for regression tracking)**
+Roper Technologies FY2016: (1) the Stockholders' Equity table was attached to the preceding Comprehensive Income statement (a company-name caption was swept into the table boundary); fixed, and its 33 rows were verified against the Balance Sheet. (2) The Balance Sheet "Total Assets" and "Total Liabilities and Stockholders' Equity" values were missing (both years' values fused into one string); fixed.
 
-🔴 KNOWN ISSUE (not fixed, documented only):
-   Note "Leases" section — 2 small adjacent tables (lease-term +
-   discount-rate) merge incorrectly:
-   - Row-values from one table attach to other table's row-labels
-   - One table's TITLE gets swapped with nearby table's caption
-   Root cause: NOT fixed — table_parser's region-splitting logic
-   struggles when 2 small tables sit close together on same page.
-   Scope: isolated to this 1 sub-section, rest of Tier-2 clean.
-   Priority: LOW (rarely-queried lease-term/discount-rate detail).
+---
 
-   META 2025 — AUDIT RESULT
+## 5. Chunk filtering (junk policy)
 
-✅ Clean: Core-statements values 100% match (Revenue/COGS/R&D/Net Income/
-   Cash Flow all verified against PDF). No boilerplate/date-header leaks.
-   Chart-graphs correctly skipped (not garbled into fake tables).
+**C1: Exhibit lists and boilerplate are not embedded** · Status: By design
+5,717 chunks are left out of the index: exhibit lists (4,886) and empty boilerplate lines such as "See accompanying notes" (831). Signatures, powers of attorney and short chunks are kept, because they contain names and some real figures. Questions about which documents were filed as exhibits cannot be answered. `build_embeddings.py --keep-junk` puts them back.
 
-🟡 3 minor, non-blocking issues (documented, not fixed):
-   1. 2-column Critical-Audit-Matter title-split ("Description of the"/
-      "Matter") -- cosmetic, content correctly attached, just 2 empty
-      extra nodes.
-   2. Text-only tables (no numbers, e.g. "Useful Life: Five to 5.5 years")
-      don't form clean tables -- become paragraph bullets instead.
-      Data present, just not table-structured. Tier-3/rare-query topic.
-   3. RECURRING (also seen in Nvidia): first data-row right after
-      "Columns:" line sometimes loses its row-label (e.g. "Revenue",
-      "Net income" show blank label, value still correct). 2/2
-      companies so far -- watch for 3rd occurrence to decide if this
-      needs a real fix.
+**C2: Navigation clutter is excluded at query time** · Status: By design (switchable)
+2,176 of 240,919 vectors (tables of contents, page-number lists, exhibit-list leftovers, XBRL / Exhibit 101 lists) are excluded from search by the retriever's clutter rule (`FEATURES["clutter"]`).
 
-Decision: proceeding to next company (IBM). No blocking issues.
+---
 
-Amazon — RSU/Stock Award Activity table (Note 8) — false year-header detection. Row-labels jaise "Outstanding as of January 1, 2023" mein embedded "2023" token standalone-year jaisa match ho jata hai, is liye table (jo asal mein Units/Fair-Value 2-column structure hai, year-comparison nahi) galat year-header detect karti hai — values garbled/incomplete. Tier-3 (equity-comp footnote detail, kam-query hoti hai). NOT fixed (deferred — narrow, low-query-frequency scope).
+## 6. Embeddings and retrieval
 
-Nvidia — 3 complex raw-fallback tables (Segment Info year-blocks, Leases schedule, valuation-allowance rollforward) mein "(In millions)" caption row ke beech mein leak hoti hai. Values traceable hain, sirf presentation messy hai. Tier-3, narrow-scope (3/41 tables). NOT fixed (deferred).
+**M1: Small embedding model** · Status: Deferred (comparison planned)
+BAAI/bge-small-en-v1.5 (384 dimensions) was chosen to fit a CPU-only laptop (8 GB RAM; a full build takes about 9–10 hours). Larger models score higher on public retrieval benchmarks (MTEB retrieval average: small 51.68, base 53.25, large 54.29). A bge-large build on a GPU (Google Colab) and a reranker are planned, to be compared against the current index on the same evaluation set.
 
-Chipotle — "Income Taxes Paid" table (Note 6) mein intro-sentence column-name ban jaati hai, 2024/2023 data incomplete lagta hai (2025 values sahi hain). Tier-3, narrow (1 table). NOT fixed (deferred).
-Chipotle — "Provision for Income Taxes" (MD&A) mein ek garbage caption-row hai, asli values sahi hain. Tier-3, cosmetic. NOT fixed (deferred).
+**M2: Stage 2 (Apple-only) findings, kept as history** · Status: Superseded / Mitigated
+The first retriever, tested on Apple only (24 queries), reached Recall@3 ≈ 95% (21/22) but Precision@1 ≈ 54% (13/24). Issues found:
+- "cash and cash equivalents 2022" and "net income 2019" did not return the figure;
+- "latest R&D spending" returned product announcements;
+- "current stock price" returned balance-sheet data with a high score (0.755);
+- an out-of-scope Tesla question scored 0.657–0.668, inside the range of real Apple answers (dividend 0.670, executive officers 0.609), so a score threshold alone cannot reject out-of-scope questions.
 
-Netflix — Stockholders' Equity table mein "Common Stock and Additional Paid-in Capital" group-title x-clustering tolerance (20pt) se thoda bahar (24.8pt gap) reh gaya, is liye "Amount" column standalone ban gaya aur Treasury Stock ki value uske neeche chali gayi. Shares value sahi hai, dollar-values present hain bas 1 label (Treasury Stock ka "Amount" ke neeche) confusing hai. Tier-1 lekin narrow (1 table). NOT fixed (deferred — x-clustering tolerance tuning risky hai, doosri companies ko regress kar sakta hai).
+Lesson: with one company, semantic similarity alone works; with 50 companies, company and year filtering must happen before ranking. Since then the retriever has added company/year filters, statement routing for line items (`stmt`), recency handling and the company guard (R7), and the v2 evaluation below replaces these numbers. These exact Apple queries were not re-run. In Stage 2, tables sometimes over-ranked for conceptual questions; in v2 this was not a major issue (Hit@5: section 97.3%, natural 95.6%). Reranking remains deferred.
 
-Walmart 2026 — Note 8 (Taxes) Effective Income Tax Rate Reconciliation table (FY2026-specific sub-table) mein "U.S. statutory tax rate" pehli row apne column-header mein sweep ho gayi hai. Values ($6,188M/21.0%) column-name mein visible hain lekin apni row mein nahi. Baaki sab rows clean hain, comparison-table (2025/2024) bhi clean hai. Tier-2, narrow (1 row, 1 sub-table). NOT fixed (deferred).
+### Retrieval stage: retriever v2.1, evaluated 17 Oct 2026
 
-PayPal 2025: Item 16 (Form 10-K Summary) ka exhibit-listing sentence 2 chhoti headings mein split ho jaata hai ("Consolidated Statements of Income (Loss), (iii) the Consolidated" / "...Stockholders' Equity, (v) the"). Koi data-loss nahi, sirf document ke end mein boilerplate exhibit-reference text. Tier-3, cosmetic.
+Hybrid FAISS + BM25 with Reciprocal Rank Fusion, BAAI/bge-small-en-v1.5. Eval set v2: 450 auto-generated questions (180 table line items, 112 section topics, 54 risk factors, 68 natural-language topics, 36 out-of-scope).
 
+Result with all query-time fixes on: Hit@1 87.4%, Hit@5 97.1%, Hit@10 98.3%, MRR 0.917. Without the easy risk-factor category: Hit@1 85.8%, Hit@5 96.7%. Out-of-scope questions correctly rejected: 36/36.
 
+**R1: Heading hierarchy errors (affect citations more than retrieval)**
+Some filings attach sections to the wrong parent heading. Examples:
+- Colgate-Palmolive and Watts Water notes appear under "ITEM 16. FORM 10-K SUMMARY".
+- The forward-looking statements at the start of some filings (Block, Alphabet) also appear under Item 16.
+- Parker Hannifin MD&A sub-sections appear under "CONSOLIDATED STATEMENT OF INCOME".
+- Some Chevron note titles are merged into the first line of the chunk text ("Operating Segments and Geographic Data Although each ...").
+- One Alphabet FY2018 path joins two headings with "|".
 
-Known Limitations (Tier-2/3 — Low Priority)
+The content is usually still retrieved, but the section name shown in a citation can be wrong, and section-based evaluation underestimates accuracy for these companies. Fixing this means re-running hierarchy_builder → chunk_builder and re-embedding only the affected files.
 
-The following minor edge cases are cataloged for tracking purposes. These items do not cause data loss, numerical corruption, or structural breakdown in the RAG ingestion pipeline:
+**R2: Broken table header (Parker Hannifin FY2021 balance sheet)**
+The header row merged with the first data row ("Columns: 2021 733,117, 2020* 685,514"). The values are still in the chunk, but the column labels are wrong. Tables with such headers are excluded from evaluation answers.
 
-1. Repeating Page-Header Clutter (Costco)
-   - Scope: Item 7 (MD&A)
-   - Issue: Repeated page-header captions such as "(In millions... ) (Continued)" persist as minor paragraph clutter.
-   - Root Cause & Status: Identified at the `paragraph_parser.py` layer; pending raw JSON verification.
+**R3: Caterpillar FY2016 cash-flow statement under the wrong parent**
+The statement is nested under "Consolidated Financial Position > See accompanying notes ...", so the statement detector does not recognise it as a cash-flow statement.
 
-2. Signature Block Merging (PayPal 2016)
-   - Scope: Exhibit / Metadata Signatures
-   - Issue: Signature blocks for two board directors (Wences Casares, John J. Donahoe) are captured under a single concatenated heading node.
-   - Impact: Purely cosmetic metadata formatting with no effect on primary financial statements.
+**R4: A few line-item questions still miss the primary statement**
+About 4 of 180 table questions (for example Walmart FY2026 cost of sales, Dell FY2020 total net revenue, Woodward FY2021 depreciation and amortization, Nike FY2017 long-term debt). The statement vote helps only when the statement table also ranks reasonably in the dense or BM25 list. Not tuned further, to avoid overfitting the evaluation set; exact line items are planned to come from the structured SQL track.
 
-3. Chart Legend Spurious Headings (Intuit)
-   - Scope: Stock Performance Graph
-   - Issue: Performance chart legends ("S&P 500", "S&P 500 Information Technology Index") generate empty, standalone heading nodes.
-   - Impact: Visual chart artifact containing no narrative or financial table data.
+**R5: Rounded amounts in text vs exact amounts in tables**
+MD&A and notes often state rounded values ("$4.35 billion") while the statements give exact values (4,349). The evaluation counts only exact matches, so a correct rounded answer is scored as a miss (for example Nvidia FY2022 goodwill).
 
-4. Multi-Page Statement Table Splitting (AMD 2025) — RESOLVED
-   - Scope: Consolidated Statements of Cash Flows
-   - Issue: Verbatim statement titles across page breaks without "(Continued)" suffixes previously spawned duplicate sibling nodes.
-   - Status: Resolved via `hierarchy_builder.py` node-reopening logic; documented here for historical regression tracking.
+**R6: Same line item, different amounts**
+Some items are reported with a different scope in different statements, for example Home Depot depreciation and amortization in the income statement vs the cash-flow statement. Answers should state which statement a number comes from.
 
+**R7: Unknown-company detection relies on capitalisation and question shape**
+The guard catches a non-indexed company when it is the capitalised subject of the question ("What risks does Samsung face?", "Toyota's revenue", "Siemens 2024 ..."). Lowercase names or unusual phrasing fall back to the dense-score confidence gate, which may still return a chunk that only mentions that company (for example Nvidia's litigation with Samsung).
 
-5. Oversized Header Flattening in Modern Filing Formats (Intel 2025, PANW 2025)
-   - Scope: Item 8 & Audit Report Subtrees
-   - Issue: Recent 10-K styling trends render standard sub-headings in oversized fonts, promoting them to Level-1 nodes and flattening implicit parent-child trees (e.g., "Item 8 → Notes" or "Audit Report → Critical Audit Matters").
-   - Impact: Direct semantic queries (e.g., retrieving specific Note text) remain 100% accurate with zero data loss. However, structural subtree queries (e.g., fetching all child nodes under Item 8) may return partial hierarchies.
-   - Status: Active observation; gathering additional enterprise document samples before implementing a generalized layout-aware parser rule to avoid over-segmentation risks.
+**R8: Evaluation set limitations (v2)**
+Questions are generated from the chunks themselves, so their wording overlaps the source text and they are easier than real user questions. Risk-factor questions copy the heading and are reported separately.
 
-   6. Financial Statement Title Wrapping (Nike 2025)
-   - Scope: Consolidated Statements of Shareholders' Equity
-   - Issue: The statement header is truncated as "CONSOLIDATED STATEMENTS OF", with the trailing qualifier ("SHAREHOLDERS' EQUITY") separated due to multi-line layout wrapping (>2 lines).
-   - Impact: Purely cosmetic metadata issue. Table parsing, column structures, and numerical data (Class A/B Shares, Common Stock Amount, Retained Earnings) remain 100% intact with zero data loss.
-   - Status: Tier-2 observation; full pattern-matching resolution pending raw `cleaned.json` layout analysis.
+Known generator issues to fix in v3:
+- duplicate question text when no year is given (Colgate-Palmolive derivatives);
+- headings that repeat across a filing (Caterpillar "Machinery, Energy & Transportation");
+- depreciation and amortization taken from either the income statement or the cash-flow statement;
+- a natural-topic answer matched through a risk-factor sentence (Block "repurchase the Notes" for a share-buyback question).
 
+A hand-written question set and a RAGAS evaluation are planned for the Gemini stage.
 
-   1. eBay Inc. (2025 & 2016)
+**R9: Query-time rules are pattern-based**
+The clutter, statement and unknown-company rules are regular expressions designed on these 500 filings (2,176 of 240,919 vectors flagged as tables of contents or exhibit lists, 6,196 as primary-statement windows; flagged chunks reviewed on a 75-file sample). Unusual layouts or new companies may need rule updates. Every rule can be switched off in `FEATURES` and measured with `eval_retriever.py --ablation`.
 
-Units-Caption Artifact Row (2025): The statement-level unit caption "(In millions, except par value)" is parsed as an empty-label artifact row at the top of the 5 core financial statements. (Impact: Cosmetic — numerical extraction unaffected).
+---
 
-Wrapped Item Title Disaggregation (2016): Multi-line title text for Items 5, 7, 9, 12, and 13 wraps into separate child-nodes due to missing item-marker line-continuation logic. (Impact: Low — section body hierarchy preserved).
+## 7. QA tools
 
-2. Kimberly-Clark (2025 & 2016)
+**Q1: `qa_check.py` false alarms** · Status: Known
+The check flags Kennametal Item 1A and Franklin Electric Item 3. These are known false alarms, not data problems.
 
-Blank Item 8 Header Title: The ITEM 8. node initializes with a blank title string due to unmerged item-title continuations. (Impact: Low — ITEM 8 correctly operates as the structural parent).
+---
 
-3. Lockheed Martin (2025)
+## Audit coverage (verified against the PDF)
 
-Empty Row Label in Comprehensive Income: A single isolated line item in the Comprehensive Income statement lacks a text label while preserving correct underlying values (177 / -65 / 58). (Impact: Isolated Cosmetic).
-
-4. Union Pacific Corporation (2025)
-
-Caption Node Promotion: Unit and period metadata ("Millions, except share and per share amounts...") is parsed as a child-heading under the Balance Sheet tree. (Impact: Low — minor section path extension).
-
-Entity Header Artifact: The company header line ("Union Pacific Corporation and Subsidiary Companies") is promoted to a child-heading node under the Cash Flow statement. (Impact: Cosmetic).
-
-5. Chevron Corporation (2025)
-
-Phantom Footnote Column Header: The Stockholders' Equity table contains a spurious "1" column header generated by an embedded footnote marker. (Impact: Low — real financial data columns remain uncorrupted).
-
-6. Emerson Electric Co. (2025 & 2016)
-
-Systemic Entity Name Child Node: The EMERSON ELECTRIC CO. & SUBSIDIARIES caption line is promoted to a child-heading across all 5 core statements (systemic pattern shared with Union Pacific). (Impact: Cosmetic).
-
-Unmatched Bracketed Reserved Marker: ITEM 6 [RESERVED] bypasses is_top_level_marker regex matching due to bracketed formatting without trailing punctuation. (Impact: Zero Data Loss — target section is natively empty).
-
-Ametek (FY2016, FY2025) — Both years verified.
-Known limitation: In FY2016, five Item headings (Item 1, 1A, 2, 3, 5) have their titles split into a separate child node rather than merging into the parent heading. Content is correctly nested and no data is lost — cosmetic only.
-
-Rockwell Automation (FY2016, FY2025) — Both years verified.
-Known limitations: (1) The "Liabilities and Shareowners' Equity" divider on the Balance Sheet forms its own empty child node in both years; values remain complete and arithmetically consistent. (2) Two subtotal rows per year render with blank labels while their values remain correct. A critical defect (missing "Item 5" heading in FY2016 due to title-length) was identified and has been corrected.
-
-Roper Technologies (FY2016, FY2025) — Both years verified.
-FY2025: no limitations identified. FY2016: two critical defects were identified and corrected — (1) the Stockholders' Equity statement's table was misattached to the preceding Comprehensive Income statement, and (2) the Balance Sheet's Total Assets and Total Liabilities and Stockholders' Equity rows were missing values due to a PDF-extraction artifact. Both have been fixed and values are now complete and arithmetically consistent.
-
-Nordson Corporation (FY2016, FY2025) — Both years verified.
-
-Known limitations:
-
-The Balance Sheet's "Total assets" and "Total liabilities and shareholders' equity" subtotal rows render with a blank label in both years (the grand-total value itself is correct and arithmetically consistent — confirmed against the PDF both years) — cosmetic only, no data loss.
-In FY2016, one isolated extraneous row ("Nordson Corporation, 36" — a page-footer artifact: company name plus page number) leaks into the Balance Sheet table as its own row with no real financial meaning. It does not corrupt or displace any genuine data row — cosmetic only.
+- **Ametek, Rockwell Automation, Roper Technologies, Nordson (FY2016 and FY2025):** all Items cross-checked against the PDF table of contents; core financial statements verified line by line; cross-statement totals consistent (for example net income ties across the income, comprehensive income and cash-flow statements).
+- **Alphabet FY2025 (Tier-2 audit):** core statements, segment and executive overview, cost lines, tax provision, share repurchases and most lease tables match the PDF (exception: T5).
+- **Meta FY2025:** core statements match 100% (revenue, cost of revenue, R&D, net income, cash flow); no boilerplate or date-header leaks; charts correctly skipped rather than turned into fake tables (exceptions: H4, T4, T9).
