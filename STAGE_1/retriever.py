@@ -25,6 +25,12 @@ eval_retriever.py --ablation har ek ka asar alag naap sake:
            wale sawal mein nahi (wahan saal sahi table / column dhoondne mein madad karta hai).
   stmt     "total assets / revenue / D&A" jaise number wale sawal par asli financial statement (balance sheet,
            income statement, cash flow) ko teesri list (RRF) se vote milta hai. Pehle notes / MD&A jeet jate the.
+v2.1 (v2 eval ke baqi 20 fail dekh kar):
+  strip    ab "according to its 2024 10-K", "annual report" jaise alfaaz bhi nikalta hai. Har chunk 10-K hi se hai,
+           in alfaaz se sirf "This Annual Report on Form 10-K ..." jaise boilerplate chunk upar aate the.
+  clutter  XBRL / Exhibit 101 ki fehrist ("(i) Consolidated Statements of ..., (ii) ...", "101.SCH ...") bhi.
+  dedup    Bina saal ke sawal par ek hi paragraph 5 saalon se 5 dafa aa jata tha. Ab hu-ba-hu wahi text ek
+           dafa aata hai (naye saal wala), baqi jagah doosri cheezein aati hain.
 Index dobara banane ki zaroorat NAHI. Pehli baar chalne par chunks ke flags (fehrist? statement?) ek dafa
 bante hain aur vector_store/flags.npz mein save ho jate hain (agli baar seedha load).
 """
@@ -43,7 +49,7 @@ import scipy.sparse as sp
 from build_embeddings import EmbeddingIndexBuilder, tok, section_str, INC_REF, EXHIBIT_REF, FORM_REF
 
 # Har sudhaar on/off. eval_retriever.py --ablation inhein badal badal kar naapta hai.
-FEATURES = {"guard": True, "clutter": True, "strip": True, "stmt": True}
+FEATURES = {"guard": True, "clutter": True, "strip": True, "stmt": True, "dedup": True}
 
 
 # ---------------------------------------------------------------------------------------------
@@ -152,6 +158,9 @@ EXH_LEAF = re.compile(r"^(?:\(?[a-z0-9]{1,3}[.)]\s*)*(?:index to |index of |list
 BIG_NUM = re.compile(r"(?<![\d.])\d{1,3}(?:,\d{3})+(?:\.\d+)?|\b\d+\.\d+\b")
 PAGE_LINE = re.compile(r"^\s*(?:[^|\d]{0,80}\|\s*)?(?:\$\s*\|\s*)?(\d{1,3})\s*$")
 ITEM_TOKEN = re.compile(r"\bItem\s*\d{1,2}[A-C]?\b", re.I)
+XBRL_DOC = re.compile(r"\b101\.(?:INS|SCH|CAL|DEF|LAB|PRE)\b|taxonomy extension", re.I)
+ROMAN_ITEM = re.compile(r"\((?:i|ii|iii|iv|v|vi|vii|viii|ix|x)\)")
+CONS_STMT = re.compile(r"consolidated (?:statements?|balance sheets?)", re.I)
 
 
 def clutter_reason(c):
@@ -181,6 +190,11 @@ def clutter_reason(c):
         return "toc"                                         # heading hi "Item 1B. | Item 3. | Item 4." ho
     if EXH_LEAF.match(leaf):
         return "exhibit"
+    if XBRL_DOC.search(t):                                   # "101.SCH XBRL Taxonomy Extension Schema ..."
+        return "exhibit"
+    if (len(ROMAN_ITEM.findall(t)) >= 3 and len(CONS_STMT.findall(t)) >= 2
+            and re.search(r"xbrl|notes to (?:the )?consolidated financial statements", t, re.I)):
+        return "exhibit"                                     # Exhibit 101: "(i) Consolidated Statements of ..., (ii) ..."
     n_inc, n_ex, n_form = len(INC_REF.findall(t)), len(EXHIBIT_REF.findall(t)), len(FORM_REF.findall(t))
     if re.search(r"\bexhibit", sec, re.I) and ((n_ex >= 1 and (n_inc or n_form)) or n_ex >= 2 or n_inc >= 2):
         return "exhibit"
@@ -221,6 +235,12 @@ def line_item_types(query):
 # ---------------------------------------------------------------------------------------------
 # "guard": sawal ka subject koi anjaan company to nahi?
 # ---------------------------------------------------------------------------------------------
+# "according to its 2024 10-K", "in the annual report" -- har chunk 10-K hi se hai, ye alfaaz koi maani nahi dete
+FILING_WORDS = re.compile(
+    r"\b(?:(?:according to|as (?:per|stated in|reported in|disclosed in)|in|from|per)\s+(?:its|their|the|this|his|her)\s+)?"
+    r"(?:(?:most recent|latest|recent)\s+)?(?:annual\s+report(?:\s+on\s+form\s*10-?k)?|form\s*10-?k|10-?k)"
+    r"(?:\s+(?:filing|report))?(?![\w-])", re.I)
+
 _CAP = r"[A-Z][\w&.\-]*"
 SUBJECT_RES = [
     # "What risks does Samsung face?"  "How many employees does Unilever have?"
@@ -316,7 +336,8 @@ class Retriever:
     def _rules_sig():
         """Flags ke rules ka fingerprint: rule (regex / function) badla to purani flags.npz khud bekaar."""
         parts = [p.pattern for p in (STMT_TITLE, SUBTITLE, NOT_STMT, BAD_SUFFIX, TABLE_TITLE, ITEM_TITLES, EXH_LEAF,
-                                     BIG_NUM, PAGE_LINE, ITEM_TOKEN, INC_REF, EXHIBIT_REF, FORM_REF)]
+                                     BIG_NUM, PAGE_LINE, ITEM_TOKEN, XBRL_DOC, ROMAN_ITEM, CONS_STMT,
+                                     INC_REF, EXHIBIT_REF, FORM_REF)]
         try:
             parts += [inspect.getsource(f) for f in (statement_type, _stmt_code, clutter_reason)]
         except (OSError, TypeError):
@@ -428,7 +449,7 @@ class Retriever:
         return None
 
     def _search_text(self, query, comps, years):
-        """'strip': filter ban chuke company naam (aur diye gaye saal) search ke alfaaz se nikal do."""
+        """'strip': filter ban chuke company naam, diye gaye saal aur "10-K / annual report" jaise alfaaz nikal do."""
         s = " " + query + " "
         if comps:
             for a in sorted((a for a, ns in self.aliases.items() if ns & comps), key=len, reverse=True):
@@ -438,6 +459,7 @@ class Retriever:
         for y in sorted(years or []):
             s = re.sub(r"(?:\b(?:in|for|during|of)\s+)?(?:\b(?:the\s+)?(?:fiscal(?:\s+year)?|fy)\s*)?['’]?(?<!\d)" + str(y) +
                        r"(?!\d)", " ", s, flags=re.I)
+        s = FILING_WORDS.sub(" ", s)
         s = re.sub(r"\s+", " ", s).strip()
         return s if re.search(r"[A-Za-z]{3,}", s) else query          # kuch bacha hi nahi -> asal sawal
 
@@ -552,14 +574,14 @@ class Retriever:
             for doc, r in L.items():
                 rrf[doc] = rrf.get(doc, 0.0) + 1.0 / (self.RRF_K + r + 1)
 
-        results, seen = [], set()
+        results, seen, same_text = [], set(), {}
         for doc in sorted(rrf, key=lambda x: -rrf[x]):
             g = int(self.gid[doc])
             if g in seen:                    # lambe table ke kai tukde -> ek hi baar
                 continue
             seen.add(g)
             m = self._meta(doc)
-            results.append({
+            item = {
                 "score": dscore[doc] if doc in dscore else float(self.index.reconstruct(doc) @ q[0]),
                 "rrf_score": rrf[doc],
                 "company": m["company"],
@@ -569,7 +591,16 @@ class Retriever:
                 "page_numbers": m["page_numbers"],
                 "chunk_type": m["chunk_type"],
                 "text": m["text"],
-            })
+            }
+            if F["dedup"]:                   # hu-ba-hu wahi paragraph doosre saal ka -> ek hi (naye saal wala)
+                sig = re.sub(r"\s+", " ", (m["text"] or "")[:250].lower()).strip()
+                j = same_text.get(sig)
+                if j is not None:
+                    if int(m["year"] or 0) > int(results[j]["year"] or 0):
+                        results[j] = item
+                    continue
+                same_text[sig] = len(results)
+            results.append(item)
             if len(results) == top_k:
                 break
 
@@ -634,7 +665,7 @@ if __name__ == "__main__":
     ap.add_argument("--year", type=int)
     ap.add_argument("--type", choices=["text", "table"])
     ap.add_argument("--store", default="STAGE_1/vector_store")
-    ap.add_argument("--off", default="", help="comma separated sudhaar band karo: guard,clutter,strip,stmt")
+    ap.add_argument("--off", default="", help="comma separated sudhaar band karo: guard,clutter,strip,stmt,dedup")
     ap.add_argument("--test", action="store_true")
     a = ap.parse_args()
     retriever = Retriever(a.store)
