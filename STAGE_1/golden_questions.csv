@@ -1,25 +1,25 @@
 id,question,company,year,answer,type,page,notes
-G01,What was Woodward's net income in fiscal 2025?,Woodward,2025,"442,111",number,70,"synonym: asks 'net income', statement line is 'Net earnings'"
-G02,How much total revenue did Microsoft report for fiscal year 2026?,Microsoft,2026,"331,839",number,51,plain income-statement line item
-G03,PYPL net revenues 2025,PayPal,2025,"33,172",number,83,ticker + keyword-style search (no question words)
+G01,What was Woodward's net income in fiscal 2025?,Woodward,2025,"442,111",number,70,"synonym: asks 'net income', statement line is 'Net earnings'  | VERIFIED"
+G02,What was the total revenue of Microsoft for year 2026?,Microsoft,2026,"331,839",number,51,plain income-statement line item
+G03,Tell me the net revenue of PYPL in 2025.,PayPal,2025,"33,172",number,83,ticker + keyword-style search (no question words)
 G04,What was AMD's bottom line in 2025?,AMD,2025,"4,335",number,70,finance slang: bottom line = net income
 G05,How much did Lockheed Martin pay its shareholders in dividends during 2025?,Lockheed Martin,2025,"3,131",number,74,cash-flow statement item (Dividends paid)
 G06,What were Donaldson's net earnings in fiscal 2026?,Donaldson,2026,453.8,number,44,amounts in millions with one decimal; fiscal year ends July 31
 G07,How much cash did Nordson have on hand at the end of fiscal 2025?,Nordson,2025,"108,442",number,45,synonym: cash on hand = cash and cash equivalents
-G08,What were Home Depot's net sales in fiscal 2025?,Home Depot,2025,"164,683",number,53,"fiscal-year label check: Home Depot fiscal 2025 ended Feb 1, 2026"
-G09,How much revenue did Dell Technologies make in fiscal 2026?,Dell,2026,"113,538",number,79,full company name 'Dell Technologies'; statement line is 'Total net revenue'
+G08,What were Home Depot's net sales in fiscal 2025?,Home Depot,2025,"164,683",number,53,"fiscal-year label check: Home Depot fiscal 2025 ended Feb 1, 2026     | VERIFIED"
+G09,How much revenue did Dell Technologies make in fiscal 2026?,Dell,2026,"113,538",number,79,
 G10,nike revenue fiscal 2026,Nike,2026,"46,398",number,63,"lowercase company name, keyword style (common in chat)"
 G11,What was Chevron's capex in 2025?,Chevron,2025,"17,347",number,69,abbreviation: capex = Capital expenditures
 G12,What was eBay's net income in 2025?,eBay,2025,"2,031",number,85,plain line item
 G13,What was Southwest Airlines' net income for 2025?,Southwest,2025,441,number,111,fiscal-year label check (source file was named 2026); possessive ending in s'
-G14,What were Ametek's net sales in 2024?,Ametek,2024,"6,941,180",number,,CHECK: copied from the prior-year column of the FY2025 filing; confirm in the FY2024 PDF and add the page
+G14,What were Ametek's net sales in 2024?,Ametek,2024,"6,941,180",number,40,CHECK: copied from the prior-year column of the FY2025 filing; confirm in the FY2024 PDF and add the page     | VERIFIED
 G15,What was 3M's headcount at the end of 2025?,3M,2025,"60,500",number,9,synonym: headcount = employees
 G16,How many route miles did Union Pacific's rail network have in 2025?,Union Pacific,2025,"32,889",number,8,operating fact in Item 1 text
-G17,How many stores did Home Depot operate at the end of fiscal 2016?,Home Depot,2016,"2,278",number,3,fiscal-year label check on an old file (source file was named 2017)
+G17,How many stores did Home Depot operate at the end of fiscal 2016?,Home Depot,2016,"2,278",number,3,fiscal-year label check on an old file (source file was named 2017)    | VERIFIED
 G18,"How many people did Nike employ as of May 31, 2025?",Nike,2025,"77,800",number,10,date-style question; middle filing (FY2025) between two others
 G19,How many reportable segments did Union Pacific have in 2025?,Union Pacific,2025,one reportable operating segment,text,6,"answer is a phrase, not a number"
 G20,What business segments does Boeing report in 2025?,Boeing,2025,"Commercial Airplanes (BCA), Defense, Space & Security (BDS), and Global Services (BGS)|three reportable segments: BCA, BDS, and BGS",text,66,names of segments; either sentence is a correct source
-G21,How is Block's business divided into segments in 2025?,Block,2025,"two reportable segments are Square and Cash App|two reportable segments, Square and Cash App",text,6,'Block' is also a common word -- capital B needed
+G21,How is Block's business divided into segments in 2025?,Block,2025,"two reportable segments are Square and Cash App|two reportable segments, Square and Cash App",text,6,Block' is also a common word -- capital B needed
 G22,What new segment structure did Graco adopt in 2025?,Graco,2025,"Contractor, Industrial and Expansion Markets",text,5,"asks about a change, not just a list"
 G23,Who is Kimberly-Clark's largest customer?,Kimberly-Clark,,Walmart Inc|Wal-Mart Stores,text,FY2025 p5,no year: answer is the same in every year (wording changes: Wal-Mart Stores -> Walmart Inc.)
 G24,Does any single customer account for more than 10% of Franklin Electric's sales in 2025?,Franklin Electric,2025,no single customer accounted for,text,9,yes/no question; the answer is a negative sentence
@@ -35,25 +35,25 @@ G33,How did Costco's warehouse count change between fiscal 2024 and 2025?,Costco
 G34,How has the number of 3M's business segments changed between 2016 and 2025?,3M,2016|2025,five business segments|three business segments,compare,FY2016 p7; FY2025 p8,needs chunks from two different filings (2016 and 2025)
 G35,Compare the research and development spending of AMD and Microsoft in their latest fiscal years.,AMD|Microsoft,2025|2026,"8,091|35,562",compare,AMD FY2025 p70; Microsoft FY2026 p51,"two companies + 'latest' (AMD FY2025, Microsoft FY2026)"
 G36,Compare Colgate-Palmolive's and Kimberly-Clark's net sales in 2025.,Colgate-Palmolive|Kimberly-Clark,2025,"20,382|16,447",compare,Colgate-Palmolive FY2025 p77; Kimberly-Clark FY2025 p55,"two peer companies, same year"
-G37,Compare the order backlog of Lockheed Martin and Northrop Grumman at the end of 2025.,Lockheed Martin|Northrop Grumman,2025,$193.6 billion|$95.7 billion,compare,Lockheed Martin FY2025 p45; Northrop Grumman FY2025 p8,two defense peers; amounts written in sentences
+G37,Compare the order backlog of Lockheed Martin and Northrop Grumman at the end of 2025.,Lockheed Martin|Northrop Grumman,2025,$193.6 billion|$95.7 billion,compare,Lockheed Martin FY2025 p45; Northrop Grumman FY2025 p8,two defense peers; amounts written in sentences     | VERIFIED
 G38,What was Costco's net profit margin in fiscal 2025?,Costco,2025,"8,099|269,912",calc,38,"needs net income and net sales (8,099 / 269,912 = 3.0%); the answer step must divide"
 G39,By what percentage did Boeing's revenue grow from 2024 to 2025?,Boeing,2024|2025,"89,463|66,517",calc,59,needs both years (growth = 34.5%)
-G40,How many warehouses does Costco currently operate?,Costco,2025,914,latest,4,'currently' -- should mean the newest filing
-G41,What is Emerson's latest employee count?,Emerson Electric,2025,"71,000",latest,10,'latest' keyword
-G42,What are Parker Hannifin's current reportable segments?,Parker Hannifin,2026,Diversified Industrial and Aerospace Systems,latest,4,'current' keyword; Parker fiscal year ends June 30
+G40,How many warehouses does Costco currently operate?,Costco,2025,914,latest,4,currently' -- should mean the newest filing
+G41,What is Emerson's latest employee count?,Emerson Electric,2025,"71,000",latest,10,latest' keyword
+G42,What are Parker Hannifin's current reportable segments?,Parker Hannifin,2026,Diversified Industrial and Aerospace Systems,latest,4,current' keyword; Parker fiscal year ends June 30
 G43,How many employees does Dell have?,Dell,2026,"97,000",latest,15,no time word at all -- a user expects today's number
-G44,What is Caterpillar's most recent order backlog?,Caterpillar,2025,$51.2 billion,latest,11,'most recent' keyword; rounded amount in a sentence
+G44,What is Caterpillar's most recent order backlog?,Caterpillar,2025,$51.2 billion,latest,11,most recent' keyword; rounded amount in a sentence
 G45,What were Lowe's net sales in fiscal 2024?,,,NOT_FOUND,out_of_scope,,"competitor of Home Depot, not in the index"
 G46,how much revenue did samsung make in 2024,,,NOT_FOUND,out_of_scope,,unknown company written in lowercase (known limitation R7)
 G47,Who won the FIFA World Cup in 2022?,,,NOT_FOUND,out_of_scope,,off-topic question that contains a year
 G48,What revenue does Microsoft expect for fiscal 2030?,,,NOT_FOUND,out_of_scope,,"indexed company, future year that is not in the data"
 G49,What is Toyota's operating margin?,,,NOT_FOUND,out_of_scope,,"unknown company, possessive"
 G50,Which companies does Berkshire Hathaway own?,,,NOT_FOUND,out_of_scope,,unknown company as the subject
-H01,,,,,,,"your own: a company + middle year (2019-2022) not used above (Apple, Walmart, Nvidia ...); a number from the income statement"
-H02,,,,,,,"your own: same as H01 but a balance-sheet item (total assets, long-term debt ...)"
-H03,,,,,,,your own: company name with a typo (e.g. 'Micorsoft'); answer from the PDF
+H01,Tell net earnings including noncontrolling interests of Starbucks in fiscal year ended in 2020?,Starbucks,2020,924.7,number,59,"Hifza: exact line name, decimal number"
+H02,Tell me about the Total Assets of Walmart in 2022?,Walmart,2022,"244,860",number,69,Hifza: balance sheet item
+H03,What were Wallmart's total assets in 2022?,Walmart,2022,"244,860",number,69,Hifza: typo test
 H04,,,,,,,your own: ticker only (e.g. 'AAPL revenue 2021'); answer from the PDF
 H05,,,,,,,your own: a risk or strategy question in your own words; answer = 4-8 words copied from the paragraph
-H06,,,,,,,your own: Roman Urdu / mixed question (e.g. 'Walmart ki 2022 mein sales kitni thi?')
-H07,,,,,,,"your own: out_of_scope - an unknown company in lowercase, no year (answer NOT_FOUND)"
-H08,,,,,,,"your own: out_of_scope - an indexed company + a year that is not in the data, e.g. 2012 (answer NOT_FOUND)"
+H06,Walmart ke 2022 mein total assets kitne thay?,Walmart,2022,"244,860",number,69,Hifza: Roman Urdu test
+H07,what does uber say about its competitors,,,NOT_FOUND,out_of_scope,,"your own: out_of_scope - an unknown company in lowercase, no year (answer NOT_FOUND)"
+H08,What was Netflix's revenue in 2012?,,,NOT_FOUND,out_of_scope,,"your own: out_of_scope - an indexed company + a year that is not in the data, e.g. 2012 (answer NOT_FOUND)"
