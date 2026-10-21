@@ -2,7 +2,7 @@
 eval_retriever.py  -  Saare sawal retriever par chalata hai aur khud check karta hai ke sahi jawab aaya ya nahi.
 
 Chalao:   python STAGE_1/eval_retriever.py              (retriever.py ke FEATURES jaise hain, waise)
-          python STAGE_1/eval_retriever.py --ablation   (har sudhaar ka asar alag naapta hai: 7 dafa, ~2-3 min)
+          python STAGE_1/eval_retriever.py --ablation   (har naya sudhaar alag naapta hai: 10 dafa)
 Pehle:    python STAGE_1/make_eval_set.py   (sawal banane ke liye)
 
 Banata (STAGE_1/eval/ mein):
@@ -33,7 +33,7 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
-from retriever import FEATURES, Retriever
+from retriever import FEATURES, Retriever, ablation_variants
 
 CATS = ["table_number", "section_topic", "risk_factor", "natural_topic"]
 NUM_PREFIX = re.compile(r"^(?:(?:item|note)\s*\d+[a-z]?\s*[.:-]?\s*|\(?[a-z0-9]{1,3}\)\s*|\d+[.)-]\s*)", re.I)
@@ -148,10 +148,8 @@ def scores(rows):
     return s
 
 
-_OFF = dict(guard=False, clutter=False, strip=False, stmt=False, dedup=False)
-VARIANTS = [("pehle jaisa (sab off)", dict(_OFF))] + \
-           [(f"+ {f}", dict(_OFF, **{f: True})) for f in _OFF] + \
-           [("sab on", {f: True for f in _OFF})]
+# v2.1 (purane 5 sudhaar on, naye off) -> har naya sudhaar akela -> v2.2 sab on.  (retriever.py mein list)
+VARIANTS = ablation_variants()
 
 
 def ablation_table(results, nq, qset):
@@ -165,8 +163,8 @@ def ablation_table(results, nq, qset):
         cat = [f"{s[c]['h5']:6.1%}" if s[c] else f"{'-':>6s}" for c in CATS]
         L.append(f"{name:22s} {a['h1']:6.1%} {a['h5']:6.1%} {a['h10']:6.1%} {a['mrr']:6.3f} {100 * (a['h5'] - base):+6.1f}  | "
                  f"{cat[0]} {cat[1]:>7s} {cat[2]} {cat[3]:>7s} | {s['oos'][0]:>2d}/{s['oos'][1]:<3d}")
-    L += ["", "dHit@5 = 'pehle jaisa' ke muqable kitne points (+ acha, - bura). Jo sudhaar - de, use retriever.py ke",
-          "FEATURES mein False kar dena."]
+    L += ["", "dHit@5 = 'v2.1' ke muqable kitne points (+ acha, - bura). Jo sudhaar yahan aur golden dono mein - de,",
+          "use retriever.py ke FEATURES mein False kar dena."]
     return "\n".join(L)
 
 
