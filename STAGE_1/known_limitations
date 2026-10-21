@@ -1,7 +1,7 @@
 # Known Limitations
 
 **Project:** TechCorp Financial Enterprise RAG: 500 SEC 10-K filings (50 companies × 10 fiscal years)
-**Last updated:** 17 Oct 2026
+**Last updated:** 21 Oct 2026
 
 **How to read this file**
 - **Impact:** *Data* = a value or label is wrong or missing · *Structure* = text is intact but sits under a wrong or split heading · *Cosmetic* = display only, no effect on answers.
@@ -12,7 +12,7 @@
 1. H2: Apple FY2021 MD&A content sits under "Item 6. [Reserved]".
 2. R1: Wrong parent headings in several filings (Colgate-Palmolive, Watts Water, Parker Hannifin, Chevron, Block, Alphabet).
 3. T4: Blank row labels recur across five companies (Meta, Nvidia, Rockwell Automation, Nordson, Lockheed Martin).
-4. R4: A few line-item questions miss the primary statement (planned: SQL track).
+4. R4: Exact statement numbers and two-number comparisons still miss the primary statement in some questions (golden dev set: 6 of 24 table-based questions; planned: SQL track).
 
 ---
 
@@ -163,11 +163,44 @@ The first retriever, tested on Apple only (24 queries), reached Recall@3 ≈ 95%
 
 Lesson: with one company, semantic similarity alone works; with 50 companies, company and year filtering must happen before ranking. Since then the retriever has added company/year filters, statement routing for line items (`stmt`), recency handling and the company guard (R7), and the v2 evaluation below replaces these numbers. These exact Apple queries were not re-run. In Stage 2, tables sometimes over-ranked for conceptual questions; in v2 this was not a major issue (Hit@5: section 97.3%, natural 95.6%). Reranking remains deferred.
 
-### Retrieval stage: retriever v2.1, evaluated 17 Oct 2026
+### Retrieval stage: retriever v2.2, evaluated 21 Oct 2026
 
-Hybrid FAISS + BM25 with Reciprocal Rank Fusion, BAAI/bge-small-en-v1.5. Eval set v2: 450 auto-generated questions (180 table line items, 112 section topics, 54 risk factors, 68 natural-language topics, 36 out-of-scope).
+Hybrid FAISS + BM25 with Reciprocal Rank Fusion, BAAI/bge-small-en-v1.5. Two evaluation sets:
 
-Result with all query-time fixes on: Hit@1 87.4%, Hit@5 97.1%, Hit@10 98.3%, MRR 0.917. Without the easy risk-factor category: Hit@1 85.8%, Hit@5 96.7%. Out-of-scope questions correctly rejected: 36/36.
+- **Eval set v2** (450 auto-generated questions: 180 table line items, 112 section topics, 54 risk factors, 68 natural-language topics, 36 out-of-scope). The questions are generated from the chunks, so their wording overlaps the source text.
+- **Golden dev set v1.1** (56 questions: 50 drafted by Claude from verified chunk text and reviewed by Hifza, 6 written by Hifza; 48 in-scope, 8 out-of-scope). Phrased like real users (synonyms, tickers, lowercase, a typo, Roman Urdu, "currently", comparisons). Five answers were checked by hand against the PDFs (5/5 correct). File: `STAGE_1/golden_questions.csv`, scored with `eval_golden.py`.
+
+| | v2.1 | v2.2 (all fixes on) |
+|---|---|---|
+| Golden, Hit@5 (exact answer in top 5) | 58.3% | **85.4%** |
+| Golden, Hit@5 counting rounded amounts ("$3.1 billion" for 3,131) | 66.7% | 89.6% |
+| Golden, Hit@10 | 72.9% | 93.8% |
+| Golden, out-of-scope rejected | 5/8 | 7/8 |
+| Golden, paragraph-based answers (24) | about 70% | **23/24 (95.8%)** |
+| Golden, table-based answers (24) | 12/24 (50.0%) | 18/24 (75.0%); 20/24 counting rounded amounts |
+| Eval set v2, Hit@5 | 97.1% | 96.6% |
+| Eval set v2, Hit@10 | 98.3% | 99.3% |
+| Eval set v2, out-of-scope rejected | 36/36 | 36/36 |
+
+v2.2 on eval set v2 in detail: Hit@1 87.0%, Hit@5 96.6%, Hit@10 99.3%, MRR 0.916 (table 96.7%, section 95.5%, risk 100%, natural 95.6%); without risk factors Hit@5 96.1%. "Paragraph-based" and "table-based" refer to where the answer is printed in the filing. The v2.1 golden figures come from the first run, before the G28 answer-key fix; with that fix v2.1 would be one question (about 2 points) higher.
+
+**Ablation (each new fix added alone to v2.1; difference in Hit@5 points):**
+
+| Fix | What it does | Golden | Eval v2 |
+|---|---|---|---|
+| `synonyms` | user words added to the keyword query (headcount → employees, bottom line → net income, audit firm → auditor and Big Four names) | +10.4 | 0.0 |
+| `expand` | each result also carries the previous and next chunk of the same section | +10.4 | +0.2 |
+| `fresh` | no year in the question → extra vote for the 3 best chunks of the newest 10-K | +4.2 | −0.5 |
+| `stem` | keyword search matches word forms (employ, employed, employees, employment) | +4.2 | −0.7 |
+| `recency` | "currently", "now", "today", "nowadays" mean the newest filing | +2.1 | 0.0 (one more out-of-scope answered; fixed by `oos2`) |
+| `names` | typo-tolerant company names (Wallmart → Walmart) and full legal names ("Dell Technologies") | +2.1 | 0.0 |
+| `diverse` | two companies or two years → results alternate between them | +2.1 | 0.0 |
+| `oos2` | list of well-known non-indexed companies (any case) and the confidence gate also for no-company questions that contain a year | out-of-scope 5 → 7 of 8 | 0.0 |
+| all together | | **+25.0** | −0.5 |
+
+With all fixes on, eval set v2 loses two section-topic questions (97.3% → 95.5%); the same loss appears with `stem` alone. The golden ablation was run before one answer-key row (G28) was repaired, so G28 counted as a miss in every variant; the per-fix differences are unaffected and the final run above includes the repair. No fix lowered both sets, so all eight stay on. Every fix can be switched off in `FEATURES` and measured with `eval_golden.py --ablation` and `eval_retriever.py --ablation`.
+
+**Caution:** the v2.2 fixes were designed by studying the golden dev set's failures, so 85.4% is an optimistic number for that set. A separate, frozen test set (paragraph-focused, partly written by people who did not build the retriever) is planned for the final figure. The flat result on eval set v2 shows that the fixes did not damage general behaviour; that set is saturated and cannot show vocabulary gains.
 
 **R1: Heading hierarchy errors (affect citations more than retrieval)**
 Some filings attach sections to the wrong parent heading. Examples:
@@ -185,31 +218,43 @@ The header row merged with the first data row ("Columns: 2021 733,117, 2020* 685
 **R3: Caterpillar FY2016 cash-flow statement under the wrong parent**
 The statement is nested under "Consolidated Financial Position > See accompanying notes ...", so the statement detector does not recognise it as a cash-flow statement.
 
-**R4: A few line-item questions still miss the primary statement**
-About 4 of 180 table questions (for example Walmart FY2026 cost of sales, Dell FY2020 total net revenue, Woodward FY2021 depreciation and amortization, Nike FY2017 long-term debt). The statement vote helps only when the statement table also ranks reasonably in the dense or BM25 list. Not tuned further, to avoid overfitting the evaluation set; exact line items are planned to come from the structured SQL track.
+**R4: Exact statement numbers and comparisons still miss the primary statement**
+On eval set v2, about 4 of 180 table questions (for example Walmart FY2026 cost of sales, Dell FY2020 total net revenue, Woodward FY2021 depreciation and amortization, Nike FY2017 long-term debt). On the golden dev set, 6 of 24 table-based questions: "AMD's bottom line" (income statement only at #10), Dell FY2026 total net revenue (not in the top 10), and two-number comparisons (Woodward net earnings FY2024 vs FY2025 at #9; AMD vs Microsoft R&D, where Microsoft's figure is only in the income statement at #9). The statement vote helps only when the statement table also ranks reasonably in the dense or BM25 list. Not tuned further, to avoid overfitting the evaluation sets; exact line items and calculations are planned to come from the structured SQL track.
 
-**R5: Rounded amounts in text vs exact amounts in tables**
-MD&A and notes often state rounded values ("$4.35 billion") while the statements give exact values (4,349). The evaluation counts only exact matches, so a correct rounded answer is scored as a miss (for example Nvidia FY2022 goodwill).
+**R5: Rounded amounts in text vs exact amounts in tables** · Status: Mitigated in evaluation
+MD&A and notes often state rounded values ("$4.35 billion", "We paid dividends totaling $3.1 billion") while the statements give exact values (4,349; 3,131). The strict score counts only exact matches; `eval_golden.py` also reports a second score that accepts the rounded form (golden v2.2: 85.4% strict, 89.6% with rounded amounts). The answer step should prefer the exact statement figure and say when a number is rounded.
 
 **R6: Same line item, different amounts**
 Some items are reported with a different scope in different statements, for example Home Depot depreciation and amortization in the income statement vs the cash-flow statement. Answers should state which statement a number comes from.
 
-**R7: Unknown-company detection relies on capitalisation and question shape**
-The guard catches a non-indexed company when it is the capitalised subject of the question ("What risks does Samsung face?", "Toyota's revenue", "Siemens 2024 ..."). Lowercase names or unusual phrasing fall back to the dense-score confidence gate, which may still return a chunk that only mentions that company (for example Nvidia's litigation with Samsung).
+**R7: Out-of-scope questions** · Status: Mitigated (v2.2)
+The guard catches a non-indexed company when it is the capitalised subject of the question ("What risks does Samsung face?", "Toyota's revenue"). Since v2.2, `oos2` also catches about 130 well-known non-indexed companies in any case ("how much revenue did samsung make in 2024", "what does uber say about its competitors"), applies this list only when no indexed company is named ("Does Boeing compete with Airbus?" still answers), and applies the dense-score confidence gate (0.58) to every question without an indexed company, even when it contains a year. Remaining gaps:
+- An off-topic question with a year whose wording resembles business text still passes the gate ("Who won the FIFA World Cup in 2022?" returns Nike's competition section). The answer step must refuse when the retrieved text does not contain the answer.
+- The company list is finite; an unknown company written in lowercase and not on the list falls back to the confidence gate.
 
-**R8: Evaluation set limitations (v2)**
-Questions are generated from the chunks themselves, so their wording overlaps the source text and they are easier than real user questions. Risk-factor questions copy the heading and are reported separately.
-
-Known generator issues to fix in v3:
+**R8: Evaluation set limitations**
+Eval set v2 is generated from the chunks themselves, so its wording overlaps the source text and it is easier than real user questions; risk-factor questions copy the heading and are reported separately. Known generator issues to fix in v3:
 - duplicate question text when no year is given (Colgate-Palmolive derivatives);
 - headings that repeat across a filing (Caterpillar "Machinery, Energy & Transportation");
 - depreciation and amortization taken from either the income statement or the cash-flow statement;
 - a natural-topic answer matched through a risk-factor sentence (Block "repurchase the Notes" for a share-buyback question).
 
-A hand-written question set and a RAGAS evaluation are planned for the Gemini stage.
+The golden dev set is small (48 in-scope questions, so one question ≈ 2 percentage points), its answers come mostly from FY2016/FY2025-26 filings, and it was used to design v2.2 (see the caution above). Answer-key fixes are documented in git: v1.1 accepts other wordings of "200 countries and territories" (G28). A frozen test set and a RAGAS evaluation of the answer step are planned.
 
 **R9: Query-time rules are pattern-based**
-The clutter, statement and unknown-company rules are regular expressions designed on these 500 filings (2,176 of 240,919 vectors flagged as tables of contents or exhibit lists, 6,196 as primary-statement windows; flagged chunks reviewed on a 75-file sample). Unusual layouts or new companies may need rule updates. Every rule can be switched off in `FEATURES` and measured with `eval_retriever.py --ablation`.
+The clutter, statement and unknown-company rules are regular expressions designed on these 500 filings (2,176 of 240,919 vectors flagged as tables of contents or exhibit lists, 6,196 as primary-statement windows; flagged chunks reviewed on a 75-file sample). v2.2 adds more hand-made lists: 24 synonym rules, a small suffix stemmer, about 130 non-indexed company names, and fuzzy-name thresholds (similarity 0.85, or 0.80 for words that never occur in the corpus). Unusual layouts, new companies or new user vocabulary may need rule updates. Every rule can be switched off in `FEATURES` and measured with both ablation scripts.
+
+**R10: Comparisons across two filings can miss one side** · Status: Open
+`diverse` alternates results between the two requested companies or years, but one side can still rank low: "How did Costco's warehouse count change between fiscal 2024 and 2025?" finds both counts only by #8. Plan: give the answer step 8–10 results for comparison questions.
+
+**R11: Questions without a year lean towards the newest filing** · Status: By design
+`fresh` gives the three best chunks of the newest 10-K an extra vote, because "How many employees does Dell have?" asks for today's number. For history-type questions without a year, an older answer can be pushed down: measured alone on eval set v2, `fresh` moved two natural-topic questions out of the top 5 (−0.5 Hit@5). With all fixes on, natural-topic Hit@5 is unchanged (95.6%).
+
+**R12: Results carry neighbouring chunks** · Status: By design
+With `expand`, each result includes the previous and next chunk of the same section (at most 3,200 characters), and its page numbers include the neighbours' pages. This gives the answer step complete sentences across chunk boundaries but makes the context longer. Hit scores are computed on this expanded text, which is what the answer step receives.
+
+**R13: Typo tolerance is limited** · Status: Known
+Fuzzy company matching only covers names of five or more letters (a typo in "Nike" or "Dell" is not corrected), and a rare real word that is very close to a company name could be read as that company.
 
 ---
 
