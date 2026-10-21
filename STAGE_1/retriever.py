@@ -5,7 +5,8 @@ Chalane ka tareeqa:
     python STAGE_1/retriever.py "Woodward 2025 total assets"
     python STAGE_1/retriever.py "net income" --company Nordson --year 2016
     python STAGE_1/retriever.py "Rockwell Automation 2016 goodwill" --off strip      (ek sudhaar band kar ke dekho)
-    python STAGE_1/retriever.py --test          (neeche wale test sawal, retriever_test_results.json banata hai)
+    python STAGE_1/retriever.py --test          (neeche wale test sawal; VS Code ka ▷ Run bhi yahi chalata hai.
+                                                 Sahi jawab STAGE_1/test_questions.csv se; nateeja retriever_test_results.json)
 
 Doosre code se (Gemini wale step mein):
     from retriever import Retriever
@@ -53,6 +54,7 @@ Index dobara banane ki zaroorat NAHI. Pehli baar chalne par chunks ke flags (feh
 bante hain aur vector_store/flags.npz mein save ho jate hain (agli baar seedha load).
 """
 import argparse
+import csv
 import difflib
 import inspect
 import json
@@ -943,45 +945,123 @@ class Retriever:
         return {"matched": True, "reason": None, "results": results}
 
 
-# Test sawal: v2.2 ki tuning mukammal hone ke BAAD likhe gaye, aur inke results dekh kar koi setting nahi badli gayi.
-# Companies wahi dataset wali hain (in mein se kuch ke doosre sawal golden / v2 set mein hain) -- naye sirf sawal hain.
-# "--test" inhein chalata hai. Sir ya koi bhi apne sawal yahan jod sakta hai (category -> list).
+# Test sawal (21 Oct 2026): 50 companies x 2 = 100 sawal, aam user ke andaz mein (casual, Roman Urdu, halki typo,
+# ticker, bina saal ...). Files Hifza ne chuni; sawal aur sahi jawab Claude ne PDF padh kar ek pehle se likhe qaide
+# ke mutabiq banaye (topic aur andaz PDF padhne se PEHLE tay), aur har jawab PDF mein check kiya. Ye v2.2 ki tuning
+# ke BAAD likhe gaye; pehli run se pehle inhein commit (freeze) karna hai, taake result dekh kar sawal na badlein.
+# Q01..Q100 = STAGE_1/test_questions.csv ke T01..T100 (wahan sahi jawab + PDF page). Aakhir mein 3 bahar ke sawal.
+# "--test" (ya VS Code ka ▷ Run, bina kuch likhe) inhein chalata hai. Sir ya koi bhi apne sawal yahan jod sakta hai
+# (category -> list); jis sawal ka jawab CSV mein nahi, us ke results sirf dikhte hain, auto-check nahi hota.
 TEST_QUESTIONS = {
-    "Paragraph: business aur strategy": [
-        "How does Alphabet make most of its revenue?",
-        "How does Adobe describe its subscription business model in fiscal 2020?",
-        "What products does Kennametal sell?",
-        "What does Roper Technologies say about its acquisition strategy?",
-        "What does Palo Alto Networks say about its platform strategy in fiscal 2023?",
+    'T01-T20: 3M se Caterpillar tak': [
+        'Who does 3M compete with, according to its 2016 annual report?',   # T01
+        'how many people work at 3m 2016',   # T02
+        'what happens to adobe if its new products dont match what custmers want? 2017',   # T03
+        '2017 mein Adobe ka head office kahan tha?',   # T04
+        'Does AMZN use temp workers or have unions? (2018)',   # T05
+        "Who audited Amazon's financial statements for 2018?",   # T06
+        'How was AMD trying to grow its business in 2019?',   # T07
+        'Who was the CEO of AMD in 2019?',   # T08
+        'what does ametek make 2020',   # T09
+        'in how many contries outside the US does ametek manufacture products in 2020?',   # T10
+        'Apple apne products kaise bechti hai aur us ke customers kaun log hain? 2021',   # T11
+        'AAPL total revenue fiscal 2021',   # T12
+        'Does Block make its own Square card readers, or do other companies manufacture them? (2022)',   # T13
+        'How much money did Block make or lose in 2022?',   # T14
+        "What is the FAA doing about Boeing's quality problems, according to the 2023 10-K?",   # T15
+        'boeing backlog 2023',   # T16
+        'how many busness segments does carlisle have in 2024 and what are they?',   # T17
+        'Carlisle kis state mein incorporated hai? (2024 report)',   # T18
+        "How did tariffs hit CAT's profits in 2025?",   # T19
+        'when was caterpillar founded',   # T20
     ],
-    "Paragraph: risks": [
-        "What does Apple say about its dependence on outsourcing partners for manufacturing in 2021?",
-        "What food safety risks does Chipotle mention in 2019?",
-        "What does Meta say about privacy and data protection regulation in 2022?",
-        "What cybersecurity risks does Walmart describe in fiscal 2024?",
-        "What does Intel say about delays in its manufacturing process technology in 2020?",
-        "Tell me about the total savings of consruction industries of Caterpillar in 2020?",
+    'T21-T40: Chevron se Google tak': [
+        'What cyber risks did Chevron warn about in 2016?',   # T21
+        'chevron r&d spending 2016',   # T22
+        'What new technology or innovations was Chipotle working on in 2017?',   # T23
+        'Kya Chipotle 2017 mein apne shareholders ko dividend deti thi?',   # T24
+        'How could climate change hurt Colgate, according to its 2018 report?',   # T25
+        'how many employes did colgate have in 2018?',   # T26
+        'How does Costco compete, and who are its biggest rivals? (2019)',   # T27
+        "Where is Costco's head office, according to its 2019 annual report?",   # T28
+        'what does dell worry about with competitors in 2020',   # T29
+        "Who was Dell's auditor for fiscal 2020?",   # T30
+        'What benefits does Donaldson give its employees? (fiscal 2021)',   # T31
+        'Who is the CEO of DCI in 2021?',   # T32
+        "whats ebay's growth plan for 2022",   # T33
+        'In how many markets is eBay available, per its 2022 report?',   # T34
+        'Emerson company kya banati aur bechti hai? 2023',   # T35
+        "What were Emerson's total sales in fiscal 2023?",   # T36
+        'does franklin electric sell its pumps through distributers or directly? 2024',   # T37
+        "What was Franklin Electric's net income in 2024?",   # T38
+        'does google make its own phones and servers or use other factories 2025',   # T39
+        "how big is google cloud's backlog right now",   # T40
     ],
-    "Paragraph: employees, customers, competition": [
-        "How many employees did Netflix have at the end of 2022?",
-        "Who are ServiceNow's main competitors?",
-        "How does Amazon describe its competition in 2020?",
-        "How does Starbucks describe the sourcing of its coffee in fiscal 2021?",
-        "How does Workday describe its customers in fiscal 2022?",
-        "Tell me the Balance in December of 2019 of Caterpillar.",
+    'T41-T60: Graco se Netflix tak': [
+        'Is Graco dealing with any big lawsuits or legal problems in 2016?',   # T41
+        'how many segments does graco have 2016',   # T42
+        'How is Home Depot organized into business segments in fiscal 2017?',   # T43
+        'Home Depot company kab bani thi? (fiscal 2017 report)',   # T44
+        'How did Intel do overall in 2018?',   # T45
+        'how much did intel spend on reserch and development in 2018?',   # T46
+        'How could hackers or cyberattacks hurt Intuit, according to its fiscal 2019 report?',   # T47
+        'How much did Intuit pay in dividends per share in fiscal 2019?',   # T48
+        'what does kennametal focus on in r&d 2020',   # T49
+        'How many people did Kennametal employ in fiscal 2020?',   # T50
+        "What are Kimberly-Clark's environmental goals in 2021?",   # T51
+        'Where is KMB headquartered? (2021)',   # T52
+        'who does lockheed martin compete against 2022',   # T53
+        "Who audited Lockheed Martin's financial statements for 2022?",   # T54
+        'Agar log Facebook aur Instagram kam use karein to Meta ko kya nuqsan hoga? 2024',   # T55
+        'Who is the CEO of Meta in 2024?',   # T56
+        "what is microsoft's company culture like in 2023, acording to its annual report?",   # T57
+        "Where are Microsoft's main offices, and how much space does it have there? (fiscal 2023)",   # T58
+        "whats netflix's plan to keep growing in 2025",   # T59
+        "what is netflix's latest yearly revenue",   # T60
     ],
-    "Paragraph: segments aur operations": [
-        "What are Nvidia's reportable segments in fiscal 2023?",
-        "How is Carlisle organized into segments in 2021?",
-        "What does Watts Water say about raw materials in 2020?",
-        "How did COVID-19 affect Parker Hannifin's business in fiscal 2021?",
-        "What are Salesforce's main sources of revenue in fiscal 2022?",
-        "Why Chevron use MTBE as a gasoline addictive?",
-        "Tell me about the controls and procedures of Chevron in 2019."
+    'T61-T80: Nike se Roper tak': [
+        'What kinds of products does Nike sell in fiscal 2017?',   # T61
+        "whats nike's net income for 2017",   # T62
+        "Who are Nordson's customers, and how does it sell its products? (2016)",   # T63
+        'Nordson ka 2016 mein order backlog kitna tha?',   # T64
+        'Does Northrop Grumman rely on outside suppliers and subcontractors for its products? (2018)',   # T65
+        'how many segments does northrop grumman have in 2018 and what are thier names?',   # T66
+        'Why did shareholders sue Nvidia in fiscal 2019?',   # T67
+        'When was Nvidia founded? (fiscal 2019 report)',   # T68
+        'is palo alto networks split into different business segments 2020',   # T69
+        'How much did Palo Alto Networks spend on research and development in fiscal 2020?',   # T70
+        'Did Parker Hannifin make or announce any big acquisitions in fiscal 2021?',   # T71
+        'How much did PH pay in dividends in fiscal 2021?',   # T72
+        'how does paypal protect itself from hackers 2022',   # T73
+        'How many employees did PayPal have at the end of 2022?',   # T74
+        'Pentair research and development mein kya karti hai, aur 2023 mein us par kitna kharch kiya?',   # T75
+        "Where is Pentair's head office located, according to its 2023 annual report?",   # T76
+        "what are rockwell automation's sustainabilty goals in fiscal 2024?",   # T77
+        "Who was Rockwell Automation's auditor for fiscal 2024?",   # T78
+        'who does roper technologies compete with 2025',   # T79
+        'who is the current ceo of roper technologies',   # T80
     ],
-    "Number (table) -- asli jawab SQL track se aayega": [
-        "What was Apple's total net sales in fiscal 2022?",
-        "How much did Microsoft spend on research and development in fiscal 2024?",
+    'T81-T100: Salesforce se Xylem tak': [
+        'What could happen to Salesforce if hackers break into its systems and steal customer data? (fiscal 2017)',   # T81
+        "where are salesforce's offices and data centers 2017",   # T82
+        "How big is ServiceNow's workforce, and are its employees in a union? (2016)",   # T83
+        'ServiceNow ki 2016 mein total revenue kitni thi?',   # T84
+        "What is Southwest Airlines' strategy for staying profitable and growing in 2018?",   # T85
+        'how much proft did southwest airlines make in 2018?',   # T86
+        'How does Starbucks make its money, and what does it actually sell? (fiscal 2019)',   # T87
+        'How many business segments did Starbucks have in fiscal 2019, and what are they?',   # T88
+        'what kind of customers does union pacific serve 2020',   # T89
+        'How many business segments does Union Pacific report in 2020?',   # T90
+        'Where does Walmart get the products it sells, and how do they reach its stores? (fiscal 2021)',   # T91
+        'When was WMT founded? (2021 report)',   # T92
+        'what regulations do watts water products have to meet 2022',   # T93
+        'How much did Watts Water spend on research and development in 2022?',   # T94
+        'Woodward ke business segments kaun se hain? (fiscal 2023)',   # T95
+        'How much did Woodward spend buying back its own shares in fiscal 2023?',   # T96
+        'did workday anounce any layoffs in fiscal 2025?',   # T97
+        'How many employees did Workday have at the end of fiscal 2025?',   # T98
+        'what is xylem doing about cybersecurity 2025',   # T99
+        'where is xylem headquartered',   # T100
     ],
     "Bahar ke sawal (jawab 'nahi mila' hona chahiye)": [
         "What was Tesla's revenue in 2023?",
@@ -1021,9 +1101,76 @@ def answer_preview(text, query, n=2, width=320, skip=""):
     return [p if len(p) <= width else p[:width] + " ..." for _, _, p in best]
 
 
-def _show(question, response, label="Q"):
+# ---- auto-check: test_questions.csv ke sahi jawab se milao (sirf madad; asli faisla aap ka nishan) ----
+_GOLD_NUM = re.compile(r"^[\s$(]*-?\d[\d,]*(?:\.\d+)?\s*\)?%?$")
+_SOFT = str.maketrans({"’": "'", "‘": "'", "“": '"', "”": '"', "–": "-", "—": "-",
+                       " ": " "})
+
+
+def _soft(t):
+    """eval_golden.norm jaisa (quotes, dash, spaces ek jaise), lekin bare / chhote huroof wahi rehte hain."""
+    return re.sub(r"\s+", " ", (t or "").translate(_SOFT)).strip()
+
+
+def _gold_pattern(alt):
+    """'4,240' -> commas ke saath ya baghair ('14,240' nahi);  text -> wahi tukda, bare / chhote huroof ka farq nahi."""
+    if _GOLD_NUM.match(alt):
+        whole, _, dec = re.search(r"\d[\d,]*(?:\.\d+)?", alt).group(0).partition(".")
+        d, groups = whole.replace(",", ""), []
+        while len(d) > 3:
+            groups.insert(0, d[-3:])
+            d = d[:-3]
+        groups.insert(0, d)
+        return re.compile(r"(?<![\d,.])" + ",?".join(groups) + (r"\." + dec if dec else "") + r"(?!\d)(?!,\d)(?!\.\d)")
+    return re.compile(re.escape(_soft(alt)), re.I)
+
+
+def load_gold(path):
+    """test_questions.csv -> {sawal: row}. File na mile to {} (--test phir bhi chalta hai, bas auto-check nahi)."""
+    p = Path(path)
+    if not p.is_file():
+        return {}
+    raw = p.read_bytes()
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        text = raw.decode("cp1252", errors="replace")
+    lines = text.splitlines()
+    delim = ";" if lines and lines[0].count(";") > lines[0].count(",") else ","
+    return {(r.get("question") or "").strip(): r for r in csv.DictReader(lines, delimiter=delim)
+            if (r.get("question") or "").strip()}
+
+
+def gold_check(retriever, row, results, width=110):
+    """Kin results mein sahi jawab hai -- sahi company + saal ke saath, eval_golden wala hi qaida ("|" = koi bhi ek).
+    Aise har result mein 'gold_snippet' jorta hai (jawab ke aas paas ka text, jawab **aise** nishan ke saath).
+    Ranks lautata hai: [1, 3] = #1 aur #3 mein jawab hai."""
+    comps = set()
+    for name in [x.strip() for x in (row.get("company") or "").split("|") if x.strip()]:
+        comps |= retriever._detect_companies(name) or retriever._detect_companies(name.title())
+    years = {int(y) for y in re.findall(r"(?:19|20)\d{2}", row.get("year") or "")}
+    pats = [_gold_pattern(x.strip()) for x in (row.get("answer") or "").split("|") if x.strip()]
+    ranks = []
+    for j, res in enumerate(results, 1):
+        if (comps and res["company"] not in comps) or (years and int(res["year"] or 0) not in years):
+            continue
+        soft = _soft(res["text"])
+        m = next((m for m in (p.search(soft) for p in pats) if m), None)
+        if m:
+            a, b = max(0, m.start() - width), min(len(soft), m.end() + width)
+            res["gold_snippet"] = (("... " if a else "") + soft[a:m.start()] + "**" + m.group(0) + "**"
+                                   + soft[m.end():b] + (" ..." if b < len(soft) else ""))
+            ranks.append(j)
+    return ranks
+
+
+def _show(question, response, label="Q", gold=None):
     print("\n" + "=" * 70)
     print(f"{label}:", question)
+    if gold:
+        alts = " ya ".join(f'"{x.strip()}"' for x in (gold.get("answer") or "").split("|") if x.strip())
+        print(f"    Jawab hona chahiye ({gold.get('id', '')}): {gold.get('company', '')} {gold.get('year') or 'koi bhi saal'}"
+              f" -> {alts}  (PDF page {gold.get('page') or '?'})")
     print("=" * 70)
     if not response["matched"]:
         print("    ⚠️  ", response["reason"])
@@ -1039,6 +1186,8 @@ def _show(question, response, label="Q"):
             print("    >>", s.replace("\n", " / "))
         if not lines:
             print("    " + r["text"][:300].replace("\n", " / "))
+        if r.get("gold_snippet"):
+            print("    ✓ AUTO: sahi jawab is result mein hai ->", r["gold_snippet"])
 
 
 if __name__ == "__main__":
@@ -1048,28 +1197,41 @@ if __name__ == "__main__":
         pass
     ap = argparse.ArgumentParser()
     ap.add_argument("query", nargs="?")
-    ap.add_argument("-k", type=int, default=None, help="kitne results (sawal par 5, --test par 3)")
+    ap.add_argument("-k", type=int, default=None, help="kitne results (default 5)")
     ap.add_argument("--company")
     ap.add_argument("--year", type=int)
     ap.add_argument("--type", choices=["text", "table"])
     ap.add_argument("--store", default="STAGE_1/vector_store")
     ap.add_argument("--off", default="", help="comma separated sudhaar band karo: " + ",".join(FEATURES))
-    ap.add_argument("--test", action="store_true")
+    ap.add_argument("--test", action="store_true", help="neeche wale TEST_QUESTIONS chalao (bina sawal ke bhi yahi)")
+    ap.add_argument("--gold", default="STAGE_1/test_questions.csv", help="sahi jawab wali CSV (auto-check ke liye)")
     a = ap.parse_args()
+    if not a.query and not a.test:                  # VS Code ka ▷ Run (bina kuch likhe) -> test sawal
+        print('Koi sawal nahi diya, is liye --test chal raha hai.  Apna sawal: python STAGE_1/retriever.py "..."')
+        a.test = True
     retriever = Retriever(a.store)
     for f in [x.strip() for x in a.off.split(",") if x.strip()]:
         if f not in retriever.features:
             ap.error(f"'{f}' koi sudhaar nahi. In mein se: {', '.join(retriever.features)}")
         retriever.features[f] = False
     if a.test:
-        k = a.k or 3
+        k = a.k or 5
+        gold = load_gold(a.gold)
+        print(f"Sahi jawab: {a.gold} se {len(gold)} sawal (auto-check)" if gold
+              else f"(Sahi jawab wali CSV nahi mili: {a.gold} -- auto-check band, results phir bhi dikhenge)")
         log = []
         for cat, qs in TEST_QUESTIONS.items():
             print("\n" + "#" * 70 + f"\n# CATEGORY: {cat}\n" + "#" * 70)
             for qn in qs:
                 resp = retriever.search(qn, top_k=k)
-                _show(qn, resp, label=f"Q{len(log) + 1:02d}")
-                log.append({"n": len(log) + 1, "category": cat, "question": qn, **resp})
+                row = gold.get(qn.strip())
+                entry = {"n": len(log) + 1, "category": cat, "question": qn}
+                if row:
+                    entry["expected"] = {f: (row.get(f) or "").strip() for f in ("id", "company", "year", "answer", "type", "page")}
+                    entry["gold_ranks"] = gold_check(retriever, row, resp["results"]) if resp["matched"] else []
+                _show(qn, resp, label=f"Q{entry['n']:02d}", gold=row)
+                entry.update(resp)
+                log.append(entry)
         with open("retriever_test_results.json", "w", encoding="utf-8") as f:
             json.dump(log, f, indent=4, ensure_ascii=False)
         n_ok = sum(1 for x in log if x["matched"])
@@ -1084,10 +1246,16 @@ if __name__ == "__main__":
             else:
                 got = "nahi mila"
             q_ = x["question"] if len(x["question"]) <= 62 else x["question"][:59] + "..."
-            print(f"[ ] Q{x['n']:02d}  {q_:<62}  -> {got}")
+            auto = ""
+            if "expected" in x:
+                auto = f"  [auto: #{x['gold_ranks'][0]}]" if x["gold_ranks"] else "  [auto: nahi]"
+            print(f"[ ] Q{x['n']:02d}  {q_:<62}  -> {got}{auto}")
+        if gold:
+            g = [x for x in log if "expected" in x]
+            print(f"\nAuto-check: {sum(1 for x in g if x['gold_ranks'])}/{len(g)} sawalon ka sahi jawab top {k} mein mila "
+                  f"(sahi company + saal ke saath).")
+            print("Ye sirf madad hai: jawab doosre alfaaz mein bhi ho sakta hai, is liye har sawal khud dekh kar nishan lagao.")
         print("\nPoore results: retriever_test_results.json")
-    elif a.query:
+    else:
         _show(a.query, retriever.search(a.query, top_k=a.k or 5, company=a.company, year=a.year,
                                         chunk_type=a.type))
-    else:
-        ap.error("query do, ya --test lagao")
