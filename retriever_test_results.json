@@ -1,0 +1,1289 @@
+[
+    {
+        "n": 1,
+        "category": "Paragraph: business aur strategy",
+        "question": "How does Alphabet make most of its revenue?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6761536002159119,
+                "rrf_score": 0.045180702729116604,
+                "company": "Google",
+                "company_display": "Alphabet (Google)",
+                "year": 2025,
+                "section_path": "ITEM 1. > How We Make Money",
+                "page_numbers": [
+                    8,
+                    9
+                ],
+                "chunk_type": "text",
+                "text": "nd brand advertising that appears on Google Search & other properties, YouTube, and Google Network partners' properties (\"Google Network properties\"). We continue to invest in both performance and brand advertising and seek to improve the measurability of advertising so advertisers understand the effectiveness of their campaigns. - Performance advertising creates and delivers relevant ads that users will click on leading to direct engagement with advertisers. Performance advertising lets our advertisers connect with users while driving measurable results. Our ads tools allow performance advertisers to create simple text-based ads. - Brand advertising helps enhance users' awareness of and affinity for advertisers' products and services, through videos, text, images, and other interactive ads that run across various devices. We help brand advertisers deliver digital videos and other types of ads to specific audiences for their brand-building marketing campaigns. We have allocated substantial resources to stopping bad advertising practices and protecting users on the web. We focus on creating the best advertising experiences for our users and advertisers in many ways, including filtering out invalid traffic, removing billions of bad ads from our systems every year, and closely monitoring the sites, apps, and videos where ads appear and blocklisting them when necessary to ensure that ads do not fund bad content. In addition, Google Services generates revenues from products and services beyond advertising, including: consumer subscriptions, which primarily include revenues from YouTube services, such as YouTube TV, YouTube Music and Premium, and NFL Sunday Ticket, as well as Google One, which offers access to our most platforms , which primarily include revenues from Google Play sales of apps and in-app purchases; and Through our Google Cloud Platform and Google Workspace offerings, Google Cloud generates revenues primarily from consumption-based fees and subscriptions for infrastructure, platform, applications, and other cloud services. Customers use Google Cloud in multiple ways such as: - AI-optimized Infrastructure: runs on our Cloud, at the edge, or in customers' data centers. It can be used to migrate and modernize information technology (IT) systems and to train and serve various types of AI models. Our AI infrastructure delivers cost-performance for AI workloads. We offer a range of AI accelerators, including our custom TPUs and specialized GPUs, as well as AI-optimized storage offerings, and efficient AI software. - Developer Platform: delivers a fully managed AI development platform, through Vertex AI, for accessing, tuning, augmenting, and deploying custom models and agents, helping customers build applications with more than 200 foundation models, including our Gemini family, third-party, and open models. - Cybersecurity: provides AI-powered threat intelligence and cybersecurity solutions to help customers detect, analyze, protect against, and respond to a broad range of cybersecurity threats. - Data and Analytics: enables customers to migrate, clean, prepare, and  ..."
+            },
+            {
+                "score": 0.684267520904541,
+                "rrf_score": 0.030621785881252923,
+                "company": "Google",
+                "company_display": "Alphabet (Google)",
+                "year": 2025,
+                "section_path": "ITEM 8. > Note 1. Summary of Significant Accounting Policies > Revenue Recognition | ITEM 8. > Note 1. Summary of Significant Accounting Policies > Google Subscriptions, Platforms, and Devices",
+                "page_numbers": [
+                    77,
+                    78
+                ],
+                "chunk_type": "text",
+                "text": "Google advertising revenues consist of revenues from: properties like Gmail, Google Maps, and Google Play; YouTube properties; and Google Network properties, including revenues from Google Network properties participating in AdMob, Google subscriptions, platforms, and devices revenues consist of revenues from: consumer subscriptions, which primarily include revenues from YouTube services, such as YouTube TV, YouTube Music and Premium, and NFL Sunday Ticket, as well as Google One, which offers access to our most Subscription revenues are recognized ratably over the period of the subscription, primarily monthly. We report revenues from Google Play sales of apps and in-app purchases on a net basis because our performance obligation is to facilitate a transaction between app developers and end users for which we earn a service fee."
+            },
+            {
+                "score": 0.6267379522323608,
+                "rrf_score": 0.029571646010002173,
+                "company": "Google",
+                "company_display": "Alphabet (Google)",
+                "year": 2025,
+                "section_path": "ITEM 7. > Cost of Revenues",
+                "page_numbers": [
+                    51
+                ],
+                "chunk_type": "text",
+                "text": "Cost of revenues is comprised of TAC and other costs of revenues. - TAC includes: ◦ amounts paid to our distribution partners who make available our search access points and other ad- supported services. Our distribution partners include browser providers, mobile carriers, original equipment manufacturers, and software developers; and ◦ amounts paid to Google Network partners primarily for ads displayed on their properties. - Other cost of revenues primarily includes: other technical infrastructure operations costs, including energy, equipment, and network capacity costs. TAC as a percentage of revenues generated from ads placed on Google Network properties are significantly higher than TAC as a percentage of revenues generated from ads placed on Google Search & other properties, because most of the advertiser revenues from ads served on Google Network properties are paid as TAC to our Google Network partners.\n◦ | content acquisition costs, which are payments to content providers from whom we license video and other content for distribution, primarily related to YouTube (we pay fees to these content providers based on revenues generated, subscriber counts, or a flat fee); ◦ | depreciation expense, primarily related to our technical infrastructure; ◦ | employee compensation expenses related to our technical infrastructure and other operations such as content review and customer and product support; ◦ | inventory and other costs related to the devices we sell; and ◦"
+            }
+        ]
+    },
+    {
+        "n": 2,
+        "category": "Paragraph: business aur strategy",
+        "question": "How does Adobe describe its subscription business model in fiscal 2020?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6655134558677673,
+                "rrf_score": 0.030776515151515152,
+                "company": "Adobe",
+                "company_display": "Adobe",
+                "year": 2020,
+                "section_path": "ITEM 1A. RISK FACTORS > Risks Related to Financial Performance or General Economic Conditions > Subscription offerings could create risks related to the timing of revenue recognition.",
+                "page_numbers": [
+                    55
+                ],
+                "chunk_type": "text",
+                "text": "We generally recognize revenue from subscription offerings ratably over the terms of their subscription agreements, which typically range from 1 to 36 months. As a result, most of the subscription revenue we report in each quarter is the result of subscription agreements entered into during previous quarters. Any reduction in new or renewed subscriptions in a quarter may not be reflected in our revenue results until a later quarter. Declines in new or renewed subscriptions may decrease our revenue in future quarters. Lower sales, reduced demand for our products and services, and increases in our attrition rate may not be fully reflected in our results of operations until future periods. Our subscription model could also make it difficult for us to rapidly increase our revenue from subscription-based or hosted services through additional sales in any period, as revenue from new customers will be recognized over the applicable subscription term. Additionally, in connection with our sales efforts to enterprise customers and our use of ETLAs, a number of factors could affect our revenue, including longer-than-expected sales and implementation cycles, potential deferral of revenue and alternative licensing arrangements. If any of our assumptions about revenue from our subscription-based offerings prove incorrect, our actual results may vary materially from those anticipated."
+            },
+            {
+                "score": 0.6785467863082886,
+                "rrf_score": 0.02738245361196181,
+                "company": "Adobe",
+                "company_display": "Adobe",
+                "year": 2020,
+                "section_path": "ITEM 8. FINANCIAL STATEMENTS AND SUPPLEMENTARY DATA > NOTE 1. BASIS OF PRESENTATION AND SIGNIFICANT ACCOUNTING POLICIES > Significant Accounting Policies > Subscription, Product and Services Offerings",
+                "page_numbers": [
+                    89
+                ],
+                "chunk_type": "text",
+                "text": "based on consumption or usage. We recognize revenue ratably over the contractual service term for hosted services that are priced based on a committed number of transactions where the delivery and consumption of the benefit of the services occur evenly over time, beginning on the date the services associated with the committed transactions are first made available to the customer and continuing through the end of the contractual service term. Over-usage fees and fees based on the actual number of transactions are billed in accordance with contract terms as these fees are incurred and are included in the transaction price of an arrangement as variable consideration. Fees based on a number of transactions, where invoicing is aligned to the pattern of performance, customer benefit and consumption, are typically accounted for utilizing the \"as-invoiced\" practical expedient. Revenue for subscriptions sold as a fee per period is recognized ratably over the contractual term as the customer simultaneously receives and consumes the benefit of the underlying service. When cloud-enabled services are highly integrated and interrelated with on-premise software, such as in our cloud-enabled Creative Cloud and Document Cloud offerings, the individual components are not considered distinct and revenue is recognized ratably over the subscription period for which the cloud-enabled services are provided. The subscription support plans related to those customer arrangements whose revenues we classify as subscription revenues represent stand-ready performance obligations. Revenue from these subscription support plans is recognized ratably over their respective contractual terms and classified as subscription revenue. Licenses for on-premise software may be purchased on a perpetual basis, as a subscription for a fixed period of time or based on usage for certain of our OEM and royalty agreements. Revenue from distinct on-premise licenses is recognized at the point in time the software is available to the customer, provided all other revenue recognition criteria are met, and classified as product revenue on our Consolidated Statements of Income. Some of our enterprise license arrangements allow customers to commit non-cancellable funds. These non-cancellable committed funds are nonrefundable and provide our customers options to either renew monthly on-premise term-based licenses or use some or all funds to purchase other Adobe products or services. Revenue associated with these monthly term-based licenses and associated maintenance and support is classified as subscription revenue. Our services and other revenue is comprised primarily of fees related to consulting, training, maintenance and support and"
+            },
+            {
+                "score": 0.6201621890068054,
+                "rrf_score": 0.02701252236135957,
+                "company": "Adobe",
+                "company_display": "Adobe",
+                "year": 2020,
+                "section_path": "ITEM 8. FINANCIAL STATEMENTS AND SUPPLEMENTARY DATA > NOTE 2. REVENUE > Deferred Revenue and Remaining Performance Obligations",
+                "page_numbers": [
+                    102
+                ],
+                "chunk_type": "text",
+                "text": "Deferred revenue primarily consists of billings or payments received in advance of revenue recognition from subscription services, including non-cancellable and non-refundable committed funds and refundable customer deposits. Deferred revenue is recognized as revenue when transfer of control to customers has occurred. Customers are typically invoiced for these agreements in regular installments and revenue is recognized ratably over the contractual subscription period. The deferred revenue balance is influenced by several factors, including seasonality, the compounding effects of renewals, invoice duration, invoice timing, size and new business linearity within the quarter. Deferred revenue does not represent the total contract value of annual or multi-year non-cancellable subscription agreements. Payment terms and conditions vary by contract type, although terms generally include a requirement of payment within 30 to 60 days. In instances where the timing of revenue recognition differs from the timing of invoicing, we have determined our contracts generally do not include a significant financing component. The primary purpose of our invoicing terms is to provide customers with simplified and predictable ways of purchasing our products and services, such as invoicing at the beginning of a subscription term with revenue recognized ratably over the contract period, and not to receive financing from our customers. Any potential financing fees are considered insignificant in the context of our contracts. As of November 27, 2020, the balance of deferred revenue was $3.76 billion, which includes $64 million of refundable"
+            }
+        ]
+    },
+    {
+        "n": 3,
+        "category": "Paragraph: business aur strategy",
+        "question": "What products does Kennametal sell?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6125307679176331,
+                "rrf_score": 0.04740305800756621,
+                "company": "KENNAMETAL",
+                "company_display": "Kennametal",
+                "year": 2026,
+                "section_path": "ITEM 1 - BUSINESS > ACQUISITIONS, STRATEGIC INVESTMENTS AND DIVESTITURES We continually evaluate new opportunities to",
+                "page_numbers": [
+                    7
+                ],
+                "chunk_type": "text",
+                "text": "... ing producers of tooling and metal cutting products, specialty wear-resistant components and ceramics, earth cutting tools and advanced metallurgical powders, we maintain a competitive position in major markets worldwide. We actively compete in the sale of all our products with several large global competitors and with many smaller niche businesses offering various capabilities to customers around the world. While several of our competitors are divisions of larger corporations, our industry remains largely fragmented, containing several hundred fabricators, toolmakers and niche specialty coating businesses. Many of our competitors operate relatively small facilities, producing a limited selection of tools while buying cemented tungsten carbide components from original producers of cemented tungsten carbide products, including Kennametal. We also supply coated solutions and other engineered wear-resistant products to both larger corporations and smaller niche businesses. Given the fragmentation, opportunities for consolidation exist from both U.S.-based and internationally-based firms, as well as among thousands of industrial supply distributors. The principal competitive differentiators in our businesses include customer focused support and application expertise, custom and standard product innovation, product performance and quality, and our brand recognition. We derive competitive advantage from our premium brand positions, global presence, application expertise and ability to address unique customer needs with new and improved tools, innovative surface and wear-resistant solutions, highly engineered components, consistent quality, traditional and digital customer service and technical assistance capabilities, state-of-the-art manufacturing and multiple sales channels. With these strengths, we are able to sell products based on the value-added productivity we deliver to our customers, rather than competing solely on price. REGULATION From time to time, we are a party to legal claims and proceedings that arise in the ordinary course of business, which may relate to our operations or assets, including real, tangible or intellectual property assets. While we currently believe that the amount of ultimate liability, if any, we may face with respect to these actions will not materially affect our financial position, results of operations or liquidity, the ultimate outcome of any litigation is uncertain. Were an unfavorable outcome to occur or if protracted litigation were to ensue, the effect on us could be material. Compliance with government laws and regulations pertaining to the discharge of materials or pollutants into the environment or otherwise relating to the protection of the environment did not have a material effect on our capital expenditures or competitive position for the years covered by this Annual Report, nor is such compliance expected to have a material effect on us in the future. The operation of our business has exposed us to certain liabilities and compliance costs related to environmental matters. We are involved in various environmental cleanup and remediation activities at certain sites associated with our current or for ..."
+            },
+            {
+                "score": 0.6158825159072876,
+                "rrf_score": 0.030158730158730156,
+                "company": "KENNAMETAL",
+                "company_display": "Kennametal",
+                "year": 2023,
+                "section_path": "ITEM 1 - BUSINESS",
+                "page_numbers": [
+                    7
+                ],
+                "chunk_type": "text",
+                "text": "... rally is not significant to our operations. COMPETITION As one of the world's leading producers of tooling and metal cutting products, specialty wear-resistant components and ceramics, earth cutting tools and advanced metallurgical powders, we maintain a leading competitive position in major markets worldwide. We actively compete in the sale of all our products with several large global competitors and with many smaller niche businesses offering various capabilities to customers around the world. While several of our competitors are divisions of larger corporations, our industry remains largely fragmented, containing several hundred fabricators, toolmakers and niche specialty coating businesses. Many of our competitors operate relatively small facilities, producing a limited selection of tools while buying cemented tungsten carbide components from original producers of cemented tungsten carbide products, including Kennametal. We also supply coated solutions and other engineered wear-resistant products to both larger corporations and smaller niche businesses. Given the fragmentation, opportunities for consolidation exist from both U.S.-based and internationally-based firms, as well as among thousands of industrial supply distributors. The principal competitive differentiators in our businesses include customer focused support and application expertise, custom and standard product innovation, product performance and quality and our brand recognition. We derive competitive advantage from our premium brand positions, global presence, application expertise and ability to address unique customer needs with new and improved tools, innovative surface and wear-resistant solutions, highly engineered components, consistent quality, traditional and digital customer service and technical assistance capabilities, state-of-the-art manufacturing and multiple sales channels. With these strengths, we are able to sell products based on the value-added productivity we deliver to our customers, rather than competing solely on price. REGULATION From time to time, we are a party to legal claims and proceedings that arise in the ordinary course of business, which may relate to our operations or assets, including real, tangible, or intellectual property assets. While we currently believe that the amount of ultimate liability, if any, we may face with respect to these actions will not materially affect our financial position, results of operations or liquidity, the ultimate outcome of any litigation is uncertain. Were an unfavorable outcome to occur or if protracted litigation were to ensue, the effect on us could be material. Compliance with government laws and regulations pertaining to the discharge of materials or pollutants into the environment or otherwise relating to the protection of the environment did not have a material effect on our capital expenditures or competitive position for the years covered by this Annual Report, nor is such compliance expected to have a material effect on us in the future. The operation of our business has exposed us to certain liabilities and compliance costs related to environmental matters. We are involved in various environment ..."
+            },
+            {
+                "score": 0.6076638102531433,
+                "rrf_score": 0.029827662395050816,
+                "company": "KENNAMETAL",
+                "company_display": "Kennametal",
+                "year": 2026,
+                "section_path": "ITEM 1 - BUSINESS",
+                "page_numbers": [
+                    5,
+                    6
+                ],
+                "chunk_type": "text",
+                "text": "arth cutting tools, and advanced metallurgical powders, primarily for the Earthworks, General Engineering, Energy and Aerospace & Defense end markets. These wear-resistant products include compacts, nozzles, frac seats and custom components used in oil and gas and petrochemical industries; rod blanks and abrasive water jet nozzles for general industries; earth cutting tools and systems used in underground mining, trenching and foundation drilling and road milling; tungsten carbide powders for the oil and gas, aerospace and process industries; high temperature critical wear components, tungsten penetrators and armor solutions for aerospace and defense; and ceramics used by the packaging industry for metallization of films and papers. We combine deep metallurgical and engineering expertise with advanced manufacturing capabilities, such as 3D printing, to deliver solutions that drive improved productivity for our customers. Infrastructure markets its products primarily under the Kennametal brand and sells through a direct sales force as well as through distributors. ® ® ® ® ® INTERNATIONAL OPERATIONS During 2026, we generated 57 percent of our consolidated sales in markets outside of the United States of America (U.S.), with principal international operations in Western Europe, China and India. We also operate manufacturing and distribution facilities in Israel, Latin America, South Africa and Vietnam, while serving customers through sales offices, agents and distributors in Europe and other parts of the world. While geographic diversification helps to minimize the sales and earnings effect of demand changes in any one particular region, our international operations are subject to normal risks of doing business globally, including tariffs, fluctuations in currency exchange rates and changes in social, political and economic environments. Our international sales and long-lived assets are presented in Note 21 of the Company's consolidated financial statements, set forth in Item 8 of this Annual Report. Further information about the effects and risks of currency exchange rates are presented in the Quantitative and Qualitative Disclosures About Market Risk section, set forth in Item 7A of this Annual Report."
+            }
+        ]
+    },
+    {
+        "n": 4,
+        "category": "Paragraph: business aur strategy",
+        "question": "What does Roper Technologies say about its acquisition strategy?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6811913251876831,
+                "rrf_score": 0.0474478480153437,
+                "company": "Roper Technologies",
+                "company_display": "Roper Technologies",
+                "year": 2025,
+                "section_path": "ITEM 1A. RISK FACTORS > Risks Related to Our Business Operations > Our growth strategy includes acquisitions. We may not be able to identify suitable acquisition candidates, complete acquisitions, or integrate acquisitions successfully.",
+                "page_numbers": [
+                    13
+                ],
+                "chunk_type": "text",
+                "text": "Our future rate of growth is highly dependent on our ability to acquire and successfully integrate new businesses. We intend to seek additional acquisition opportunities, both to expand into new markets and to enhance our position in existing markets. There are no assurances, however, that we will be able to successfully identify suitable candidates, negotiate appropriate terms, obtain financing on acceptable terms, complete proposed acquisitions, receive the necessary regulatory approvals (including clearance under the Hart-Scott-Rodino Act in the U.S. and similar antitrust regulations in foreign countries), successfully integrate acquired businesses, or expand into new markets. Once acquired, operations may not achieve anticipated levels of revenues, profitability, or cash flows. Acquisitions involve risks, including difficulties in the integration of the operations, technologies, services, and products of the acquired companies and the diversion of management's attention from other business concerns. Although our management will endeavor to evaluate the risks inherent in any particular transaction, including but not limited to cybersecurity risks and susceptibility to market disruption from AI or otherwise, there are no assurances that we will properly ascertain all such risks. Acquisitions may involve significant cash expenditures, debt incurrences, equity issuances, and expenses. Difficulties encountered with acquisitions may have a material adverse effect on our business, financial condition, and results of operations."
+            },
+            {
+                "score": 0.6779493689537048,
+                "rrf_score": 0.029083245521601686,
+                "company": "Roper Technologies",
+                "company_display": "Roper Technologies",
+                "year": 2022,
+                "section_path": "ITEM 1A. RISK FACTORS > Risks Related to Our Business Operations > Our growth strategy includes acquisitions. We may not be able to identify suitable acquisition candidates, complete acquisitions or integrate acquisitions successfully.",
+                "page_numbers": [
+                    10,
+                    11
+                ],
+                "chunk_type": "text",
+                "text": "Our future growth is likely to depend to some degree on our ability to acquire and successfully integrate new businesses. We intend to seek additional acquisition opportunities, both to expand into new markets and to enhance our position in existing markets. There are no assurances, however, that we will be able to successfully identify suitable candidates, negotiate appropriate terms, obtain financing on acceptable terms, complete proposed acquisitions, successfully integrate acquired businesses or expand into new markets. Once acquired, operations may not achieve anticipated levels of revenues, profitability or cash flows. Acquisitions involve risks, including difficulties in the integration of the operations, technologies, services and products of the acquired companies and the diversion of management's attention from other business concerns. Although our management will endeavor to evaluate the risks inherent in any particular transaction, including but not limited to cyber risks, there are no assurances that we will properly ascertain all such risks. Acquisitions may involve significant cash expenditures, debt incurrences, equity issuances and expenses. Difficulties encountered with acquisitions may have a material adverse effect on our business, financial condition and results of operations."
+            },
+            {
+                "score": 0.6496258974075317,
+                "rrf_score": 0.028373015873015873,
+                "company": "Roper Technologies",
+                "company_display": "Roper Technologies",
+                "year": 2025,
+                "section_path": "ITEM 8. FINANCIAL STATEMENTS AND SUPPLEMENTARY DATA > Report of Independent Registered Public Accounting Firm > Critical Audit Matters > Acquisition of CentralReach Holdings, LLC - Valuation of Customer Relationships",
+                "page_numbers": [
+                    46
+                ],
+                "chunk_type": "text",
+                "text": "... the customer attrition rates, projected customer revenue growth rates, margins, contributory asset charges, and discount rates. The principal considerations for our determination that performing procedures relating to the valuation of customer relationships acquired in the acquisition of CentralReach is a critical audit matter are (i) the significant judgment by management when developing the fair value estimate of the customer relationships acquired; (ii) a high degree of auditor judgment, subjectivity, and effort in performing procedures and evaluating management's significant assumptions related to the customer attrition rate, projected customer revenue growth rates, margins, contributory asset charges, and discount rate; and (iii) the audit effort involved the use of professionals with specialized skill and knowledge. Addressing the matter involved performing procedures and evaluating audit evidence in connection with forming our overall opinion on the consolidated financial statements. These procedures included testing the effectiveness of controls relating to the acquisition accounting, including controls over management's valuation of the customer relationships acquired. These procedures also included, among others (i) reading the purchase agreement; (ii) testing management's process for developing the fair value estimate of the customer relationships acquired; (iii) evaluating the appropriateness of the excess earnings method used by management; (iv) testing the completeness and accuracy of the underlying data used in the excess earnings method; and (v) evaluating the reasonableness of the significant assumptions used by management related to the customer attrition rate, projected customer revenue growth rates, margins, contributory asset charges, and discount rate. Evaluating management's assumptions related to projected customer revenue growth rates and margins involved considering (i) the current and past performance of the CentralReach business; (ii) the consistency with external market and industry data; and (iii) whether the assumptions were consistent with evidence obtained in other areas of the audit. Professionals with specialized skill and knowledge were used to assist in evaluating (i) the appropriateness of the excess earnings method and (ii) the reasonableness of the customer attrition rate, contributory asset charges, and discount rate assumptions."
+            }
+        ]
+    },
+    {
+        "n": 5,
+        "category": "Paragraph: business aur strategy",
+        "question": "What does Palo Alto Networks say about its platform strategy in fiscal 2023?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.63913893699646,
+                "rrf_score": 0.03278688524590164,
+                "company": "Palo Alto Networks",
+                "company_display": "Palo Alto Networks",
+                "year": 2023,
+                "section_path": "HUMAN CAPITAL",
+                "page_numbers": [
+                    13
+                ],
+                "chunk_type": "text",
+                "text": "... ilitating rapid productivity. Welcome Day is a combination of in-person, virtual learning platforms and communication channels that provide new employees with inspirational, often personalized, onboarding experiences that carry on through the first year of employment. We have specialized learning tracks for interns and new graduates that have been recognized as best in class externally to support early-in-career individuals in acclimating to our culture as they progress on their career journey. As part of our merger and acquisition strategy, we have also established a robust integration program with the goal to enable individuals joining our teams to feel part of our culture at speed. Following onboarding, there are a variety of ways that employees can assess their interests and skills, build a development plan specific to those insights, and continue to grow. Our development initiatives are delivered to employees through a comprehensive platform, FLEXLearn. The platform contains curated content and programs, such as assessment instruments, thousands of courses, workshops, and mentoring and coaching services. Leaders and executives also have access to specialized learning tracks that help them strategize, mobilize, and deliver maximum personal and team performance. Employees have full agency to direct their growth at their pace and choosing. Development information about core business elements, working in a distributed hybrid environment, as well as required company-wide compliance training, such as Code of Conduct, privacy and security, anti-discrimination, anti-harassment, and anti-bribery training, is also deployed through the FLEXLearn platform for all employees. In addition, FLEXLearn provides employees with events and activities that motivate and spark critical thinking, on topics ranging from inclusion to well-being and collaboration. On average, employees had completed 33 hours of development through the FLEXLearn platform during fiscal 2023. Engage & Reward. We aim to foster engagement through a multifaceted approach to collect, understand, and act on employee feedback. Our comprehensive communication and listening strategy utilizes in-person and technology-enabled channels. We share and collect information through corporate and functional \"All Hands\" meetings, including several meetings specifically focused on employee- centered topics in an \"Ask Me Anything\" format. Digital Displays across our sites, our intranet platform, monthly and weekly email communications, and an active Slack platform provide a regular flow of information to and between employees and leadership. In addition to these channels that reach large audiences, we conduct regular executive listening sessions, including small group convenings with our CEO and other C-suite leaders, and ad-hoc pulse surveys to better understand employee engagement, sentiment, well-being, and the ability to transition to a hybrid work model. Employee sentiment is also collected from external sources, such as web platforms that crowdsource feedback. Employees provide commentary to platforms such as Glassdoor, Comparably, and others and insights from those platforms are used to measure e ..."
+            },
+            {
+                "score": 0.6322029829025269,
+                "rrf_score": 0.030834914611005692,
+                "company": "Palo Alto Networks",
+                "company_display": "Palo Alto Networks",
+                "year": 2023,
+                "section_path": "Risks Related to Our Business > RISKS RELATED TO OUR PRODUCTS AND TECHNOLOGY > If we do not accurately predict, prepare for, and respond promptly to rapidly evolving technological and market developments and successfully manage product and subscription introductions and transitions to meet changing end-customer needs in the enterprise security industry, our competitive position and prospects will be harmed.",
+                "page_numbers": [
+                    22
+                ],
+                "chunk_type": "text",
+                "text": "The enterprise security industry has grown quickly and continues to evolve rapidly. Moreover, many of our end-customers operate in markets characterized by rapidly changing technologies and business plans, which require them to add numerous network access points and adapt increasingly complex enterprise networks, incorporating a variety of hardware, software applications, operating systems, and networking protocols. If we fail to effectively anticipate, identify, and respond to rapidly evolving technological and market developments in a timely manner, our business will be harmed. In order to anticipate and respond effectively to rapid technological changes and market developments, as well as evolving security threats, we must invest effectively in research and development to increase the reliability, availability, and scalability of our existing products and subscriptions and introduce new products and subscriptions. Our investments in research and development, including investments in AI, may not result in design or performance improvements, marketable products, subscriptions, or features, or may not achieve the cost savings or additional revenue that we expect. In addition, new and evolving products and services, including those that use AI, require significant investment and raise ethical, technological, legal, regulatory, and other challenges, which may negatively affect our brands and demand for our products and services. Because all of these investment areas are inherently risky, no assurance can be given that such strategies and offerings will be successful or will not harm our reputation, financial condition, and operating results. In addition, we must continually change our products and expand our business strategy in response to changes in network infrastructure requirements, including the expanding use of cloud computing. For example, organizations are moving portions of their data to be managed by third parties, primarily infrastructure, platform, and application service providers, and may rely on such providers' internal security measures. While we have historically been successful in developing, acquiring, and marketing new products and product enhancements that respond to technological change and evolving industry standards, we may not be able to continue to do so, and there can be no assurance that our new or future offerings will be successful or will achieve widespread market acceptance. If we fail to accurately predict and address end-customers' changing needs and emerging technological trends in the enterprise security industry, including in the areas of AI, mobility, virtualization, cloud computing, and software-defined networks, our business could be harmed. The technology in our portfolio is especially complex because it needs to effectively identify and respond to new and increasingly sophisticated methods of attack, while minimizing the impact on network performance. Additionally, some of our new features and related enhancements may require us to develop new hardware architectures that involve complex, expensive, and time-consuming research and development processes."
+            },
+            {
+                "score": 0.6260870695114136,
+                "rrf_score": 0.02967032967032967,
+                "company": "Palo Alto Networks",
+                "company_display": "Palo Alto Networks",
+                "year": 2023,
+                "section_path": "Overview",
+                "page_numbers": [
+                    39,
+                    40
+                ],
+                "chunk_type": "text",
+                "text": "N-OS 11.0, Cloud NGFW for AWS, and Cloud NGFW for Azure. Additionally, we acquired productive investments that fit well within our long-term strategy. For example, in December 2022, we acquired Cider, which we expect will support our Prisma Cloud's platform approach to securing the entire application security lifecycle from code to cloud. We believe that the growth of our business and our short-term and long-term success are dependent upon many factors, including our ability to extend our technology leadership, grow our base of end-customers, expand deployment of our portfolio and support offerings within existing end-customers, and focus on end-customer satisfaction. To manage any future growth effectively, we must continue to improve and expand our information technology and financial infrastructure, our operating and administrative systems and controls, and our ability to manage headcount, capital, and processes in an efficient manner. While these areas present significant opportunities for us, they also pose challenges and risks that we must successfully address in order to sustain the growth of our business and improve our operating results. For additional information regarding the challenges and risks we face, see the \"Risk Factors\" section in Part I, Item 1A of this Annual Report on Form 10-K.\ndelivering value in four fundamental areas: Network Security: Our network security platform, designed to deliver complete zero trust solutions to our customers, includes our hardware and software Cloud Security: We enable cloud-native security through our Prisma Cloud platform. As a comprehensive Cloud Native Application Protection - 38 -\nSecurity Operations: We deliver the next generation of security automation, security analytics, endpoint security, and attack surface management solutions Threat Intelligence and Security Consulting (Unit 42): Unit 42 brings together world-renowned threat researchers with an elite team of incident responders and security consultants to"
+            }
+        ]
+    },
+    {
+        "n": 6,
+        "category": "Paragraph: risks",
+        "question": "What does Apple say about its dependence on outsourcing partners for manufacturing in 2021?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.7341943979263306,
+                "rrf_score": 0.03252247488101534,
+                "company": "Apple",
+                "company_display": "Apple",
+                "year": 2021,
+                "section_path": "Item 1A. Risk Factors > Business Risks > The Company depends on component and product manufacturing and logistical services provided by outsourcing partners, many of which are located outside of the U.S.",
+                "page_numbers": [
+                    12
+                ],
+                "chunk_type": "text",
+                "text": "for warranty and out-of-warranty service in the event of product defects and experiences an unanticipated product defect liability from time to time. While the Company relies on its partners to adhere to its supplier code of conduct, violations of the supplier code of conduct occur from time to time and can materially adversely affect the Company's business, reputation, results of operations and financial condition. The Company relies on single-source outsourcing partners in the U.S., Asia and Europe to supply and manufacture many components, and on outsourcing partners primarily located in Asia, for final assembly of substantially all of the Company's hardware products. Any failure of these partners to perform can have a negative impact on the Company's cost or supply of components or finished goods. In addition, manufacturing or logistics in these locations or transit to final destinations can be disrupted for a variety of reasons, including natural and man-made disasters, information technology system failures, commercial disputes, military actions, economic, business, labor, environmental, public health or political issues, or international trade disputes. The Company has invested in manufacturing process equipment, much of which is held at certain of its outsourcing partners, and has made prepayments to certain of its suppliers associated with long-term supply agreements. While these arrangements help ensure the supply of components and finished goods, if these outsourcing partners or suppliers experience severe financial problems or other disruptions in their business, such continued supply can be reduced or terminated, and the recoverability of manufacturing process equipment or prepayments can be negatively impacted."
+            },
+            {
+                "score": 0.7549051642417908,
+                "rrf_score": 0.032018442622950824,
+                "company": "Apple",
+                "company_display": "Apple",
+                "year": 2021,
+                "section_path": "Item 1A. Risk Factors > Business Risks > The Company depends on component and product manufacturing and logistical services provided by outsourcing partners, many of which are located outside of the U.S.",
+                "page_numbers": [
+                    12
+                ],
+                "chunk_type": "text",
+                "text": "Substantially all of the Company's manufacturing is performed in whole or in part by outsourcing partners located primarily in Asia. A significant concentration of this manufacturing is currently performed by a small number of outsourcing partners, often in single locations. The Company has also outsourced much of its transportation and logistics management. While these arrangements can lower operating costs, they also reduce the Company's direct control over production and distribution. Such diminished control has from time to time and may in the future have an adverse effect on the quality or quantity of products manufactured or services provided, or adversely affect the Company's flexibility to respond to changing conditions. Although arrangements with these partners may contain provisions for product defect expense reimbursement, the Company generally remains responsible to the consumer for warranty and out-of-warranty service in the event of product defects and experiences an unanticipated product defect liability from time to time."
+            },
+            {
+                "score": 0.6910728216171265,
+                "rrf_score": 0.031754032258064516,
+                "company": "Apple",
+                "company_display": "Apple",
+                "year": 2021,
+                "section_path": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Liquidity and Capital Resources > Manufacturing Purchase Obligations",
+                "page_numbers": [
+                    31
+                ],
+                "chunk_type": "text",
+                "text": "The Company utilizes several outsourcing partners to manufacture subassemblies for the Company's products and to perform final assembly and testing of finished products. The Company also obtains individual components for its products from a wide variety of individual suppliers. Outsourcing partners acquire components and build product based on demand information supplied by the Company, which typically covers periods up to 150 days. As of September 25, 2021, the Company had manufacturing purchase obligations of $54.8 billion, with $54.7 billion payable within 12 months. The Company's manufacturing purchase obligations are primarily noncancelable."
+            }
+        ]
+    },
+    {
+        "n": 7,
+        "category": "Paragraph: risks",
+        "question": "What food safety risks does Chipotle mention in 2019?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.7899811863899231,
+                "rrf_score": 0.03278688524590164,
+                "company": "Chipotle Mexican Grill",
+                "company_display": "Chipotle Mexican Grill",
+                "year": 2019,
+                "section_path": "ITEM 1. BUSINESS > Risks Related to our Business and Industry > Food safety and food-borne illness concerns may have an adverse effect on our business by decreasing sales and increasing costs.",
+                "page_numbers": [
+                    8
+                ],
+                "chunk_type": "text",
+                "text": "Food safety is our top priority, and we dedicate substantial resources to ensuring that our guests enjoy safe, high-quality food products. Even with strong preventative controls and interventions, food safety incidents continue to occur in the food service industry because food safety risks cannot be completely eliminated in any restaurant, including as a result of possible failures by restaurant crew or suppliers to follow food safety policies and procedures. Although we test and audit these activities, we cannot guarantee that all food items are safely and properly maintained during transport or distribution throughout the supply chain. Regardless of the source or cause, any report of food-borne illnesses such as E. coli, hepatitis A, norovirus or salmonella, and other food safety issues, including food tampering or contamination, at one of our restaurants could adversely affect our reputation and have a negative impact on our sales. Even instances of food-borne illness, food tampering or food contamination that occur solely at competitors' restaurants could result in negative publicity about the food service industry generally and adversely impact our sales. Social media has dramatically increased the rate at which negative publicity, including as it relates to food safety incidents, can be disseminated before there is any meaningful opportunity to respond or address an issue. The occurrence of food-borne illnesses or food safety issues could also adversely affect the price and availability of affected ingredients, resulting in higher costs and lower margins. Several highly publicized food safety incidents in our restaurants and our Food With Integrity business principles may make us more susceptible than our competitors to significant adverse consequences arising from food safety incidents. From 2015 to 2017, illnesses caused by E. coli bacteria and norovirus were connected to a number of our restaurants and, in 2018, illnesses believed to be caused by c. perfringens bacteria were connected to the food in one of our restaurants. As a result of these incidents and the related negative publicity, our sales and profitability were severely impacted th ..."
+            },
+            {
+                "score": 0.7121592164039612,
+                "rrf_score": 0.03128054740957967,
+                "company": "Chipotle Mexican Grill",
+                "company_display": "Chipotle Mexican Grill",
+                "year": 2019,
+                "section_path": "ITEM 1. BUSINESS > Purchasing and Food Safety",
+                "page_numbers": [
+                    4,
+                    5
+                ],
+                "chunk_type": "text",
+                "text": "Close Relationships with Suppliers. Maintaining the high levels of quality and safety we expect in our restaurants depends in part on our ability to acquire high-quality, fresh ingredients and other necessary supplies that meet our specifications from reliable suppliers. Our 23 independently owned and operated regional distribution centers purchase from various suppliers we carefully select based on quality and the suppliers' understanding and adherence of our mission. We work closely with our suppliers and seek to develop mutually beneficial long-term relationships with them. We use a mix of forward, fixed, formula and range forward pricing protocols, and our distribution centers purchase within the pricing guidelines and protocols we have established with suppliers. We've also sought to increase, where practical, the number of suppliers for our ingredients to help mitigate pricing volatility and supply shortages. In addition, we closely monitor industry news, trade tariffs, weather, exchange rates, foreign demand, crises and other world events that may affect our ingredient prices. Certain key ingredients (including beef, pork, chicken, beans, rice, sour cream, cheese, and tortillas) are purchased from a small number of suppliers. Quality Assurance and Food Safety. We are committed to serving safe, high quality food. Our food safety and quality assurance teams work to ensure compliance with our food safety programs and practices, components of which include:  supplier interventions (steps to avoid food safety risks before ingredients reach Chipotle);  advanced technologies (tools that reduce or eliminate pathogens while maintaining food quality);  small grower support and training;  enhanced restaurant procedures (protocols for handling ingredients and sanitizing surfaces in our restaurants);  food safety certifications;  internal and third-party restaurant inspections; and  ingredient traceability. These and other food safety practices underscore our commitment to be a leader in food safety while continuing to serve high quality food that our guests love. Our food safety and quality assurance teams establish and monitor our quality and food safety programs and work closely with suppliers to ensure our high standards are met throughout the supply chain. We maintain a limited list of approved suppliers, many of whom are among the top suppliers in the industry. In addition, we have a team approach where our training, operations, culinary, legal and safety, security and risk management departments develop and implement operating standards for food quality, preparation, cleanliness, employee health protocols, and safety in the restaurants. Our food safety programs are also intended to ensure that we not only continue to comply with applicable federal, state and local food safety regulations, but also establish Chipotle as an industry leader in food safety. To help achieve this goal, we have a Food Safety Advisory Council comprised of some of the nation's foremost food safety authoritie ..."
+            },
+            {
+                "score": 0.7714914679527283,
+                "rrf_score": 0.031024531024531024,
+                "company": "Chipotle Mexican Grill",
+                "company_display": "Chipotle Mexican Grill",
+                "year": 2019,
+                "section_path": "ITEM 1. BUSINESS > Risks Related to our Business and Industry > Food safety and food-borne illness concerns may have an adverse effect on our business by decreasing sales and increasing costs.",
+                "page_numbers": [
+                    8
+                ],
+                "chunk_type": "text",
+                "text": "e incidents and the related negative publicity, our sales and profitability were severely impacted throughout 2016 and from time to time through 2018. Because of consumer perceptions in the wake of these food safety incidents, any future food safety incidents associated with our restaurants- even incidents that may be considered minor at other restaurants-may have a more significant negative impact on our sales and our ability to regain guests. In addition, we may be at a higher risk for food safety incidents than some competitors due to our greater use of fresh, unprocessed produce and meats, our reliance on employees cooking with traditional methods rather than automation, and our avoidance of frozen ingredients. The risk of illnesses associated with our food also may increase due to the growth of our delivery or catering businesses, in which our food is transported and/or served in transportation conditions that we cannot control. All of these factors could have an adverse impact on our ability to attract and retain guests, which could in turn have a material adverse effect on our growth and profitability."
+            }
+        ]
+    },
+    {
+        "n": 8,
+        "category": "Paragraph: risks",
+        "question": "What does Meta say about privacy and data protection regulation in 2022?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.7388507127761841,
+                "rrf_score": 0.03252247488101534,
+                "company": "META",
+                "company_display": "Meta Platforms",
+                "year": 2022,
+                "section_path": "Item 1. Business > Government Regulation",
+                "page_numbers": [
+                    11
+                ],
+                "chunk_type": "text",
+                "text": "We are subject to a variety of laws and regulations in the United States and abroad that involve matters central to our business, many of which are still evolving and being tested in courts, and could be interpreted in ways that could harm our business. These laws and regulations involve matters including privacy, data use, data protection and personal information, biometrics, encryption, rights of publicity, content, integrity, intellectual property, advertising, marketing, distribution, data security, data retention and deletion, data localization and storage, data disclosure, artificial intelligence and machine learning, electronic contracts and other communications, competition, protection of minors, consumer protection, civil rights, accessibility, telecommunications, product liability, e-commerce, taxation, economic or other trade controls including sanctions, anti-corruption and political law compliance, securities law compliance, and online payment services. Foreign data protection, privacy, content, competition, consumer protection, and other laws and regulations can impose different obligations, or penalties or fines for non- compliance, or be more restrictive than those in the United States. These U.S. federal, state, and foreign laws and regulations, which in some cases can be enforced by private parties in"
+            },
+            {
+                "score": 0.6876978278160095,
+                "rrf_score": 0.03131881575727918,
+                "company": "META",
+                "company_display": "Meta Platforms",
+                "year": 2022,
+                "section_path": "Item 3. Legal Proceedings",
+                "page_numbers": [
+                    61,
+                    63
+                ],
+                "chunk_type": "text",
+                "text": "ts, require us to change our business practices, divert resources and the attention of management from our business, or adversely affect our business. On July 16, 2021, a stockholder derivative action was filed in Delaware Chancery Court against certain of our directors and officers asserting breach of fiduciary duty and related claims relating to our historical platform and user data practices, as well as our settlement with the FTC. On July 20, 2021, other stockholders filed an amended derivative complaint in a related Delaware Chancery Court action, asserting breach of fiduciary duty and related claims against certain of our current and former directors and officers in connection with our historical platform and user data practices. On November 4, 2021, the lead plaintiffs filed a second amended and consolidated complaint in the stockholder derivative action. We believe the lawsuits described above are without merit, and we are vigorously defending them. We also notify the Irish Data Protection Commission (IDPC), our lead European Union privacy regulator under the General Data Protection Regulation (GDPR), of certain other personal data breaches and privacy issues, and are subject to inquiries and investigations by the IDPC and other European regulators regarding various aspects of our regulatory compliance. For example, in August 2020, we received a preliminary draft decision from the IDPC that preliminarily concluded that Meta Platforms Ireland's reliance on Standard Contractual Clauses in respect of European Union/European Economic Area Facebook user data does not achieve compliance with the GDPR and preliminarily proposed that transfers of such user data from the European Union to the United States should therefore be suspended. In February 2022, we received a revised preliminary draft decision in which the IDPC maintained its preliminary conclusion that these transfers should be suspended. The IDPC's draft decision was then further refined and shared on July 6, 2022 with other European data protection regulators (CSAs) as part of the GDPR's consistency mechanism. Separately, on October 7, 2022, President Biden signed the Executive Order on Enhancing Safeguards for United States Signals Intelligence Activities, and on December 13, 2022, the European Commission published its draft adequacy decision on the proposed new European Union-U.S. Data Privacy Framework. On January 19, 2023, the IDPC referred the inquiry to a vote by the European Data Protection Board, pursuant to the dispute resolution process under Article 65 GDPR, in respect of elements of the draft decision over which consensus could not be reached between concerned supervisory authorities. We believe a final decision in this inquiry may issue as early as the first quarter of 2023. For additional information, see Part I, Item 1A, \"Risk Factors-Our business is subject to complex and evolving U.S. and foreign laws and regulations regarding privacy, data use and data protection, content, competition, safety and consumer protection, e-commerce, and other matters\" in this Annual Report on Form 10-K."
+            },
+            {
+                "score": 0.7168315649032593,
+                "rrf_score": 0.029571646010002173,
+                "company": "META",
+                "company_display": "Meta Platforms",
+                "year": 2022,
+                "section_path": "Item 1. Business > Government Regulation",
+                "page_numbers": [
+                    13
+                ],
+                "chunk_type": "text",
+                "text": "... s of operations. We have been subject to other significant legislative and regulatory developments in the past, and proposed or new legislation and regulations could significantly affect our business in the future. For example, we have implemented a number of product changes and controls as a result of requirements under the GDPR, and may implement additional changes in the future. The GDPR also requires submission of personal data breach notifications to our lead European Union privacy regulator, the IDPC, and includes significant penalties for non-compliance with the notification obligation as well as other requirements of the regulation. The interpretation of the GDPR is still evolving and draft decisions in investigations by the IDPC are subject to review by other European privacy regulators as part of the GDPR's consistency mechanism, which may lead to significant changes in the final outcome of such investigations. As a result, the interpretation and enforcement of the GDPR, as well as the imposition and amount of penalties for non-compliance, are subject to significant uncertainty. In addition, Brazil, the United Kingdom, and other countries have enacted similar data protection regulations imposing data privacy-related requirements on products and services offered to users in their respective jurisdictions. The California Consumer Privacy Act, as amended by the California Privacy Rights Act, and similar laws recently enacted by other states also establish certain transparency rules and create certain data privacy rights for users. In addition, the European Union's ePrivacy Directive and national implementation laws impose additional limitations on the use of data across messaging products and include significant penalties for non-compliance. Changes to our products or business practices as a result of these or similar developments have in the past adversely affected, and may in the future adversely affect, our advertising business. Similarly, there are a number of legislative proposals or recently enacted laws in the European Union, the United States, at both the federal and state level, as well as other jurisdictions that could impose new obligations or limitations in areas affecting our business. For example, the Digital Markets Act (DMA) in the European Union imposes new restrictions and requirements on companies like ours, including in areas such as the combination of data across services, mergers and acquisitions, and product design. The DMA also includes significant penalties for non-compliance, and its key requirements will be enforceable against designated gatekeeper companies in early 2024. We expect the DMA will cause us to incur significant compliance costs and make additional changes to our products or business practices. The requirements under the DMA will likely be subject to further interpretation and regulatory engagement. Pending or future proposals to modify competition laws in the United States and other jurisdictions could have similar effects. Further, the Digital Services Act (DSA) in the European Union, which will apply to our business as early as June 2023, will impose new restrictions and requirements for our  ..."
+            }
+        ]
+    },
+    {
+        "n": 9,
+        "category": "Paragraph: risks",
+        "question": "What cybersecurity risks does Walmart describe in fiscal 2024?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6843828558921814,
+                "rrf_score": 0.031754032258064516,
+                "company": "Walmart",
+                "company_display": "Walmart",
+                "year": 2024,
+                "section_path": "ITEM 1C. > Risk Management and Strategy",
+                "page_numbers": [
+                    37
+                ],
+                "chunk_type": "text",
+                "text": "Our cybersecurity program is informed by various industry frameworks including the National Institute of Standards and Technology Cybersecurity Framework for Improving Critical Infrastructure Cybersecurity (NIST-CSF Version 1.1), which are reflected in our related policies, standards, processes and practices. We may implement changes to our cybersecurity program when deemed necessary based on updates to industry standards among other things. We have multiple layers of security designed to detect and block cybersecurity events, as well as dedicated teams of cybersecurity personnel and professionals, which assist our CISO in helping to assess, identify, monitor, detect and manage cybersecurity risks, threats, vulnerabilities and incidents. We collaborate with public and private entities and industry groups and engage third-party service providers to expand the capabilities and capacity of our cybersecurity program when deemed necessary. Certain key components of our cybersecurity program include the following: Protecting our technology and information systems: When we implement significant changes to our technologies or information systems, we conduct risk-based security and privacy impact assessments and deploy technical safeguards that are designed to reasonably protect our technology and information systems from cybersecurity threats. We actively monitor and proactively research potential cybersecurity threats to our technologies and information systems. We use what we learn to evolve our security controls over time to mitigate risks posed by such threats. Incident response and recovery planning: We maintain incident response and recovery plans that address our response to cybersecurity incidents, including incidents that we become aware of at third parties that support our operations. These plans guide how we evaluate and assign incident severity levels and reporting thresholds; escalate and engage incident response teams; and manage and mitigate the related risks. Third-party risk management: We maintain a risk-based approach to identifying and managing cybersecurity threats presented to Walmart by third-party systems that support our operations, as well as third-party users of our data and systems, including vendors, service providers and subcontractors. Training and awareness: We provide recurring information security training (which includes cybersecurity training) to our associates and certain third parties based on access, risk, roles, policies, standards and behaviors."
+            },
+            {
+                "score": 0.7044110298156738,
+                "rrf_score": 0.030679156908665108,
+                "company": "Walmart",
+                "company_display": "Walmart",
+                "year": 2024,
+                "section_path": "ITEM 1C. > Risk Management and Strategy",
+                "page_numbers": [
+                    38
+                ],
+                "chunk_type": "text",
+                "text": "g (which includes cybersecurity training) to our associates and certain third parties based on access, risk, roles, policies, standards and behaviors. Assessments and testing: We engage in periodic assessment and testing of our policies, standards, processes and practices that are designed to address cybersecurity threats. These efforts include tabletop exercises, threat modeling, vulnerability testing and other exercises focused on evaluating the effectiveness of our cybersecurity measures and planning. We regularly engage third parties to assist with our assessments and testing. Where appropriate we adjust our cybersecurity policies, standards, processes and practices accordingly based on internal and external assessment and testing results. Certain of Walmart's systems and those of our third-party service providers have experienced cybersecurity incidents and threats. Based on the information available as of the date of this Annual Report on Form 10-K, we are not aware of any risks from cybersecurity threats, including as a result of any cybersecurity incidents, which have materially affected us or are reasonably likely to materially affect us, including our business strategy, results of operations, or financial condition. Despite our security measures, however, there can be no assurance that we, or the third parties with which we interact, will not experience a cybersecurity incident in the future that will materially affect us. Additional information about cybersecurity risks we face is discussed in \" Item 1A. Risk Factors ,\" which should be read in conjunction with the information above."
+            },
+            {
+                "score": 0.6309204697608948,
+                "rrf_score": 0.03009207275993712,
+                "company": "Walmart",
+                "company_display": "Walmart",
+                "year": 2024,
+                "section_path": "ITEM 1C. > Board of Directors' oversight of risks from cybersecurity threats",
+                "page_numbers": [
+                    37
+                ],
+                "chunk_type": "text",
+                "text": "Our Board of Directors, which has primary responsibility for overseeing risk management, has delegated risk management oversight responsibility for information systems, information security, data privacy and cybersecurity to the Audit Committee. Several of our Board members, including certain members of our Audit Committee, have backgrounds or professional experience in risk management, digital platforms, information technology or cybersecurity. The Audit Committee receives periodic updates from our Chief Information Security Officer (\"CISO\"), Chief Technology Officer (\"CTO\") and other members of management on risks related to information systems, information security, data privacy and cybersecurity. Specific topics may include updates to our company's approach to cybersecurity risk management; recent developments; key initiatives; the threat landscape; trends; and the results of certain assessments and testing. The Board of Directors receives regular reports from the Audit Committee chair on these and other risk-related matters as deemed necessary. Our CISO or other members of management provide information to the Audit Committee pursuant to risk-based escalation protocols for cybersecurity incidents that exceed established reporting thresholds."
+            }
+        ]
+    },
+    {
+        "n": 10,
+        "category": "Paragraph: risks",
+        "question": "What does Intel say about delays in its manufacturing process technology in 2020?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.7699962854385376,
+                "rrf_score": 0.03278688524590164,
+                "company": "Intel",
+                "company_display": "Intel",
+                "year": 2020,
+                "section_path": "INTEL CORPORATION > Notes to the Consolidated Financial Statements > Critical Accounting Estimates",
+                "page_numbers": [
+                    57
+                ],
+                "chunk_type": "text",
+                "text": "... ducts and market segments due in part to marketability of our products and differences in their features or manufacturing costs. For example, our platform product offerings range from lower-priced and entry-level platforms, such as those based on Intel Atom processors, to higher-end platforms based on Intel Xeon processors. Our adjacent products also typically have significantly lower margins than our higher-priced platform products, and at times are not profitable. To the extent demand shifts from our higher-priced to lower-priced platform products in any of our market segments, or our adjacent products represent an increasingly greater share of our mix of products sold, our gross margin percentage may decrease. We are vulnerable to product and manufacturing-related risks. We are subject to risks associated with the development and implementation of new manufacturing technologies. Production of integrated circuits is a complex process. We are continually engaged in the development of next-generation process technologies at increasingly advanced nodes as we seek to realize the benefits of Moore's Law. Forecasting our progress and schedule for developing advanced nodes is challenging, and at times we encounter unexpected delays due to the complexity of interactions among steps in the manufacturing process, challenges in using new materials, and other issues. Diagnosing defects in our manufacturing processes often takes a long time, as manufacturing throughput times can delay our receipt of data about defects and the effectiveness of fixes. We are not always successful or efficient in developing or implementing new process nodes and manufacturing processes. We experienced significant delays in implementing our 10nm process technology. Although we began shipping products based on our 10nm process technology in volume in 2019, our delays in transitioning to this node occurred while third-party foundries such as TSMC developed new, competitive process technologies. Competitors using third-party foundries are able to benefit from the improvements such process technologies have made in performance, energy efficiency, and other features, which has helped increase the competitiveness of their products. In 2020, we encountered a defect mode in the development of our 7nm process technology that resulted in yield degradation, which was the primary driver for a delay in our expectations for our 7nm-based CPU product timing. These delays can allow competitors to benefit from advancements in manufacturing processes introduced ahead of us by third-party foundries and could adversely affect the competitiveness of our products. Because of the delays in our 10nm and 7nm process technologies, we may experience greater adverse competitive impacts in the event of delays in the development of future manufacturing process technologies and products. To increase our manufacturing and design flexibility, we have developed a disaggregated design approach for certain products, which enables us to manufacture processors and components on different process technologies, including third-party foundry processes, and connect them in a single package with advanced packaging te ..."
+            },
+            {
+                "score": 0.7617783546447754,
+                "rrf_score": 0.03125763125763126,
+                "company": "Intel",
+                "company_display": "Intel",
+                "year": 2020,
+                "section_path": "INTEL CORPORATION > Notes to the Consolidated Financial Statements > Critical Accounting Estimates",
+                "page_numbers": [
+                    57,
+                    58
+                ],
+                "chunk_type": "text",
+                "text": "on different process technologies, including third-party foundry processes, and connect them in a single package with advanced packaging technologies. This approach introduces additional risks as described in the risk factor \"We face supply chain risks.\" Our efforts to innovate involve significant expense and carry inherent risks, including difficulties in designing and developing next-generation process technologies, and investments in manufacturing assets and facilities that are made years in advance of the process node introduction. We cannot guarantee that we will realize the expected benefits of next-generation process technologies, including the expected cost and density advantages, or that we will achieve an adequate return on our capital and R&D investments, particularly as development of new nodes has grown increasingly expensive. In such circumstances, we may be required to write down the value of some of our manufacturing assets and facilities, increasing our expenses. Risks inherent in the development of next-generation process technologies include production timing delays, lower-than-anticipated manufacturing yields, longer manufacturing throughput times, and product defects and errata. Production timing delays have at times caused us to miss customer product design windows, which can result in lost revenue opportunities and damage to our customer relationships. Furthermore, when the introduction of next-generation process nodes is delayed, including additional cores or other competitive features in our products can result in larger die size products, manufacturing supply constraints, and increased product costs. Lower manufacturing yields and longer manufacturing throughput times, compared to previous process nodes, can increase our product costs and adversely affect our gross margins, and can contribute to manufacturing supply constraints. When we introduce a new process node, it typically has higher costs compared to a mature node due to factors that include higher depreciation costs and lower yields. For example, our increased 10nm product mix in 2020 had a negative impact on our overall unit cost and gross margins, and yields on our 10nm manufacturing process remain below our mature 14nm process. In addition, the improvements we expect to make in 10nm costs and yields may not proceed at the same rate as the improvements we made on 14nm. As the die size of our products has increased and our manufacturing process nodes have shrunk, our products and manufacturing processes have grown increasingly complex and more susceptible to product defects and errata, which at times also contribute to production timing delays and lower yields. From time to time, disruptions in the production process result from errors, defects in materials, delays in obtaining or revising operating permits and licenses, interruptions in our supply of materials or resources, and disruptions at our fabrication and assembly and test facilities due to accidents, maintenance issues, power interruptions, equipment ..."
+            },
+            {
+                "score": 0.6917184591293335,
+                "rrf_score": 0.030798389007344232,
+                "company": "Intel",
+                "company_display": "Intel",
+                "year": 2020,
+                "section_path": "INTEL CORPORATION > Notes to the Consolidated Financial Statements > Manufacturing Capital",
+                "page_numbers": [
+                    13,
+                    14
+                ],
+                "chunk_type": "text",
+                "text": "r reduce a chip's cost as we shrink its size, or increase functionality and performance of a chip while maintaining the same cost with higher density. This makes possible the innovation of new products with higher performance while balancing power efficiency, cost, and size to meet customers' needs. Our ability to optimize and apply our manufacturing expertise to deliver more advanced, differentiated products has been foundational to our success and is a continued focus of our investments. \"The IDM model has been foundational to Intel's success as a global leader in semiconductor manufacturing by enabling product optimization, improved economics, and supply assurance. We are committed to be the supplier of choice for achieving best-in-class performance and to deliver world-changing products on a predictable cadence for our customers.\" -Keyvan Esfarjani, Senior Vice President and General Manager of Manufacturing and Operations We shipped higher volumes of 10nm products in 2020 than we had anticipated at the beginning of the year. We also launched our 11th Gen Intel Core processors with new 10nm SuperFin Technology. We announced in July 2020 that our 7nm-based CPU product timing would be delayed and that the primary driver was the yield of our 7nm manufacturing process. We will continue to invest in our future process technology roadmap and advanced packaging technologies to differentiate our products, provide manufacturing optionality and deliver a predictable cadence of leadership products to our customers. Fundamentals of Our Business \"Our goal is to enable leadership products for Intel by delivering predictable process and packaging technology innovation.\" -Ann Kelleher, Senior Vice President and General Manager of Technology Development Network and Supply Chain Our global supply chain supports internal partners across architecture, product design, technology development, manufacturing and operations, sales and marketing, and business units, with the goal of enabling product and process leadership, industry-leading total cost of ownership, and uninterrupted supply for our customers. Our supply chain ecosystem comprises thousands of suppliers globally. Our worldwide site expansion projects remained on track despite disruptions from the COVID-19 pandemic. In addition to our own manufacturing capacity, we continue to use third-party foundries to expand the ways in which we can support our customers. These third-party solutions complement our manufacturing and provide additional flexibility. Our world-class safety standards and supply chain operations, including our robust risk management and crisis response model, have to date allowed our worldwide factory and supply chain network to continue to operate safely and with mostly on-time deliveries despite the pandemic."
+            }
+        ]
+    },
+    {
+        "n": 11,
+        "category": "Paragraph: risks",
+        "question": "Tell me about the total savings of consruction industries of Caterpillar in 2020?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.611732006072998,
+                "rrf_score": 0.028693528693528692,
+                "company": "Caterpillar",
+                "company_display": "Caterpillar",
+                "year": 2020,
+                "section_path": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations. > Other Profit/Loss and Tax Items",
+                "page_numbers": [
+                    45
+                ],
+                "chunk_type": "text",
+                "text": "ated to lower sales volumes. Construction Industries' profit as a percent of total sales was 14.0 percent in 2020, compared with 17.4 percent in 2019. Resource Industries' total sales were $7.906 billion in 2020, a decrease of $2.370 billion, or 23 percent, compared with $10.276 billion in 2019. The decrease was due to lower sales volume, driven by lower end-user demand for equipment and aftermarket parts and the impact from changes in dealer inventories. Dealers decreased inventories during 2020, compared with an increase during 2019. Lower end-user demand was primarily driven by equipment supporting heavy construction and quarry and aggregates. Mining equipment end-user demand and aftermarket parts demand were also down in 2020, though to a lesser extent. Mining equipment sales were impacted by mining company delays in capital expenditures due to pricing in certain commodities and overall economic uncertainty. Resource Industries' profit was $896 million in 2020, a decrease of $733 million, or 45 percent, compared with $1.629 billion in 2019. The decrease was mainly due to lower sales volume, partially offset by favorable manufacturing costs. Favorable manufacturing costs were mostly due to lower period manufacturing costs and material costs, partially offset by the unfavorable impact of cost absorption. Lower period manufacturing costs were driven by lower short-term incentive compensation expense, other cost-reduction actions implemented in response to lower sales volumes and the benefits of prior restructuring programs. Cost absorption was unfavorable as inventory increased during 2019, compared with inventory levels that were about flat during 2020. Resource Industries' profit as a percent of total sales was 11.3 percent for 2020, compared with 15.9 percent for 2019."
+            },
+            {
+                "score": 0.6075729131698608,
+                "rrf_score": 0.02819138376017471,
+                "company": "Caterpillar",
+                "company_display": "Caterpillar",
+                "year": 2020,
+                "section_path": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations. > Other Profit/Loss and Tax Items",
+                "page_numbers": [
+                    51
+                ],
+                "chunk_type": "text",
+                "text": "was more than offset by unfavorable impacts from changes in dealer inventories. This was partially offset by higher demand in several other countries. Construction Industries' profit was $630 million in the fourth quarter of 2020, a decrease of $29 million, or 4 percent, compared with $659 million in the fourth quarter of 2019. The decrease was mainly due to lower sales volume and higher warranty expense, partially offset by favorable impact of cost absorption and lower SG&A/R&D expenses. Cost absorption was favorable as inventory increased during the fourth quarter of 2020, compared with a decrease during the fourth quarter of 2019. SG&A/R&D expenses benefited from reduced short-term incentive compensation expense and other cost reductions related to lower sales volumes. Construction Industries' profit as a percent of total sales was 14.0 percent in the fourth quarter of 2020, compared with 13.1 percent in the fourth quarter of 2019. Resource Industries' total sales were $2.180 billion in the fourth quarter of 2020, a decrease of $215 million, or 9 percent, compared with $2.395 billion in the fourth quarter of 2019. The decrease was due to lower end-user demand for equipment and aftermarket parts. End-user demand was lower for heavy construction and quarry and aggregates and was also lower in mining, but to a lesser extent. Resource Industries' profit was $273 million in the fourth quarter of 2020, an increase of $12 million, or 5 percent, compared with $261 million in the fourth quarter of 2019. The increase was mainly due to favorable manufacturing costs and lower SG&A/R&D expenses which was mostly offset by lower sales volume. Favorable manufacturing costs reflected favorable variable labor and burden, impact of cost absorption, period manufacturing costs and material costs. Cost absorption was favorable as inventory decreased in the fourth quarter of 2019 compared with being about flat in the fourth quarter of 2020. SG&A/R&D expenses, along with period manufacturing costs, benefited from lower short-term incentive compensation expense, other cost-reduction actions implemented and benefits from prior restructuring programs. Resource Industries' profit as a percent of total sales was 12.5 percent in the fourth quarter of 2020, compared with 10.9 percent in the fourth quarter of 2019."
+            },
+            {
+                "score": 0.6061998009681702,
+                "rrf_score": 0.026785714285714288,
+                "company": "Caterpillar",
+                "company_display": "Caterpillar",
+                "year": 2020,
+                "section_path": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations. > Other Profit/Loss and Tax Items",
+                "page_numbers": [
+                    45
+                ],
+                "chunk_type": "text",
+                "text": "demand and the impact from changes in dealer inventories across most countries in the region. Dealers decreased inventories more in 2020 than in 2019. - Sales declined in Asia/Pacific primarily due to lower sales volume driven by the impact of changes in dealer inventories, lower end-user demand across most of the region and unfavorable price realization due to competitive market conditions in China. Construction Industries' profit was $2.373 billion in 2020, a decrease of $1.558 billion, or 40 percent, compared with $3.931 billion in 2019. The decrease was mainly due to lower sales volume and unfavorable price realization primarily due to the geographic mix of sales, partially offset by favorable manufacturing costs and lower SG&A/R&D expenses. Favorable manufacturing costs were primarily due to lower period manufacturing costs, material costs and favorable cost absorption, partially offset by higher warranty expense. Cost absorption was favorable as inventory decreased in 2019, compared with inventory that was about flat in 2020. Lower SG&A/R&D expenses and period manufacturing costs both reflected a reduction in short-term incentive compensation expense and other cost reductions related to lower sales volumes. Construction Industries' profit as a percent of total sales was 14.0 percent in 2020, compared with 17.4 percent in 2019."
+            }
+        ]
+    },
+    {
+        "n": 12,
+        "category": "Paragraph: employees, customers, competition",
+        "question": "How many employees did Netflix have at the end of 2022?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.670998215675354,
+                "rrf_score": 0.032018442622950824,
+                "company": "Netflix",
+                "company_display": "Netflix",
+                "year": 2022,
+                "section_path": "Item 1. > HUMAN CAPITAL",
+                "page_numbers": [
+                    6
+                ],
+                "chunk_type": "text",
+                "text": "We view our employees and our culture as key to our success. As of December 31, 2022, we had approximately 12,800 full- time employees located globally in 65 countries. Of these, approximately 9,000 (70%) were located in the United States and Canada, 2,000 (16%) in Europe, Middle East, and Africa, 400 (3%) in Latin America and 1,400 (11%) in Asia-Pacific. We also have a number of employees engaged in content production, some of whom are part-time or temporary, and whose numbers fluctuate throughout the year. We believe a critical component of our success is our company culture. This culture, which is detailed in a \"Culture Memo\" located on our website, is often described as a high-performance culture of freedom and responsibility. We aim to attract and retain great people - representing a diverse array of perspectives and skills - to work together as a dream team. We empower all of our employees so that they can have significant impact and input into decision-making; each employee has the freedom and power to make the decisions and take actions in the best interest of the company in carrying out their role. In return, our employees are responsible and accountable for those decisions and actions. With this approach, we believe we are a more flexible, fun, stimulating, creative, collaborative and successful organization."
+            },
+            {
+                "score": 0.5536704659461975,
+                "rrf_score": 0.029513888888888888,
+                "company": "Netflix",
+                "company_display": "Netflix",
+                "year": 2022,
+                "section_path": "Risk Factors > Risks Related to Human Resources > We may lose key employees or may be unable to hire qualified employees, and the failure to maintain and improve our company culture may adversely affect our business.",
+                "page_numbers": [
+                    24
+                ],
+                "chunk_type": "text",
+                "text": "We rely on the continued service of our senior management, including our Co-Chief Executive Officers, Ted Sarandos and Greg Peters, our Executive Chairman, Reed Hastings, members of our executive team and other key employees and the hiring of new qualified employees. In our industry, there is substantial and continuous competition for highly-skilled business, product development, technical, creative and other personnel. If we experience high executive turnover, fail to adapt our business practices to industry expectations, fail to implement succession plans for key employees, encounter difficulties associated with the transition of members of our management team, are not successful in recruiting new personnel or in retaining and motivating existing personnel, in instilling our culture in new employees, or maintaining and improving our culture as we grow, our operations may be disrupted, which could adversely affect our results of operations."
+            },
+            {
+                "score": 0.5349422693252563,
+                "rrf_score": 0.02886002886002886,
+                "company": "Netflix",
+                "company_display": "Netflix",
+                "year": 2022,
+                "section_path": "Item 1. > HUMAN CAPITAL",
+                "page_numbers": [
+                    6,
+                    7
+                ],
+                "chunk_type": "text",
+                "text": "e publish an Inclusion report annually which further highlights our approach to diversity and inclusion, and publish our EEO-1 reports on our website. We believe in fostering great leaders. We offer programs, such as seminars and lectures, that help our leaders (officers, VPs and director-level employees) examine values that guide them personally, and as leaders, especially when those values come into tension with the world around us. The goal of these programs is to create great human beings, who become great leaders, who shape a great company. We also offer programs and workshops to provide skills and coaching to employees on a variety of topics, such as leading and inspiring teams. We believe this focus helps our employees grow as leaders and well-rounded individuals, and better positions Netflix to operate our global business of providing compelling content to entertain the world. We aim to generally pay our employees at the top of their personal market, and they generally are able to choose the form of their compensation between cash and stock options. This permits employee compensation to be highly personalized and reflective of each employee's individual needs and preferences. We conduct pay equity analyses at least annually, and have adopted practices to help ensure that employees from underrepresented groups are not being underpaid based on gender (globally) and race (U.S.) relative to others doing the same or similar work under comparable circumstances. We aim to rectify any pay gaps that we find through this analysis. We care about the health and well-being of our employees and their families and provide a variety of benefit programs based on region, including health benefits. In the U.S., employees generally receive an annual cash health benefit allowance that they may allocate to medical, dental and vision premiums in a way that makes sense for them. Employees have access to a host of other benefits, including mental health, childcare, family planning and a company match for charitable donations. We believe that our approach to human capital resources has been instrumental in our growth, and has made Netflix a desirable destination for employees."
+            }
+        ]
+    },
+    {
+        "n": 13,
+        "category": "Paragraph: employees, customers, competition",
+        "question": "Who are ServiceNow's main competitors?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6398332715034485,
+                "rrf_score": 0.036455896405153385,
+                "company": "ServiceNow",
+                "company_display": "ServiceNow",
+                "year": 2025,
+                "section_path": "Competition",
+                "page_numbers": [
+                    21
+                ],
+                "chunk_type": "text",
+                "text": "We operate in a highly competitive and rapidly evolving market characterized by fragmentation, low barriers to entry, shifting customer needs and frequent introductions of new products and services. As our business expands and the industries in which we operate continue to evolve, we compete with a broad range of solutions and alternative approaches, including: For additional information about competition, see \"Risk Factors-A failure to innovate and adapt how we offer our products in response to rapidly evolving technological changes and in the midst of an intensely competitive market may harm our competitive position and business prospects.\"\nenterprise application software vendors, both cloud-based and on-premises, such as Microsoft, Oracle, SAP, Salesforce and Workday; new technologies and entrants, including point-solutions and platform solutions, particularly those related to AI; custom-developed and in-house solutions; technology consulting firms; systems integrators; and software resellers."
+            },
+            {
+                "score": 0.6039354801177979,
+                "rrf_score": 0.03592841498811186,
+                "company": "ServiceNow",
+                "company_display": "ServiceNow",
+                "year": 2025,
+                "section_path": "Risks Related to Our Ability to Grow Our Business > A failure to innovate and adapt how we offer our products in response to rapidly evolving technological changes and in the midst of an intensely competitive market may harm our competitive position and business prospects.",
+                "page_numbers": [
+                    27
+                ],
+                "chunk_type": "text",
+                "text": "We compete in markets that evolve rapidly. The pace of innovation will continue to accelerate as customers recognize the advantages of acquiring leading digital technologies and adopting AI native solutions and modern cloud-based infrastructure. Cutting-edge capabilities such as AI, machine learning, hyper automation, low-code/no-code application development, system observability and predictive insights become increasingly relevant to the customer's evolving needs. With this rapid evolution, we are increasingly competing with alternative solutions and approaches to solve customer needs, and we expect additional competition as we shift our products and services to compete with providers in new and adjacent markets. Competitors, regardless of their size, may be able to respond more quickly and effectively to new or changing opportunities, technologies, standards, customer requirements and buying practices. They may introduce new technology, solve similar problems in different ways or more effectively utilize existing technology that reduces demand for our services. They may utilize acquisitions, integrations or consolidations to offer integrated or bundled products, enhanced functionality or other advantages. Some of our existing competitors and potential competitors are larger and have greater name recognition, the ability to more efficiently scale their business, more established operations and customer relationships and greater financial and technical resources than we do. \"Systems of record\" operators may attempt to create technology solutions or other mechanisms that would prevent our systems from integrating with theirs. They may create pricing pressures by reducing the price of competing products, services or subscriptions or bundling their offerings, causing our offerings to appear relatively more expensive. Companies whose products are integrated with our Platform could also seek to compete with us by blocking, limiting or imposing fees on particular integrations or data access. Cloud-based and AI native vendors may build more business applications or AI powered automation solutions that compete ..."
+            },
+            {
+                "score": 0.7116527557373047,
+                "rrf_score": 0.030798389007344232,
+                "company": "ServiceNow",
+                "company_display": "ServiceNow",
+                "year": 2020,
+                "section_path": "ITEM 1. > Competition",
+                "page_numbers": [
+                    13
+                ],
+                "chunk_type": "text",
+                "text": "We compete in markets that are rapidly evolving and highly competitive, with relatively low barriers to entry. As these markets continue to mature and new technologies and competitors enter such markets, we expect competition to intensify. Our current competitors include: Many prospective customers have invested substantial personnel and financial resources to implement and integrate their current enterprise software into their businesses and therefore may be reluctant or unwilling to migrate away from their current solution to ours. Accordingly, we compete with both cloud-based and traditional, enterprise-application, software vendors. Our competitors vary in size and in the breadth and scope of the products and services they offer. As we continue to expand the breadth of our services to include offerings in new markets and verticals, we expect increasing competition from platform and application development vendors focused on these markets and verticals. Various factors influence purchase decisions in our industry, including total cost of ownership, customer experience, level of customer satisfaction, breadth and depth of product functionality, security, adherence to industry standards, brand awareness, flexibility, performance, relevance and traction. We believe that we compete favorably with our competitors on each of these factors. However, many of our competitors have substantially greater financial, technical and other resources. They may be able to respond more quickly and effectively than we can to new or changing opportunities, technologies, standards, customer requirements and buying practices. An existing competitor or potential competitor could introduce new technology, or more effectively utilize existing technology, that reduces demand for our services. Acquisitions, integrations and consolidation by and among other companies in our industry may allow potential competitors to offer integrated or bundled products, enhanced functionality, or other advantages, which may impact our competitive position."
+            }
+        ]
+    },
+    {
+        "n": 14,
+        "category": "Paragraph: employees, customers, competition",
+        "question": "How does Amazon describe its competition in 2020?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.730628490447998,
+                "rrf_score": 0.03252247488101534,
+                "company": "Amazon",
+                "company_display": "Amazon",
+                "year": 2020,
+                "section_path": "Item 1. > Competition",
+                "page_numbers": [
+                    5
+                ],
+                "chunk_type": "text",
+                "text": "es that sell grocery products online and in physical stores; and (9) companies that provide advertising services, whether in digital or other formats. We believe that the principal competitive factors in our retail businesses include selection, price, and convenience, including fast and reliable fulfillment. Additional competitive factors for our seller and enterprise services include the quality, speed, and reliability of our services and tools, as well as customers' ability and willingness to change business practices. Some of our current and potential competitors have greater resources, longer histories, more customers, greater brand recognition, and greater control over inputs critical to our various businesses. They may secure better terms from suppliers, adopt more aggressive pricing, pursue restrictive distribution agreements that restrict our access to supply, direct consumers to their own offerings instead of ours, lock-in potential customers with restrictive terms, and devote more resources to technology, infrastructure, fulfillment, and marketing. The Internet facilitates competitive entry and comparison shopping, which enhances the ability of new, smaller, or lesser-known businesses to compete against us. Each of our businesses is also subject to rapid change and the development of new business models and the entry of new and well-funded competitors. Other companies also may enter into business combinations or alliances that strengthen their competitive positions."
+            },
+            {
+                "score": 0.6831743717193604,
+                "rrf_score": 0.032266458495966696,
+                "company": "Amazon",
+                "company_display": "Amazon",
+                "year": 2020,
+                "section_path": "Item 1. > Competition",
+                "page_numbers": [
+                    5
+                ],
+                "chunk_type": "text",
+                "text": "Our businesses encompass a large variety of product types, service offerings, and delivery channels. The worldwide marketplace in which we compete is evolving rapidly and intensely competitive, and we face a broad array of competitors from many different industry sectors around the world. Our current and potential competitors include: (1) physical, e-commerce, and omnichannel retailers, publishers, vendors, distributors, manufacturers, and producers of the products we offer and sell to consumers and businesses; (2) publishers, producers, and distributors of physical, digital, and interactive media of all types and all distribution channels; (3) web search engines, comparison shopping websites, social networks, web portals, and other online and app-based means of discovering, using, or acquiring goods and services, either directly or in collaboration with other retailers; (4) companies that provide e-commerce services, including website development and hosting, omnichannel sales, inventory and supply chain management, advertising, fulfillment, customer service, and payment processing; (5) companies that provide fulfillment and logistics services for themselves or for third parties, whether online or offline; (6) companies that provide information technology services or products, including on-premises or cloud-based infrastructure and other services; (7) companies that design, manufacture, market, or sell consumer electronics, telecommunication, and electronic devices; (8) companies that sell grocery products online and in physical stores; and (9) companies that provide advertising services, whether in digital or other formats."
+            },
+            {
+                "score": 0.6782740354537964,
+                "rrf_score": 0.03125763125763126,
+                "company": "Amazon",
+                "company_display": "Amazon",
+                "year": 2020,
+                "section_path": "Risk Factors > We Face Intense Competition",
+                "page_numbers": [
+                    7
+                ],
+                "chunk_type": "text",
+                "text": "Our businesses are rapidly evolving and intensely competitive, and we have many competitors across geographies, including cross-border competition, and in different industries, including physical, e-commerce, and omnichannel retail, e-commerce services, web and infrastructure computing services, electronic devices, digital content, advertising, grocery, and transportation and logistics services. Some of our current and potential competitors have greater resources, longer histories, more customers, and/or greater brand recognition, particularly with our newly-launched products and services and in our newer geographic regions. They may secure better terms from vendors, adopt more aggressive pricing, and devote more resources to technology, infrastructure, fulfillment, and marketing. Competition continues to intensify, including with the development of new business models and the entry of new and well- funded competitors, and as our competitors enter into business combinations or alliances and established companies in other market segments expand to become competitive with our business. In addition, new and enhanced technologies, including search, web and infrastructure computing services, digital content, and electronic devices continue to increase our competition. The Internet facilitates competitive entry and comparison shopping, which enhances the ability of new, smaller, or lesser known businesses to compete against us. As a result of competition, our product and service offerings may not be successful, we may fail to gain or may lose business, and we may be required to increase our spending or lower prices, any of which could materially reduce our sales and profits."
+            }
+        ]
+    },
+    {
+        "n": 15,
+        "category": "Paragraph: employees, customers, competition",
+        "question": "How does Starbucks describe the sourcing of its coffee in fiscal 2021?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6723785400390625,
+                "rrf_score": 0.031099324975891997,
+                "company": "Starbucks",
+                "company_display": "Starbucks",
+                "year": 2021,
+                "section_path": "Item 1. Business > Product Supply",
+                "page_numbers": [
+                    15
+                ],
+                "chunk_type": "text",
+                "text": "Starbucks is committed to selling the finest whole bean coffees and coffee beverages. To help ensure compliance with our rigorous coffee standards, we generally control substantially all coffee purchasing, roasting and packaging and the global distribution of coffee used in our operations. Nestlé controls distribution of certain finished goods through the Global Coffee Alliance. We purchase green coffee beans from multiple coffee-producing regions around the world and custom roast them to our exacting standards for our many blends and single origin coffees. The price of coffee is subject to significant volatility. Although most coffee trades in the commodity market, high-altitude arabica coffee of the quality sought by Starbucks tends to trade on a negotiated basis at a premium above the \"C\" coffee commodity price. Both the premium and the commodity price depend upon the supply and demand at the time of purchase. Supply and price can be affected by multiple factors in the producing countries, including weather, water supply quality and availability throughout the coffee production chain, natural disasters, crop disease and pests, general increase in farm inputs and costs of production, inventory levels and political and economic conditions. Climate change may further exacerbate many of these factors. Price is also impacted by trading activities in the arabica coffee futures market, including hedge funds and commodity index funds. In addition, green coffee prices have been affected in the past, and may be affected in the future, by the actions of certain organizations and associations that have historically attempted to influence prices of green coffee through agreements establishing export quotas or by restricting coffee supplies. We buy coffee using fixed-price and price-to-be-fixed purchase commitments, depending on market conditions, to secure an adequate supply of quality green coffee."
+            },
+            {
+                "score": 0.626166045665741,
+                "rrf_score": 0.030679156908665108,
+                "company": "Starbucks",
+                "company_display": "Starbucks",
+                "year": 2021,
+                "section_path": "Item 1. Business > Planet-Positive",
+                "page_numbers": [
+                    6
+                ],
+                "chunk_type": "text",
+                "text": "Our planet-positive vision is to give back more than we take from the planet. This includes reducing our environmental impacts, such as expanding reusable packaging, conserving water, shifting to renewable energy and eliminating landfill waste, and committing to the sustainability of high-quality coffee and other raw materials. Sustainability of our raw materials, especially coffee, is paramount to our business operations. We are committed to ethically sourcing coffee, tea and cocoa, donating disease- resistant coffee trees to farmers, providing farmers access to low-interest loans and sharing the expertise of our agronomists with all coffee farmers, among other things."
+            },
+            {
+                "score": 0.6275851726531982,
+                "rrf_score": 0.03057889822595705,
+                "company": "Starbucks",
+                "company_display": "Starbucks",
+                "year": 2021,
+                "section_path": "Item 1A. Risk Factors > Risks Related to Labor and Supply Chain > - Interruption of our supply chain could affect our ability to produce or deliver our products and could negatively impact our business and profitability.",
+                "page_numbers": [
+                    29
+                ],
+                "chunk_type": "text",
+                "text": "Any material interruption in our supply chain, such as material interruption of roasted coffee supply due to the casualty loss of any of our roasting plants, interruptions in service by our third-party logistic service providers or common carriers that ship goods within our distribution channels, trade restrictions, such as increased tariffs or quotas, embargoes or customs restrictions, pandemics, social or labor unrest, labor shortages, natural disasters or political disputes and military conflicts that cause a material disruption in our supply chain could have a negative material impact on our business and our profitability. Additionally, our food, beverage and other products are sourced from a wide variety of domestic and international business partners in our supply chain operations, and in certain cases are produced or sourced by our licensees directly. We rely on these suppliers to provide high quality products and to comply with applicable laws. Our ability to find qualified suppliers who meet our standards and supply products in a timely and efficient manner is a significant challenge as we increase our fresh and prepared food offerings, especially with respect to goods sourced from outside the U.S. and from countries or regions with diminished infrastructure, developing or failing economies or which are experiencing political instability or social unrest. For certain products, we may rely on one or very few suppliers. A supplier's failure to meet our standards, provide products in a timely and efficient manner, or comply with applicable laws is beyond our control. These issues could have a material negative impact on our business and profitability."
+            }
+        ]
+    },
+    {
+        "n": 16,
+        "category": "Paragraph: employees, customers, competition",
+        "question": "How does Workday describe its customers in fiscal 2022?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.5771472454071045,
+                "rrf_score": 0.02964254577157803,
+                "company": "Workday",
+                "company_display": "Workday",
+                "year": 2022,
+                "section_path": "ITEM 8. CONSOLIDATED FINANCIAL STATEMENTS AND SUPPLEMENTARY DATA > Report of Independent Registered Public Accounting Firm > Critical Audit Matter",
+                "page_numbers": [
+                    55,
+                    56
+                ],
+                "chunk_type": "text",
+                "text": "The critical audit matter communicated below is a matter arising from the current period audit of the financial statements that was communicated or required to be communicated to the audit committee and that: (1) relates to accounts or disclosures that are material to the financial statements and (2) involved our especially challenging, subjective or complex judgments. The communication of the critical audit matter does not alter in any way our opinion on the consolidated financial statements, taken as a whole, and we are not, by communicating the critical audit matter below, providing a separate opinion on the critical audit matter or on the account or disclosure to which it relates. Description of the Matter As described in Note 2 to the consolidated financial statements, the Company recognizes revenue primarily from subscription services and professional services contracts. Some of the Company's contracts contain multiple performance obligations. For these contracts, the Company assesses the performance obligations and accounts for those obligations separately if they are distinct. In such cases, the transaction price is allocated to the distinct performance obligations on a relative standalone selling price basis. Auditing the Company's determination of distinct performance obligations and the allocation of the transaction price to these performance obligations was challenging. For example, there were nonstandard terms and conditions that required judgment to determine the distinct performance obligations and relative standalone selling prices were accounted for appropriately. How We Addressed the Matter in Our Audit We obtained an understanding, evaluated the design and tested the operating effectiveness of controls over the Company's process to identify distinct performance obligations and allocate the transaction price to those performance obligations, including the underlying assumptions related to the relative standalone selling price. Among other audit procedures, we selected a sample of contracts and evaluated whether management appropriately identified and considered the terms and conditions and the appropriate revenue recognition. As part of our procedures, we evaluated the assessment of distinct performance obligations and the accuracy and completeness of the underlying data used in management's determination of the relative standalone selling prices. /s/ Ernst & Young LLP We have served as the Company's auditor since 2008. San Francisco, California February 28, 2022"
+            },
+            {
+                "score": 0.6192654967308044,
+                "rrf_score": 0.028949545078577336,
+                "company": "Workday",
+                "company_display": "Workday",
+                "year": 2022,
+                "section_path": "ITEM 1. BUSINESS > Competition",
+                "page_numbers": [
+                    9
+                ],
+                "chunk_type": "text",
+                "text": "d Coupa Software Inc. In addition, other cloud companies that provide services in different markets may develop applications or acquire companies that operate in our target markets, and some potential customers may elect to develop their own internal applications. However, the domain and industry expertise that is required for a successful solution in the areas of financial management, HCM, and analytics may inhibit new entrants that are unable to invest the necessary capital to accurately address global requirements and regulations. We expect continued consolidation in our industry that could lead to significantly increased competition. We believe that we compete favorably based on these factors. Our ability to remain competitive will largely depend on our ongoing performance in product development and customer support. For more information regarding the competitive risks we face, see \"Risk Factors\" included in Part I, Item 1A of this report.\nWe believe the principal competitive factors in our markets include: level of customer satisfaction and quality of customer references; speed to deploy and ease of use; breadth and depth of application functionality; total cost of ownership; brand awareness and reputation; adaptive technology platform; capability for configuration, integration, security, scalability, and reliability of applications; operational excellence to ensure system availability, scalability, and performance; ability to innovate and rapidly respond to customer needs; domain and industry expertise in applicable laws and regulations; size of customer base and level of user adoption; customer confidence in financial stability and future viability; and ability to integrate with legacy enterprise infrastructure and third-party applications."
+            },
+            {
+                "score": 0.6285521984100342,
+                "rrf_score": 0.028021349599695006,
+                "company": "Workday",
+                "company_display": "Workday",
+                "year": 2022,
+                "section_path": "ITEM 1. BUSINESS > Customers",
+                "page_numbers": [
+                    8
+                ],
+                "chunk_type": "text",
+                "text": "We primarily sell to medium-sized and large, global organizations that span numerous industry categories, including professional and business services, financial services, healthcare, education, government, technology, media, retail, and hospitality. We have built a company culture centered around customer success and satisfaction. As part of their subscription, customers are provided support services and tools to enhance their experience with Workday applications. This includes 24/7 support; training; a Customer Success Management group to assist customers in production; and Workday Community, an online portal where customers can collaborate and share knowledge and best practices. Additionally, we offer extensive customer training opportunities and a professional services ecosystem of experienced Workday consultants and system integrators to help customers not only achieve a timely adoption of Workday but continue to get value out of our applications over the life of their subscription."
+            }
+        ]
+    },
+    {
+        "n": 17,
+        "category": "Paragraph: employees, customers, competition",
+        "question": "Tell me the Balance in December of 2019 of Caterpillar.",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6313962340354919,
+                "rrf_score": 0.026515151515151516,
+                "company": "Caterpillar",
+                "company_display": "Caterpillar",
+                "year": 2019,
+                "section_path": "Item 8. Financial Statements and Supplementary Data. > 7. Cat Financial Financing Activities > Impaired finance receivables",
+                "page_numbers": [
+                    124
+                ],
+                "chunk_type": "table",
+                "text": "The following table shows Impaired finance receivables data for Caterpillar 2019:\nColumns: (Millions of dollars) Recorded Investment, December 31, 2019 Principal, Principal Unpaid Balance, Unpaid Related Allowance, Related Recorded Investment, December 31, 2018 Principal, Principal Unpaid Balance (col 7), Unpaid Related Allowance (col 8)\nImpaired Finance Receivables With No North America -- December 31, 2019 Principal: 6, Unpaid Related Allowance: 6, Related Recorded Investment: -, December 31, 2018 Principal: 10, Principal Unpaid Balance (col 7): 10, Unpaid Related Allowance (col 8): -\nEAME -- December 31, 2019 Principal: -, Principal Unpaid Balance: -, Unpaid Related Allowance: -, December 31, 2018 Principal: 1, Principal Unpaid Balance (col 7): 1, Unpaid Related Allowance (col 8): -\nAsia Pacific -- December 31, 2019 Principal: -, Principal Unpaid Balance: -, Unpaid Related Allowance: -, December 31, 2018 Principal: -, Principal Unpaid Balance (col 7): -, Unpaid Related Allowance (col 8): -\nMining -- December 31, 2019 Principal: 22, Principal Unpaid Balance: 22, Unpaid Related Allowance: -, December 31, 2018 Principal: 33, Principal Unpaid Balance (col 7): 33, Unpaid Related Allowance (col 8): -\nLatin America -- December 31, 2019 Principal: 8, Unpaid Related Allowance: 8, Related Recorded Investment: -, December 31, 2018 Principal: 29, Principal Unpaid Balance (col 7): 29, Unpaid Related Allowance (col 8): -\nCaterpillar Power Finance -- December 31, 2019 Principal: 58, Principal Unpaid Balance: 58, Unpaid Related Allowance: -, December 31, 2018 Principal: 69, Principal Unpaid Balance (col 7): 83, Unpaid Related Allowance (col 8): -\nTotal -- December 31, 2019 Principal: 94, Principal Unpaid Balance: 94, Unpaid Related Allowance: -, December 31, 2018 Principal: 142, Principal Unpaid Balance (col 7): 156, Unpaid Related Allowance (col 8): -\nNorth America -- December 31, 2019 Principal: 30, Principal Unpaid Balance: 30, Related Recorded Investment: 11, December 31, 2018 Principal: 40, Principal Unpaid Balance (col 7): 41, Unpaid Related Allowance (col 8): 14\nEAME -- December 31, 2019 Principal: 61, Principal Unpaid Balance: 61, Unpaid Related Allowance: 29, December 31, 2018 Principal: 92, Principal Unpaid Balance (col 7): 92, Unpaid Related Allowance (col 8): 57\nAsia Pacific -- December 31, 2019 Principal: 8, Unpaid Related Allowance: 8, Related Recorded Investment: 2, December 31, 2018 Principal: 4, Unpaid Related Allowance (col 8): 4\nMining -- December 31, 2019 Principal: 37, Principal Unpaid Balance: 36, Related Recorded Investment: 9, December 31, 2018 Principal: 56, Principal Unpaid Balance (col 7): 55, Unpaid Related Allowance (col 8): 26\nLatin America -- December 31, 2019 Principal: 58, Principal Unpaid Balance: 58, Unpaid Related Allowance: 20, December 31, 2018 Principal: 75, Principal Unpaid Balance (col 7): 75, Unpaid Related Allowance (col 8): 25\nCaterpillar Power Finance -- December 31, 2019 Principal: 306, Principal Unpaid Balance: 319, Unpaid Related Allowance: 107, December 31, 2018 Principal: 449, Principal Unpaid Balance (col 7): 455, Unpaid Related Allowance (col 8): 164\nTotal -- December 31, 2019 Principal: 500, Principal Unpaid Balance: 512, Unpaid Related Allowance: 178, December 31, 2018 Principal: 716, Principal Unpaid Balance (col 7): 722, Unpaid Related Allowance (col 8): 288\nNorth America -- December 31, 2019 Principal: 36, Principal Unpaid Balance: 36, Related Recorded Investment: 11, December 31, 2018 Principal: 50, Principal Unpaid Balance (col 7): 51, Unpaid Related Allowance (col 8): 14\nEAME -- December 31, 2019 Principal: 61, Principal Unpaid Balance: 61, Unpaid Related Allowance: 29, December 31, 2018 Principal: 93, Principal Unpaid Balance (col 7): 93, Unpaid Related Allowance (col 8): 57\nAsia Pacific -- December 31, 2019 Principal: 8, Unpaid Related Allowance: 8, Related Recorded Investment: 2, December 31, 2018 Principal: 4, Unpaid Related Allowance (col 8): 4\nMining -- December 31, 2019 Principal: 59, Principal Unpaid Balance: 58, Related Recorded Investment: 9, December 31, 2018 Principal: 89, Principal Unpaid Balance (col 7): 88, Unpaid Related Allowance (col 8): 26\nLatin America -- December 31, 2019 Principal: 66, Principal Unpaid Balance: 66, Unpaid Related Allowance: 20, December 31, 2018 Principal: 104, Principal Unpaid Balance (col 7): 104, Unpaid Related Allowance (col 8): 25\nCaterpillar Power Finance -- December 31, 2019 Principal: 364, Principal Unpaid Balance: 377, Unpaid Related Allowance: 107, December 31, 2018 Principal: 518, Principal Unpaid Balance (col 7): 538, Unpaid Related Allowance (col 8): 164\nTotal -- December 31, 2019 Principal: 594, Principal Unpaid Balance: 606, Unpaid Related Allowance: 178, December 31, 2018 Principal: 858, Principal Unpaid Balance (col 7): 878, Unpaid Related Allowance (col 8): 288"
+            },
+            {
+                "score": 0.6006708145141602,
+                "rrf_score": 0.02558175373709354,
+                "company": "Caterpillar",
+                "company_display": "Caterpillar",
+                "year": 2019,
+                "section_path": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations. > Twelves Months Ended",
+                "page_numbers": [
+                    76
+                ],
+                "chunk_type": "table",
+                "text": "The following table shows Twelves Months Ended data for Caterpillar 2019:\nColumns: 2019, 2018\nME&T net cash provided by operating activities 1 -- 2019: 4,871, 2018: 6,347\nME&T discretionary pension contributions -- 2019: 1,500, 2018: 1,000\nME&T capital expenditures -- 2019: (1,074), 2018: (1,221)\nME&T free cash flow -- 2019: 5,297, 2018: 6,126\n1 See reconciliation of ME&T net cash provided by operating activities to consolidated net cash provided by operating activities on page 63."
+            },
+            {
+                "score": 0.6242295503616333,
+                "rrf_score": 0.025278219395866455,
+                "company": "Caterpillar",
+                "company_display": "Caterpillar",
+                "year": 2019,
+                "section_path": "Item 8. Financial Statements and Supplementary Data. > 1. Operations and summary of significant accounting policies > Adoption of new accounting standards",
+                "page_numbers": [
+                    98
+                ],
+                "chunk_type": "table",
+                "text": "ent of cash flows. We adopted the new guidance effective January 1, 2019, and the adoption did not have a material impact to our financial statements. See Note 20 for additional information. The cumulative effect of initially applying the new lease guidance to our consolidated financial statements on January 1, 2019\nThe following table shows Adoption of new accounting standards data for Caterpillar 2019:\nColumns: December 31, Balance as of 2018, Lease Guidance Adopting New Impact from Cumulative, January 1, 2019 Balance as of\nPrepaid expenses and other current assets -- December 31, Balance as of 2018: 1,765, Lease Guidance Adopting New Impact from Cumulative: (17), January 1, 2019 Balance as of: 1,748\nProperty, plant and equipment - net -- December 31, Balance as of 2018: 13,574, Lease Guidance Adopting New Impact from Cumulative: (26), January 1, 2019 Balance as of: 13,548\nNoncurrent deferred and refundable income taxes -- December 31, Balance as of 2018: 1,439, Lease Guidance Adopting New Impact from Cumulative: (77), January 1, 2019 Balance as of: 1,362\nOther assets -- December 31, Balance as of 2018: 2,332, Lease Guidance Adopting New Impact from Cumulative: 713, January 1, 2019 Balance as of: 3,045\nLiabilities\nAccrued expenses -- December 31, Balance as of 2018: 3,573, Lease Guidance Adopting New Impact from Cumulative: (27), January 1, 2019 Balance as of: 3,546\nOther current liabilities -- December 31, Balance as of 2018: 1,919, Lease Guidance Adopting New Impact from Cumulative: 209, January 1, 2019 Balance as of: 2,128\nLong-term debt due after one year Machinery, Energy & Transportation -- December 31, Balance as of 2018: 8,005, Lease Guidance Adopting New Impact from Cumulative: (362), January 1, 2019 Balance as of: 7,643\nOther liabilities -- December 31, Balance as of 2018: 3,756, Lease Guidance Adopting New Impact from Cumulative: 538, January 1, 2019 Balance as of: 4,294\nProfit employed in the business -- December 31, Balance as of 2018: 30,427, Lease Guidance Adopting New Impact from Cumulative: 235, January 1, 2019 Balance as of: 30,662\n2017-08 Premium amortization on purchased callable debt securities\n2017-12 Derivatives and hedging - Targeted improvements\n2018-02 Reclassification of certain tax effects from accumulated other comprehensive income"
+            }
+        ]
+    },
+    {
+        "n": 18,
+        "category": "Paragraph: segments aur operations",
+        "question": "What are Nvidia's reportable segments in fiscal 2023?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.7014435529708862,
+                "rrf_score": 0.03252247488101534,
+                "company": "Nvidia",
+                "company_display": "Nvidia",
+                "year": 2023,
+                "section_path": "ITEM 15. EXHIBIT AND FINANCIAL STATEMENT SCHEDULES > Note 17 - Segment Information",
+                "page_numbers": [
+                    87,
+                    88
+                ],
+                "chunk_type": "text",
+                "text": "g; automotive platforms for infotainment systems; and Omniverse Enterprise software for building and operating metaverse and 3D internet applications. Operating results by segment include costs or expenses that are directly attributable to each segment, and costs or expenses that are leveraged across our unified architecture and therefore allocated between our two segments. The \"All Other\" category includes the expenses that our CODM does not assign to either Compute & Networking or Graphics for purposes of making operating decisions or assessing financial performance. The expenses include stock- based compensation expense, acquisition-related and other costs, corporate infrastructure and support costs, restructuring costs, acquisition termination cost, IP-related and legal settlement costs, contributions, and other non- recurring charges and benefits that our CODM deems to be enterprise in nature. Our CODM does not review any information regarding total assets on a reportable segment basis. Depreciation and amortization expense directly attributable to each reportable segment is included in operating results for each segment. However, the CODM does not evaluate depreciation and amortization expense by operating segment and, therefore, it is not separately presented. There is no intersegment revenue. The accounting policies for segment reporting are the same as for our consolidated financial statements. The table below presents details of our reportable segments and the \"All Other\" category.\nCompute & Networking | Graphics | All Other | Consolidated"
+            },
+            {
+                "score": 0.6475425958633423,
+                "rrf_score": 0.03252247488101534,
+                "company": "Nvidia",
+                "company_display": "Nvidia",
+                "year": 2023,
+                "section_path": "ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS > Revenue by Reportable Segments",
+                "page_numbers": [
+                    43
+                ],
+                "chunk_type": "table",
+                "text": "Compute & Networking - The year-on-year increase was led by growth from hyperscale customers and also reflects purchases made by several CSP partners to support multi-year cloud service agreements for our new NVIDIA AI cloud service offerings and our research and development activities. The increase was also related to the growth in Automotive. CMP contributed an insignificant amount in fiscal year 2023 compared to $550 million in fiscal year 2022. Graphics - The year-on-year decrease primarily reflects lower sell-in to partners to help reduce channel inventory levels as global macro-economic conditions and COVID-19 related disruptions in China weighed on gaming demand.\nThe following table shows Revenue by Reportable Segments data for Nvidia 2023:\nColumns: 2023, 2022\nCompute & Networking -- 2023: 15,068, 2022: 11,046\nGraphics -- 2023: 11,906, 2022: 15,868\nTotal -- 2023: 26,974, 2022: 26,914"
+            },
+            {
+                "score": 0.5741443037986755,
+                "rrf_score": 0.030303030303030304,
+                "company": "Nvidia",
+                "company_display": "Nvidia",
+                "year": 2023,
+                "section_path": "ITEM 15. EXHIBIT AND FINANCIAL STATEMENT SCHEDULES > Note 1 - Organization and Summary of Significant Accounting Policies > Product Sales Revenue",
+                "page_numbers": [
+                    63
+                ],
+                "chunk_type": "text",
+                "text": "ontrol of products to customers in an amount that reflects the consideration we expect to receive in exchange for those products. Certain products are sold with support or an extended warranty for the incorporated system, hardware, and/or software. Support and extended warranty revenue are recognized ratably over the service period, or as services are performed. Revenue is recognized net of allowances for returns, customer programs and any taxes collected from customers. For products sold with a right of return, we record a reduction to revenue by establishing a sales return allowance for estimated product returns at the time revenue is recognized, based primarily on historical return rates. However, if product returns for a fiscal period are anticipated to exceed historical return rates, we may determine that additional sales return allowances are required to properly reflect our estimated exposure for product returns. Our customer programs involve rebates, which are designed to serve as sales incentives to resellers of our products in various target markets, and marketing development funds, or MDFs, which represent monies paid to our partners that are earmarked for market segment development and are designed to support our partners' activities while also promoting NVIDIA products. We account for customer programs as a reduction to revenue and accrue for potential rebates and MDFs based on the amount we expect to be claimed by customers."
+            }
+        ]
+    },
+    {
+        "n": 19,
+        "category": "Paragraph: segments aur operations",
+        "question": "How is Carlisle organized into segments in 2021?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.5184512734413147,
+                "rrf_score": 0.02946236559139785,
+                "company": "Carlisle",
+                "company_display": "Carlisle",
+                "year": 2021,
+                "section_path": "Item 1A. Risk Factors. > Industry and Macroeconomic Risks > Several of the market segments that the Company serves are cyclical and sensitive to domestic and global economic conditions.",
+                "page_numbers": [
+                    15
+                ],
+                "chunk_type": "text",
+                "text": "Several of the market segments in which the Company sells its products are, to varying degrees, cyclical and may experience periodic downturns in demand. For example, the CCM segment is susceptible to downturns in the commercial construction industry, particularly in the construction repair and replacement sectors, the CIT segment is susceptible to downturns in the commercial aerospace industry and the CFT segment is susceptible to downturns in the automotive industry. Uncertainty regarding global economic conditions may have an adverse effect on the businesses, results of operations and financial condition of the Company and its customers, distributors and suppliers. Among the economic factors which may affect performance are: manufacturing activity, commercial and residential construction, passenger airline travel, difficulties entering new markets and general economic conditions such as inflation, deflation, interest rates and credit availability. These effects may, among other things, negatively impact the level of purchases, capital expenditures and creditworthiness of the Company's customers, distributors and suppliers, and therefore, the Company's results of operations, margins and orders. The Company cannot predict if, when or how much worldwide economic conditions will fluctuate. These conditions are highly unpredictable and beyond the Company's control. If these conditions deteriorate, however, the Company's business, financial condition, results of operations and cash flows could be adversely affected."
+            },
+            {
+                "score": 0.520469605922699,
+                "rrf_score": 0.027799227799227798,
+                "company": "Carlisle",
+                "company_display": "Carlisle",
+                "year": 2021,
+                "section_path": "Item 8. Financial Statements and Supplementary Data. > Note 1-Summary of Accounting Policies > Basis of Presentation",
+                "page_numbers": [
+                    55
+                ],
+                "chunk_type": "text",
+                "text": "The consolidated financial statements include the accounts of the Company and its subsidiaries. All material intercompany transactions and accounts have been eliminated. The Company has reclassified certain prior periods' amounts to conform with the current period presentation of the revenues by country tables in Note 2-Segment Information to present Middle East revenues combined with Asia, as opposed to the previous presentation combined with Africa, and to combine Canada and Mexico revenues into North America (excluding U.S.)."
+            },
+            {
+                "score": 0.586990237236023,
+                "rrf_score": 0.026702720973466286,
+                "company": "Carlisle",
+                "company_display": "Carlisle",
+                "year": 2021,
+                "section_path": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations. > Other Operating (Income) Expense, net > Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations. > Operating Income",
+                "page_numbers": [
+                    25,
+                    26
+                ],
+                "chunk_type": "text",
+                "text": "Other operating (income) expense, net Refer to Segment Results of Operations within this MD&A for further information related to segment operating income results."
+            }
+        ]
+    },
+    {
+        "n": 20,
+        "category": "Paragraph: segments aur operations",
+        "question": "What does Watts Water say about raw materials in 2020?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6847309470176697,
+                "rrf_score": 0.03252247488101534,
+                "company": "WATTS WATER TECHNOLOGIES",
+                "company_display": "Watts Water Technologies",
+                "year": 2020,
+                "section_path": "Item 1. BUSINESS. > Purchased Raw Materials and Components",
+                "page_numbers": [
+                    9
+                ],
+                "chunk_type": "text",
+                "text": "le to predict whether component costs or commodity costs, including copper and stainless steel, will significantly increase or decrease in the future. If component costs or commodity costs increase in the future and we are not able to reduce or eliminate the effect of the cost increases by reducing production costs or implementing price increases, our profit margins could decrease. If component costs or commodity costs were to decline, we may experience pressure from customers to reduce our selling prices. The timing of any price reductions and decreases in commodity costs may not align. As a result, our margins could be affected. With limited exceptions, we have multiple suppliers for our components and raw materials. We believe our relationships with our key suppliers are good and that an interruption in supply from any one supplier would not materially affect our ability to meet our immediate demands while another supplier is qualified. We regularly review our suppliers to evaluate their strengths. If a supplier is unable to meet our demands, we believe that in most cases our inventory of components and raw materials will allow for sufficient time to identify and obtain the necessary commodities and other raw materials from an alternate source. We believe that the nature of the components and raw materials used in our business are such that multiple sources are generally available in the market. However, our current and alternative suppliers are largely concentrated in China. The occurrence of natural disasters, public health crises such as pandemics or epidemics, political crises such as war, terrorism or political instability, or other events that result in widespread business or supply chain disruptions in China could have a material adverse effect on our ability to obtain necessary components and raw materials and our business and operating results could suffer."
+            },
+            {
+                "score": 0.7040023803710938,
+                "rrf_score": 0.032018442622950824,
+                "company": "WATTS WATER TECHNOLOGIES",
+                "company_display": "Watts Water Technologies",
+                "year": 2020,
+                "section_path": "Item 1. BUSINESS. > Purchased Raw Materials and Components",
+                "page_numbers": [
+                    9
+                ],
+                "chunk_type": "text",
+                "text": "Our products are made using various purchased components and raw materials, including primarily bronze, brass, cast iron, stainless steel, steel, and plastic. Substantially all of the raw materials we require to manufacture our products are purchased from outside sources. The commodity markets have experienced volatility over the past several years, particularly with respect to copper and stainless steel. Tariffs impact the total cost of our products and the components and raw materials that go into manufacturing them. Increased tariff costs could adversely impact the gross margin we earn on our products. Because we internationally source a significant amount of raw materials and components, several months of raw materials and work in process are moving through our supply chain at any point in time. We are not able to predict whether component costs or commodity costs, including copper and stainless steel, will significantly increase or decrease in the future."
+            },
+            {
+                "score": 0.6651421785354614,
+                "rrf_score": 0.03200204813108039,
+                "company": "WATTS WATER TECHNOLOGIES",
+                "company_display": "Watts Water Technologies",
+                "year": 2020,
+                "section_path": "Item 1. BUSINESS. > (3) Member of the Nominating and Corporate Governance Committee > Company Risk Factors",
+                "page_numbers": [
+                    26
+                ],
+                "chunk_type": "text",
+                "text": "Changes in the costs of raw materials and purchased components, including imposition of or changes in tariff rates, could reduce our profit margins. Reductions or interruptions in the supply of raw materials, components or finished goods from international sources could adversely affect our ability to meet our customer delivery commitments. Our products are made using various purchased components and raw materials, including primarily bronze, brass, cast iron, stainless steel, steel and plastic. Substantially all of the raw materials we require to manufacture our products are purchased from outside sources. The costs of raw materials and components may be subject to change due to, among other things, interruptions in production by suppliers, changes in exchange rates, imposition of or changes in tariff rates, and worldwide price and demand levels. We typically do not enter into long-term supply agreements. Our inability to obtain supplies of raw materials and purchased components for our products at favorable costs could have a material adverse effect on our business, financial condition or results of operations by decreasing our profit margins. Commodity prices, particularly copper and stainless-steel prices, have experienced tremendous volatility over the past several years. Should commodity costs or purchased component costs increase substantially, we may not be able to recover such costs, through selling price increases to our customers or other product cost reductions, which would have a negative effect on our financial results. If commodity costs or purchased component costs decline, we may experience pressure from customers to reduce our selling prices. Additionally, we continue to purchase components and finished goods from international sources. In limited cases, these components or finished goods are single-sourced. The availability of components and finished goods from international sources could be adversely impacted by, among other things, interruptions in production by suppliers including due to pandemics or other public health crises, suppliers' allocations to other purchasers and new laws, tariffs or regulations."
+            }
+        ]
+    },
+    {
+        "n": 21,
+        "category": "Paragraph: segments aur operations",
+        "question": "How did COVID-19 affect Parker Hannifin's business in fiscal 2021?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.7810338735580444,
+                "rrf_score": 0.032266458495966696,
+                "company": "Parker Hannifin",
+                "company_display": "Parker Hannifin",
+                "year": 2021,
+                "section_path": "ITEM 1A. Risk Factors. > Business and Operational Risks > Changes in the demand for and supply of our products may adversely affect our financial results, financial condition and cash flow.",
+                "page_numbers": [
+                    17
+                ],
+                "chunk_type": "text",
+                "text": "Demand for and supply of our products has been and may be adversely affected by numerous factors, some of which we cannot changes in business relationships with and purchases by or from major customers, suppliers or distributors, including delays or cancellations in shipments, disputes regarding contract terms or significant changes in financial condition, and changes in contract cost and revenue estimates for new development programs, including changes as a result of the COVID-19 pandemic; declines in the general level of industrial production, including as a result of the COVID-19 pandemic; If any of these factors occur, the demand for and supply of our products could suffer, which could materially adversely affect the Company's results of operations.\npredict or control. Such factors include: changes in product mix; changes in the market acceptance of our products; increased competition in the markets we serve; weakness in the end-markets we serve, including as a result of the COVID-19 pandemic; fluctuations in the availability or the prices of raw materials; and fluctuations in currency exchange rates."
+            },
+            {
+                "score": 0.8288319110870361,
+                "rrf_score": 0.03225806451612903,
+                "company": "Parker Hannifin",
+                "company_display": "Parker Hannifin",
+                "year": 2021,
+                "section_path": "ITEM 1A. Risk Factors. > Business and Operational Risks > The novel coronavirus (\"COVID-19\") pandemic has disrupted our operations and could have a material adverse effect on our business and financial condition.",
+                "page_numbers": [
+                    15
+                ],
+                "chunk_type": "text",
+                "text": "The COVID-19 pandemic, along with the response to the pandemic by governmental and other actors, has disrupted our operations and is expected to continue to negatively impact our operations in the future, which impact may be material. We have experienced, and may continue to experience, mandatory and voluntary facility closures in certain jurisdictions in which we operate. Furthermore, several of our customers temporarily suspended their operations and we have experienced less demand for our products. Disruptions to our customers in the aerospace industry, which is facing diminished demand, have been and may continue to be challenging. Additionally, the COVID-19 outbreak has, and could further, disrupt our supply chain. Facility closures or other restrictions, as well as supply chain disruptions, could materially adversely affect our ability to adequately staff, supply or otherwise maintain our operations. Moreover, because certain of our employees continue to work from home, we may be subject to increased vulnerability to cyber and other information technology risks. We have modified, and may further modify, our business practices in response to the risks and negative impacts associated with the COVID-19 pandemic. However, there can be no assurance that these measures will be temporary or successful. The impact of the COVID-19 pandemic continues to evolve and its ultimate duration, severity and disruption to our business, customers and supply chain, and the related financial impact to us, cannot be accurately forecasted at this time. Should such disruption continue for an extended period, the adverse effect on our business, results of operations and financial condition could be more severe than previously anticipated. Additionally, weak economic conditions generally as a result of the COVID-19 pandemic could result in impairment in value of our tangible or intangible assets. Furthermore, future public health crises are possible and could involve some or all of the risks discussed above."
+            },
+            {
+                "score": 0.766359806060791,
+                "rrf_score": 0.029709507042253523,
+                "company": "Parker Hannifin",
+                "company_display": "Parker Hannifin",
+                "year": 2021,
+                "section_path": "ITEM 7. Management's Discussion and Analysis of Financial Condition and Results of Operations. > Overview",
+                "page_numbers": [
+                    27,
+                    28
+                ],
+                "chunk_type": "text",
+                "text": "priced by the value they Enabling a sustainable future by providing innovative technology solutions that offer a positive, global environmental impact Our order rates provide a near-term perspective of the Company's outlook particularly when viewed in the context of prior and future order rates. The Company publishes its order rates on a quarterly basis. The lead time between the time an order is received and revenue is realized generally ranges from one day to 12 weeks for mobile and industrial orders and from one day to 18 months for aerospace orders. In March 2020, the World Health Organization declared the outbreak of COVID-19 a pandemic. We continue to monitor the impact of the COVID-19 pandemic, which has negatively impacted demand and continues to create economic uncertainty. Disruption within the aerospace industry, which is facing the consequences of travel restrictions and considerably lower demand, was significant and is expected to continue. The extent to which our business and results of operations will be impacted by the pandemic over the long term will depend on future developments that cannot be accurately predicted at this time. These developments include the availability, acceptance, distribution and effectiveness of vaccines; new information concerning the severity and spread of COVID-19 and its variants; and actions by government authorities to contain the pandemic or mitigate its economic, public health and other impacts. We continue to prioritize the safety of our team members. To minimize the spread of COVID-19 in our workplaces, we implemented rigorous prevention, screening and hygiene protocols. Additionally, we are strategically managing costs through reductions in discretionary spending. We continue to prioritize capital expenditures related to safety and strategic investments. At the same time, we are appropriately addressing the ongoing needs of our business so that we may continue to serve our customers. The discussion below is structured to separately discuss the financial statements presented in Part II, Item 8 of this Annual Report on Form 10-K. The term \"year\" and references to specific years refer to the applicable fiscal year. Discussion of the 2019 financial statements is included in Part II, Item 7 of the Company's 2020 Annual Report on Form 10-K."
+            }
+        ]
+    },
+    {
+        "n": 22,
+        "category": "Paragraph: segments aur operations",
+        "question": "What are Salesforce's main sources of revenue in fiscal 2022?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.7444219589233398,
+                "rrf_score": 0.03021353930031804,
+                "company": "SalesForce",
+                "company_display": "Salesforce",
+                "year": 2022,
+                "section_path": "ITEM 8. FINANCIAL STATEMENTS > 7. Business Combinations > Fiscal Year 2022",
+                "page_numbers": [
+                    91
+                ],
+                "chunk_type": "table",
+                "text": "The following table shows Fiscal Year 2022 data for SalesForce 2022:\nColumns: Fair Value, 2,360 3,690 300, Useful Life 5 years 8 years 6 years\nTotal intangible assets subject to amortization -- 2,360 3,690 300: 6,350\nThe following table shows Fiscal Year 2022 data for SalesForce 2022:\nTotal revenues | 592\nPretax loss | (1,105)\ninformation was as follows (in millions):\nThe following table shows Fiscal Year 2022 data for SalesForce 2022:\nColumns: 2022, 2021\nTotal revenues -- 2022: 26,932, 2021: 21,990\nPretax income -- 2022: 1,014, 2021: 546\nNet income -- 2022: 1,127, 2021: 2,589"
+            },
+            {
+                "score": 0.7194174528121948,
+                "rrf_score": 0.029236022193768675,
+                "company": "SalesForce",
+                "company_display": "Salesforce",
+                "year": 2022,
+                "section_path": "ITEM 8. FINANCIAL STATEMENTS > 2. Revenues > Disaggregation of Revenue > Total Revenue by Geographic Locations",
+                "page_numbers": [
+                    82
+                ],
+                "chunk_type": "text",
+                "text": "Revenues by geography are determined based on the region of the Company's contracting entity, which may be different than the region of the customer. Americas revenue attributed to the United States was approximately 94 percent during fiscal 2022, 95 percent during fiscal 2021, and 96 percent during fiscal 2020. No other country represented more than ten percent of total revenue during fiscal 2022, 2021 and 2020, respectively.\nThe following table shows Total Revenue by Geographic Locations data for SalesForce 2022:\nColumns: 2022, 2021, 2020\nAmericas -- 2022: 17,983, 2021: 14,736, 2020: 12,051\nEurope -- 2022: 6,016, 2021: 4,501, 2020: 3,430\nAsia Pacific -- 2022: 2,493, 2021: 2,015, 2020: 1,617\n -- 2022: 26,492, 2021: 21,252, 2020: 17,098"
+            },
+            {
+                "score": 0.7149983644485474,
+                "rrf_score": 0.02871794871794872,
+                "company": "SalesForce",
+                "company_display": "Salesforce",
+                "year": 2022,
+                "section_path": "ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS OF > (2) Amounts related to stock-based expense, as follows (in millions): > Revenues",
+                "page_numbers": [
+                    48
+                ],
+                "chunk_type": "text",
+                "text": "The increase in subscription and support revenues for fiscal 2022 was primarily caused by volume-driven increases from new business, which includes new customers, upgrades, additional subscriptions from existing customers and acquisition activity. Pricing was not a significant driver of the increase in revenues for either period. Revenues from term and perpetual software licenses, which are recognized at a point in time, represent approximately seven percent and six percent of total subscription and support revenues for fiscal 2022 and fiscal 2021, respectively. Subscription and support revenues accounted for approximately 93 and 94 percent of our total revenues for fiscal 2022 and 2021, respectively. The acquisition of Slack in July 2021 contributed approximately $584 million to subscription and support revenues during the fiscal year ended January 31, 2022. As a result of our business combination activity, we recorded unearned revenue related to acquired contracts from acquired entities at fair value on the date of acquisition. As a result, we did not recognize certain revenues related to these acquired contracts that the acquired entities would have otherwise recorded as an independent entity. The increase in professional services and other revenues was due primarily to the higher demand for services from an increased number of customers as well as revenues resulting from the Acumen Solutions, Inc. (\"Acumen\") acquisition in February 2021."
+            }
+        ]
+    },
+    {
+        "n": 23,
+        "category": "Paragraph: segments aur operations",
+        "question": "Why Chevron use MTBE as a gasoline addictive?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.7156685590744019,
+                "rrf_score": 0.03177805800756621,
+                "company": "CHEVRON",
+                "company_display": "Chevron",
+                "year": 2020,
+                "section_path": "Item 14. Principal Accounting Fees and Services > Consolidated Statement of Equity > Note 13 > Consolidated Statement of Income as \"Income tax expense.\" > Note 14",
+                "page_numbers": [
+                    85
+                ],
+                "chunk_type": "text",
+                "text": "Litigation MTBE Chevron and many other companies in the petroleum industry have used methyl tertiary butyl ether (MTBE) as a gasoline additive. Chevron is a party to six pending lawsuits and claims, the majority of which involve numerous other petroleum marketers and refiners. Resolution of these lawsuits and claims may ultimately require the company to correct or ameliorate the alleged effects on the environment of prior release of MTBE by the company or other parties. The company's ultimate exposure related to pending lawsuits and claims is not determinable. The company no longer uses MTBE in the manufacture of gasoline in the United States."
+            },
+            {
+                "score": 0.7085777521133423,
+                "rrf_score": 0.031754032258064516,
+                "company": "CHEVRON",
+                "company_display": "Chevron",
+                "year": 2017,
+                "section_path": "Item 14. Principal Accounting Fees and Services > Consolidated Statement of Equity > Note 16 > Consolidated Statement of Income as \"Income tax expense.\" > Note 17",
+                "page_numbers": [
+                    91
+                ],
+                "chunk_type": "text",
+                "text": "Litigation MTBE Chevron and many other companies in the petroleum industry have used methyl tertiary butyl ether (MTBE) as a gasoline additive. Chevron is a party to eight pending lawsuits and claims, the majority of which involve numerous other petroleum marketers and refiners. Resolution of these lawsuits and claims may ultimately require the company to correct or ameliorate the alleged effects on the environment of prior release of MTBE by the company or other parties. Additional lawsuits and claims related to the use of MTBE, including personal-injury claims, may be filed in the future. The company's ultimate exposure related to pending lawsuits and claims is not determinable. The company no longer uses MTBE in the manufacture of gasoline in the United States."
+            },
+            {
+                "score": 0.7084715366363525,
+                "rrf_score": 0.03125763125763126,
+                "company": "CHEVRON",
+                "company_display": "Chevron",
+                "year": 2018,
+                "section_path": "Item 14. Principal Accounting Fees and Services > Consolidated Statement of Equity > Note 1 > Consolidated Statement of Income. > Note 14 > Consolidated Statement of Income as \"Income tax expense.\" > Note 15",
+                "page_numbers": [
+                    93
+                ],
+                "chunk_type": "text",
+                "text": "Litigation MTBE Chevron and many other companies in the petroleum industry have used methyl tertiary butyl ether (MTBE) as a gasoline additive. Chevron is a party to seven pending lawsuits and claims, the majority of which involve numerous other petroleum marketers and refiners. Resolution of these lawsuits and claims may ultimately require the company to correct or ameliorate the alleged effects on the environment of prior release of MTBE by the company or other parties. Additional lawsuits and claims related to the use of MTBE, including personal-injury claims, may be filed in the future. The company's ultimate exposure related to pending lawsuits and claims is not determinable. The company no longer uses MTBE in the manufacture of gasoline in the United States."
+            }
+        ]
+    },
+    {
+        "n": 24,
+        "category": "Paragraph: segments aur operations",
+        "question": "Tell me about the controls and procedures of Chevron in 2019.",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6199396848678589,
+                "rrf_score": 0.03278688524590164,
+                "company": "CHEVRON",
+                "company_display": "Chevron",
+                "year": 2019,
+                "section_path": "Item 8. Financial Statements and Supplementary Data | Item 9A. Controls and Procedures",
+                "page_numbers": [
+                    27
+                ],
+                "chunk_type": "text",
+                "text": "The index to Management's Discussion and Analysis, Consolidated Financial Statements and Supplementary Data is presented on page 27. (a) Evaluation of Disclosure Controls and Procedures The company's management has evaluated, with the participation of the Chief Executive Officer and the Chief Financial Officer, the effectiveness of the company's disclosure controls and procedures (as defined in Rule 13a-15(e) and 15d-15(e) under the Securities Exchange Act of 1934 (Exchange Act)) as of the end of the period covered by this report. Based on this evaluation, management concluded that the company's disclosure controls and procedures were effective as of December 31, 2019."
+            },
+            {
+                "score": 0.6000488996505737,
+                "rrf_score": 0.0315136476426799,
+                "company": "CHEVRON",
+                "company_display": "Chevron",
+                "year": 2019,
+                "section_path": "Item 9A. Controls and Procedures > (b) Management's Report on Internal Control Over Financial Reporting The company's management is responsible for",
+                "page_numbers": [
+                    27
+                ],
+                "chunk_type": "text",
+                "text": "establishing and maintaining adequate internal control over financial reporting, as defined in the Exchange Act Rules 13a-15(f) and 15d-15(f). The company's management, including the Chief Executive Officer and Chief Financial Officer, conducted an evaluation of the effectiveness of the company's internal control over financial reporting based on the Internal Control - Integrated Framework (2013) issued by the Committee of Sponsoring Organizations of the Treadway Commission (COSO). Based on the results of this evaluation, the company's management concluded that internal control over financial reporting was effective as of December 31, 2019. The effectiveness of the company's internal control over financial reporting as of December 31, 2019, has been audited by PricewaterhouseCoopers LLP, an independent registered public accounting firm, as stated in its report included herein. (c) Changes in Internal Control Over Financial Reporting During the quarter ended December 31, 2019, there were no changes in the company's internal control over financial reporting that have materially affected, or are reasonably likely to materially affect, the company's internal control over financial reporting."
+            },
+            {
+                "score": 0.5599613189697266,
+                "rrf_score": 0.031054405392392875,
+                "company": "CHEVRON",
+                "company_display": "Chevron",
+                "year": 2019,
+                "section_path": "Item 14. Principal Accounting Fees and Services > Report of Independent Registered Public Accounting Firm > Basis for Opinions",
+                "page_numbers": [
+                    62
+                ],
+                "chunk_type": "text",
+                "text": "The Company's management is responsible for these consolidated financial statements, for maintaining effective internal control over financial reporting, and for its assessment of the effectiveness of internal control over financial reporting, included in the accompanying Management's Report on Internal Control Over Financial Reporting. Our responsibility is to express opinions on the Company's consolidated financial statements and on the Company's internal control over financial reporting based on our audits. We are a public accounting firm registered with the Public Company Accounting Oversight Board (United States) (PCAOB) and are required to be independent with respect to the Company in accordance with the U.S. federal securities laws and the applicable rules and regulations of the Securities and Exchange Commission and the PCAOB. We conducted our audits in accordance with the standards of the PCAOB. Those standards require that we plan and perform the audits to obtain reasonable assurance about whether the consolidated financial statements are free of material misstatement, whether due to error or fraud, and whether effective internal control over financial reporting was maintained in all material respects. Our audits of the consolidated financial statements included performing procedures to assess the risks of material misstatement of the consolidated financial statements, whether due to error or fraud, and performing procedures that respond to those risks. Such procedures included examining, on a test basis, evidence regarding the amounts and disclosures in the consolidated financial statements. Our audits also included evaluating the accounting principles used and significant estimates made by management, as well as evaluating the overall presentation of the consolidated financial statements. Our audit of internal control over financial reporting included obtaining an understanding of internal control over financial reporting, assessing the risk that a material weakness exists, and testing and evaluating the design and operating effectiveness of internal control based on the assessed risk. Our audits also included performing such other procedures as we considered necessary in the circumstances. We believe that our audits provide a reasonable basis for our opinions."
+            }
+        ]
+    },
+    {
+        "n": 25,
+        "category": "Number (table) -- asli jawab SQL track se aayega",
+        "question": "What was Apple's total net sales in fiscal 2022?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6872568130493164,
+                "rrf_score": 0.04420318562256724,
+                "company": "Apple",
+                "company_display": "Apple",
+                "year": 2022,
+                "section_path": "Item 8. Financial Statements and Supplementary Data > CONSOLIDATED STATEMENTS OF OPERATIONS",
+                "page_numbers": [
+                    33
+                ],
+                "chunk_type": "table",
+                "text": "The following table shows CONSOLIDATED STATEMENTS OF OPERATIONS data for Apple 2022:\nColumns: 2022, 2021, 2020\nNet sales:\nProducts -- 2022: 316,199, 2021: 297,392, 2020: 220,747\nServices -- 2022: 78,129, 2021: 68,425, 2020: 53,768\nTotal net sales -- 2022: 394,328, 2021: 365,817, 2020: 274,515\nCost of sales:\nProducts -- 2022: 201,471, 2021: 192,266, 2020: 151,286\nServices -- 2022: 22,075, 2021: 20,715, 2020: 18,273\nTotal cost of sales -- 2022: 223,546, 2021: 212,981, 2020: 169,559\nGross margin -- 2022: 170,782, 2021: 152,836, 2020: 104,956\nOperating expenses:\nResearch and development -- 2022: 26,251, 2021: 21,914, 2020: 18,752\nSelling, general and administrative -- 2022: 25,094, 2021: 21,973, 2020: 19,916\nTotal operating expenses -- 2022: 51,345, 2021: 43,887, 2020: 38,668\nOperating income -- 2022: 119,437, 2021: 108,949, 2020: 66,288\nOther income/(expense), net -- 2022: (334), 2021: 258, 2020: 803\nIncome before provision for income taxes -- 2022: 119,103, 2021: 109,207, 2020: 67,091\nProvision for income taxes -- 2022: 19,300, 2021: 14,527, 2020: 9,680\nNet income -- 2022: 99,803, 2021: 94,680, 2020: 57,411\nEarnings per share:\nBasic -- 2022: 6.15, 2021: 5.67, 2020: 3.31\nDiluted -- 2022: 6.11, 2021: 5.61, 2020: 3.28\nShares used in computing earnings per share:\nBasic -- 2022: 16,215,963, 2021: 16,701,272, 2020: 17,352,119\nDiluted -- 2022: 16,325,819, 2021: 16,864,919, 2020: 17,528,214"
+            },
+            {
+                "score": 0.7497545480728149,
+                "rrf_score": 0.03278688524590164,
+                "company": "Apple",
+                "company_display": "Apple",
+                "year": 2022,
+                "section_path": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Fiscal Year Highlights > Fiscal 2022 Highlights",
+                "page_numbers": [
+                    24
+                ],
+                "chunk_type": "text",
+                "text": "Total net sales increased 8% or $28.5 billion during 2022 compared to 2021, driven primarily by higher net sales of iPhone, Services and Mac. The weakness in foreign currencies relative to the U.S. dollar had an unfavorable year-over-year impact on all Products and Services net sales during 2022. The Company announces new product, service and software offerings at various times during the year. Significant announcements during fiscal 2022 included the following: Updated MacBook Pro 14\" and MacBook Pro 16\", powered by the Apple M1 Pro or M1 Max chip; and iOS 16, macOS Ventura, iPadOS 16 and watchOS 9, updates to the Company's operating systems; and In April 2022, the Company announced an increase to its Program authorization from $315 billion to $405 billion and raised its quarterly dividend from $0.22 to $0.23 per share beginning in May 2022. During 2022, the Company repurchased $90.2 billion of its common stock and paid dividends and dividend equivalents of $14.8 billion.\nFirst Quarter 2022: Third generation of AirPods. Second Quarter 2022: Updated iPhone SE with 5G technology; All-new Mac Studio, powered by the Apple M1 Max or M1 Ultra chip; All-new Studio Display™; and Updated iPad Air with 5G technology, powered by the Apple M1 chip. Third Quarter 2022: Updated MacBook Air and MacBook Pro 13\", both powered by the Apple M2 chip; Apple Pay Later, a buy now, pay later service. Fourth Quarter 2022: iPhone 14, iPhone 14 Plus, iPhone 14 Pro and iPhone 14 Pro Max; Second generation of AirPods Pro; and Apple Watch Series 8, updated Apple Watch SE and all-new Apple Watch Ultra."
+            },
+            {
+                "score": 0.7135725021362305,
+                "rrf_score": 0.0315136476426799,
+                "company": "Apple",
+                "company_display": "Apple",
+                "year": 2022,
+                "section_path": "Item 8. Financial Statements and Supplementary Data > Note 2 - Revenue",
+                "page_numbers": [
+                    41
+                ],
+                "chunk_type": "text",
+                "text": "Net sales disaggregated by significant products and services for 2022, 2021 and 2020 were as follows (in millions): Products net sales include amortization of the deferred value of unspecified software upgrade rights, which are bundled in the sales price of the respective product. (2) Wearables, Home and Accessories net sales include sales of AirPods, Apple TV, Apple Watch, Beats products, HomePod mini and accessories. (3) Services net sales include sales from the Company's advertising, AppleCare, cloud, digital content, payment and other services. Services net sales also include amortization of the deferred value of services bundled in the sales price of certain products. (4) Includes $7.5 billion of revenue recognized in 2022 that was included in deferred revenue as of September 25, 2021, $6.7 billion of revenue recognized in 2021 that was included in deferred revenue as of September 26, 2020, and $5.0 billion of revenue recognized in 2020 that was included in deferred revenue as of September 28, 2019. The Company's proportion of net sales by disaggregated revenue source was generally consistent for each reportable segment in Note 11, \"Segment Information and Geographic Data\" for 2022, 2021 and 2020, except in Greater China, where iPhone revenue represented a moderately higher proportion of net sales in 2022 and 2021. As of September 24, 2022 and September 25, 2021, the Company had total deferred revenue of $12.4 billion and $11.9 billion, respectively. As of September 24, 2022, the Company expects 64% of total deferred revenue to be realized in less than a year, 27% within one-to-two years, 7% within two-to-three years and 2% in greater than three years.\nThe following table shows Note 2 - Revenue data for Apple 2022:\nColumns: 2022, 2021, 2020\niPhone (1) -- 2022: 205,489, 2021: 191,973, 2020: 137,781\nMac (1) -- 2022: 40,177, 2021: 35,190, 2020: 28,622\niPad (1) -- 2022: 29,292, 2021: 31,862, 2020: 23,724\nWearables, Home and Accessories (1)(2) -- 2022: 41,241, 2021: 38,367, 2020: 30,620\nServices (3) -- 2022: 78,129, 2021: 68,425, 2020: 53,768\nTotal net sales (4) -- 2022: 394,328, 2021: 365,817, 2020: 274,515\n(1)"
+            }
+        ]
+    },
+    {
+        "n": 26,
+        "category": "Number (table) -- asli jawab SQL track se aayega",
+        "question": "How much did Microsoft spend on research and development in fiscal 2024?",
+        "matched": true,
+        "reason": null,
+        "results": [
+            {
+                "score": 0.6583603024482727,
+                "rrf_score": 0.039430765660273856,
+                "company": "Microsoft",
+                "company_display": "Microsoft",
+                "year": 2024,
+                "section_path": "ITEM 8. FINANCIAL STATEMENTS AND SUPPLEMENTARY DATA > INCOME STATEMENTS",
+                "page_numbers": [
+                    59
+                ],
+                "chunk_type": "table",
+                "text": "The following table shows INCOME STATEMENTS data for Microsoft 2024:\nColumns: 2024, 2023, 2022\nRevenue:\nProduct -- 2024: 64,773, 2023: 64,699, 2022: 72,732\nService and other -- 2024: 180,349, 2023: 147,216, 2022: 125,538\nTotal revenue -- 2024: 245,122, 2023: 211,915, 2022: 198,270\nCost of revenue:\nProduct -- 2024: 15,272, 2023: 17,804, 2022: 19,064\nService and other -- 2024: 58,842, 2023: 48,059, 2022: 43,586\nTotal cost of revenue -- 2024: 74,114, 2023: 65,863, 2022: 62,650\nGross margin -- 2024: 171,008, 2023: 146,052, 2022: 135,620\nResearch and development -- 2024: 29,510, 2023: 27,195, 2022: 24,512\nSales and marketing -- 2024: 24,456, 2023: 22,759, 2022: 21,825\nGeneral and administrative -- 2024: 7,609, 2023: 7,575, 2022: 5,900\nOperating income -- 2024: 109,433, 2023: 88,523, 2022: 83,383\nOther income (expense), net -- 2024: (1,646 ), 2023: 788, 2022: 333\nIncome before income taxes -- 2024: 107,787, 2023: 89,311, 2022: 83,716\nProvision for income taxes -- 2024: 19,651, 2023: 16,950, 2022: 10,978\nNet income -- 2024: 88,136, 2023: 72,361, 2022: 72,738\nEarnings per share:\nBasic -- 2024: 11.86, 2023: 9.72, 2022: 9.70\nDiluted -- 2024: 11.80, 2023: 9.68, 2022: 9.65\nWeighted average shares outstanding:\nBasic -- 2024: 7,431, 2023: 7,446, 2022: 7,496\nDiluted -- 2024: 7,469, 2023: 7,472, 2022: 7,540"
+            },
+            {
+                "score": 0.7246187925338745,
+                "rrf_score": 0.03252247488101534,
+                "company": "Microsoft",
+                "company_display": "Microsoft",
+                "year": 2024,
+                "section_path": "ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND > Research and Development",
+                "page_numbers": [
+                    47
+                ],
+                "chunk_type": "table",
+                "text": "Research and development expenses include payroll, employee benefits, stock-based compensation expense, and other headcount-related expenses associated with product development. Research and development expenses also include third-party development and programming costs and the amortization of purchased software code and services content.\nThe following table shows Research and Development data for Microsoft 2024:\nColumns: 2024, 2023\nResearch and development -- 2024: 29,510, 2023: 27,195\nAs a percent of revenue -- 2024: 12%, 2023: 13%"
+            },
+            {
+                "score": 0.6501295566558838,
+                "rrf_score": 0.02664576802507837,
+                "company": "Microsoft",
+                "company_display": "Microsoft",
+                "year": 2024,
+                "section_path": "ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND > Fiscal Year 2024 Compared with Fiscal Year 2023 > ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND > Sales and Marketing",
+                "page_numbers": [
+                    47,
+                    48
+                ],
+                "chunk_type": "text",
+                "text": "Research and development expenses increased $2.3 billion or 9% driven by Gaming, with 7 points of growth from the Activision Blizzard acquisition, and investments in cloud engineering. Sales and marketing expenses include payroll, employee benefits, stock-based compensation expense, and other headcount-related expenses associated with sales and marketing personnel, and the costs of advertising, promotions, trade shows, seminars, and other programs."
+            }
+        ]
+    },
+    {
+        "n": 27,
+        "category": "Bahar ke sawal (jawab 'nahi mila' hona chahiye)",
+        "question": "What was Tesla's revenue in 2023?",
+        "matched": false,
+        "reason": "No indexed data for 'tesla'.",
+        "results": []
+    },
+    {
+        "n": 28,
+        "category": "Bahar ke sawal (jawab 'nahi mila' hona chahiye)",
+        "question": "what does spotify say about podcasts",
+        "matched": false,
+        "reason": "No indexed data for 'spotify'.",
+        "results": []
+    },
+    {
+        "n": 29,
+        "category": "Bahar ke sawal (jawab 'nahi mila' hona chahiye)",
+        "question": "Who won the Cricket World Cup in 2023?",
+        "matched": false,
+        "reason": "No sufficiently relevant data found for this query.",
+        "results": []
+    }
+]
