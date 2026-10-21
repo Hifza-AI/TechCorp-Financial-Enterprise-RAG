@@ -31,10 +31,29 @@ v2.1 (v2 eval ke baqi 20 fail dekh kar):
   clutter  XBRL / Exhibit 101 ki fehrist ("(i) Consolidated Statements of ..., (ii) ...", "101.SCH ...") bhi.
   dedup    Bina saal ke sawal par ek hi paragraph 5 saalon se 5 dafa aa jata tha. Ab hu-ba-hu wahi text ek
            dafa aata hai (naye saal wala), baqi jagah doosri cheezein aati hain.
+v2.2 (golden set ke 56 asli-user jaise sawalon ke 23 fail dekh kar; zor paragraphs par):
+  recency  "currently", "now", "today", "nowadays" bhi = sab se naya saal (pehle sirf "current/latest").
+  fresh    Sawal mein saal na ho to sab se naye 10-K ke behtareen chunks ko ek extra vote (jaise stmt), kyun ke
+           "How many employees does Dell have?" mein user aaj ka number chahta hai. Purane saal bhi aate hain.
+  synonyms User ke alfaaz -> PDF ke alfaaz, sirf keyword (BM25) search mein: headcount -> employees,
+           bottom line -> net income, audit firm -> auditor / Ernst & Young / Deloitte ...
+  stem     Keyword search lafz ke roop bhi pakadta hai: employ = employed = employees = employment.
+  names    Company ke naam mein spelling ki ghalti (Wallmart, Micorsoft) bhi pehchanta hai, aur poora
+           naam ("Dell Technologies") search ke alfaaz se nikalta hai.
+  oos2     Bahar ki mashhoor companies chhote huroof mein bhi pakadta hai (samsung, uber), aur company na
+           mile to "kitna milta julta" (confidence) check saal wale sawal par bhi lagta hai (FIFA 2022).
+           Ab ye check tab hi lagta hai jab index ki koi company sawal mein na ho ("Apple vs Samsung" theek).
+  diverse  Do companies ya do saal ka sawal: dono ke chunks baari baari (pehle sirf ek hi company aati thi).
+  expand   Har result ke saath usi section ka pichla aur agla chunk bhi (jawab aksar chunk ki had par toot'ta
+           hai, Gemini ko poori baat milni chahiye).
+Har sudhaar FEATURES mein on/off; eval_retriever.py --ablation aur eval_golden.py --ablation har ek ka asar
+alag naapte hain.
+
 Index dobara banane ki zaroorat NAHI. Pehli baar chalne par chunks ke flags (fehrist? statement?) ek dafa
 bante hain aur vector_store/flags.npz mein save ho jate hain (agli baar seedha load).
 """
 import argparse
+import difflib
 import inspect
 import json
 import re
@@ -48,8 +67,17 @@ import scipy.sparse as sp
 
 from build_embeddings import EmbeddingIndexBuilder, tok, section_str, INC_REF, EXHIBIT_REF, FORM_REF
 
-# Har sudhaar on/off. eval_retriever.py --ablation inhein badal badal kar naapta hai.
-FEATURES = {"guard": True, "clutter": True, "strip": True, "stmt": True, "dedup": True}
+# Har sudhaar on/off. eval_retriever.py --ablation / eval_golden.py --ablation inhein badal badal kar naapte hain.
+OLD_FEATURES = ["guard", "clutter", "strip", "stmt", "dedup"]                          # v2 / v2.1
+NEW_FEATURES = ["recency", "fresh", "synonyms", "stem", "names", "oos2", "diverse", "expand"]   # v2.2
+FEATURES = {f: True for f in OLD_FEATURES + NEW_FEATURES}
+
+
+def ablation_variants():
+    """v2.1 (naye sudhaar band) -> har naya sudhaar akela -> sab on. Dono eval files yahi list use karti hain."""
+    base = {f: f in OLD_FEATURES for f in FEATURES}
+    return ([("v2.1 (naye off)", base)] + [(f"+ {f}", dict(base, **{f: True})) for f in NEW_FEATURES]
+            + [("v2.2 (sab on)", {f: True for f in FEATURES})])
 
 
 # ---------------------------------------------------------------------------------------------
@@ -269,11 +297,113 @@ STOP_ENTITY = {
 }
 
 
+# ---------------------------------------------------------------------------------------------
+# v2.2 "oos2": mashhoor companies jo index mein NAHI (chhote huroof mein bhi pakadni hain).
+# Sirf wahi naam jo aam English / Roman Urdu lafz nahi ("kia", "shell", "target", "gap", "visa" jaan boojh kar nahi).
+# Agar inmein se koi kabhi index mein aa jaye to khud chhoot jata hai (_mentions_unknown_company check karta hai).
+# ---------------------------------------------------------------------------------------------
+MORE_UNKNOWN_COMPANIES = [
+    "samsung", "toyota", "honda", "nissan", "hyundai", "volkswagen", "bmw", "mercedes-benz", "mercedes", "stellantis",
+    "ferrari", "porsche", "sony", "panasonic", "nintendo", "xiaomi", "huawei", "lenovo", "alibaba", "tencent", "baidu",
+    "bytedance", "tiktok", "nestle", "nestlé", "unilever", "procter & gamble", "procter and gamble", "pepsico", "pepsi",
+    "kraft heinz", "mondelez", "novartis", "roche", "astrazeneca", "sanofi", "glaxosmithkline", "bayer", "merck",
+    "eli lilly", "abbvie", "amgen", "gilead", "moderna", "biontech", "siemens", "philips", "honeywell", "raytheon",
+    "general dynamics", "l3harris", "airbus", "embraer", "bombardier", "lufthansa", "uber", "lyft", "airbnb",
+    "doordash", "expedia", "spotify", "shopify", "snapchat", "pinterest", "reddit", "twitter", "mastercard",
+    "american express", "goldman sachs", "morgan stanley", "citibank", "bank of america", "wells fargo", "hsbc",
+    "barclays", "berkshire hathaway", "blackrock", "exxonmobil", "conocophillips", "aramco", "totalenergies",
+    "petrobras", "kroger", "ikea", "adidas", "lululemon", "under armour", "inditex", "lvmh", "gucci", "infosys",
+    "wipro", "accenture", "cisco", "qualcomm", "broadcom", "texas instruments", "micron", "asml", "tsmc",
+    "hewlett packard", "verizon", "at&t", "t-mobile", "comcast", "warner bros", "fedex", "maersk",
+    "john deere", "lowe's", "lowes", "best buy", "walgreens", "unitedhealth", "johnson & johnson", "mcdonald's",
+    "burger king", "yum brands", "dominos", "domino's", "zara", "h&m",
+]
+
+# v2.2 "synonyms": user ke alfaaz -> 10-K ke alfaaz. Sirf keyword (BM25) query mein jodte hain, dense waisa hi rehta hai.
+SYNONYMS = [
+    (r"\bhead ?counts?\b|\bworkforce\b|\bstaff(?:ing)?\b|\bpersonnel\b|\bhow many (?:people|workers)\b|"
+     r"\bemploy(?:s|ed|ees?)?\b", "employees employed workforce human capital"),
+    (r"\bbottom line\b|\bnet profits?\b|\bprofit after tax\b", "net income net earnings"),
+    (r"\btop line\b", "revenue net sales"),
+    (r"\bcapex\b", "capital expenditures"),
+    (r"\br&d\b", "research and development"),
+    (r"\bsg&a\b", "selling general administrative"),
+    (r"\beps\b", "earnings per share"),
+    (r"\bfcf\b", "free cash flow"),
+    (r"\bheadquarter(?:s|ed)?\b|\bhq\b|\bhead office\b|\bmain office\b|\bbased in\b|\bwhere is\b.{0,40}\blocated\b",
+     "headquarters principal executive offices located"),
+    (r"\baudits\b|\bauditors?\b|\baudit firm\b|\baccounting firm\b|\bwho audit",
+     "auditor independent registered public accounting firm ernst young deloitte pricewaterhousecoopers kpmg"),
+    (r"\border book\b|\bunfilled orders\b|\borders on hand\b", "backlog"),
+    (r"\b(?:biggest|largest|major|top|main|key) (?:customers?|clients?|buyers?)\b|\bcustomer concentration\b",
+     "largest customer single customer accounted percent net sales"),
+    (r"\bbuy ?backs?\b|\brepurchas\w*", "share repurchase program repurchased shares"),
+    (r"\blawsuits?\b|\bsued\b|\blitigation\b|\blegal (?:cases?|issues?|matters?)\b", "legal proceedings litigation"),
+    (r"\bcyber\w*|\bhack\w*|\bdata breach\w*|\bciso\b|\bsecurity officer\b",
+     "cybersecurity chief information security officer"),
+    (r"\bcompetitors?\b|\brivals?\b|\bcompet\w*", "competition competitors compete"),
+    (r"\bdivisions?\b|\bbusiness (?:units?|lines?)\b|\blines of business\b", "reportable segments"),
+    (r"\bfactories\b|\bplants?\b|\bmanufacturing (?:sites?|locations?)\b", "manufacturing facilities plants properties"),
+    (r"\bsuppliers?\b|\bsupply chain\b|\braw materials?\b", "suppliers raw materials supply chain sources"),
+    (r"\bfounded\b|\bestablished\b|\bhistory\b", "incorporated founded"),
+    (r"\bceo\b|\bchief executive\b", "chief executive officer"),
+    (r"\bacquisitions?\b|\bacquir\w*|\bbought\b|\btakeover\b", "acquisition acquired business combination"),
+    (r"\bstores?\b|\boutlets?\b|\bwarehouses?\b|\bbranches\b", "stores locations operated"),
+    (r"\bcountries\b|\bglobal (?:presence|footprint)\b|\binternational presence\b", "countries"),
+]
+SYNONYMS = [(re.compile(p, re.I), add) for p, add in SYNONYMS]
+
+
+def synonym_terms(query):
+    """Sawal ke alfaaz se milte 10-K ke alfaaz (khaali string agar kuch na mile)."""
+    return " ".join(add for rx, add in SYNONYMS if rx.search(query))
+
+
+# v2.2 "stem": lafz ki jarh (employees -> employ). Sirf keyword search ke liye, query ki taraf; index wahi rehta hai.
+_SUFFIXES = ("ations", "ation", "ments", "ment", "ings", "ing", "ers", "ees", "ed", "es", "er", "ee", "s", "ly")
+
+
+def stem(w):
+    """Chhota sa stemmer: employs/employed/employees/employment -> employ, countries -> country, acquired -> acquir."""
+    if len(w) < 5 or not w.isalpha():
+        return w
+    for _ in range(2):
+        if len(w) > 5 and w.endswith(("ies", "ied")):
+            w = w[:-3] + "y"
+            continue
+        for s in _SUFFIXES:
+            if w.endswith(s) and len(w) - len(s) >= 5:
+                if s == "es" and not re.search(r"(?:s|x|z|ch|sh)es$", w):
+                    continue                                   # stores -> store (stor nahi), taxes -> tax
+                if s == "s" and w.endswith("ss"):
+                    continue                                   # business, loss, process -> waise hi
+                w = w[:-len(s)]
+                break
+        else:
+            break
+    if len(w) > 5 and w.endswith("e"):
+        w = w[:-1]                                             # acquire -> acquir (acquired ke barabar)
+    return w
+
+
+# v2.2 "names": "Dell Technologies", "Lockheed Martin Corporation" -> search alfaaz se poora naam niklega
+LEGAL_SUFFIX = (r"(?:,?\s+(?:inc|corp|corporation|co|company|plc|ltd|technologies|technology|holdings|group|"
+                r"incorporated|international|industries)\b\.?)?")
+OLD_LEGAL_SUFFIX = r"(?:,?\s+(?:inc|corp|corporation|co|company|plc|ltd)\b\.?)?"
+
+
 class Retriever:
 
     RECENCY_KEYWORDS = re.compile(
         r"\b(most recent|latest|current|this year|last fiscal year|newest|up[- ]to[- ]date)\b", re.IGNORECASE)
+    RECENCY_V2 = re.compile(                                                    # v2.2 "recency"
+        r"\b(most recent|latest|current(?:ly)?|this year|last fiscal year|newest|up[- ]to[- ]date|now|today|"
+        r"nowadays|these days|at present|presently|recent(?:ly)?)\b", re.IGNORECASE)
     YEAR_PATTERN = re.compile(r"(?<![\d,.$])(?:19|20)\d{2}(?![\d,])")       # "2024", "FY2024"
+    FRESH_POOL = 3          # "fresh": sab se naye 10-K ke sirf itne behtareen chunks ko extra vote
+    EXPAND_MAX = 3200       # "expand": pichla + asal + agla chunk, zyada se zyada itne huroof
+    FUZZY_CUTOFF = 0.85     # "names": spelling ki ghalti kitni milti julti ho (1.0 = bilkul wahi)
+    FUZZY_MAX_DF = 30       # is se zyada chunks mein aane wala lafz asli English lafz hai, naam ki ghalti nahi
 
     # Dense cosine par check (RRF score par nahi). Model badla hai (bge-small), isliye eval mein dobara
     # parakhna: agar sahi sawal bhi "nahi mila" aaye to ise 0.50 ke qareeb kar dena.
@@ -326,11 +456,66 @@ class Retriever:
         self.global_latest_year = max(self.latest_year_by_company.values()) if self.latest_year_by_company else None
         self._years_by_company = {n: sorted({int(y) for y in set(self.year[self.ccode == ci].tolist()) if y > 0})
                                   for ci, n in enumerate(self.names)}
+        self._latest_arr = np.array([self.latest_year_by_company.get(n, 0) for n in self.names], dtype=np.int16)
+        self._stem_ids = None                    # "stem": pehli zaroorat par banta hai (stem -> vocab ids)
         self._build_aliases()
 
     def _meta(self, i):
         self._mf.seek(int(self.offset[i]))
         return json.loads(self._mf.readline())
+
+    def _chunk_meta(self, g):
+        """Chunk number g (gid) ka meta, ya None."""
+        if g < 0:
+            return None
+        i = int(np.searchsorted(self.gid, g))
+        if i >= self.N or int(self.gid[i]) != g:
+            return None
+        return self._meta(i)
+
+    @staticmethod
+    def _join(a, b):
+        """Do chunk jodo; agla chunk pichle ke aakhri hisse se shuru hota hai (overlap) to wo dobara nahi."""
+        probe = b[:60]
+        if len(probe) >= 20:
+            p = a.rfind(probe, max(0, len(a) - 1500))
+            if p >= 0 and a[p:] == b[:len(a) - p]:
+                return a + b[len(a) - p:]
+        return a + "\n" + b
+
+    def _expanded_text(self, doc, m, covered=()):
+        """"expand": usi file + usi section ka pichla aur agla chunk saath (zyada se zyada EXPAND_MAX huroof).
+        Jo padosi chunk pehle hi kisi upar wale result mein aa chuka (covered) wo dobara nahi.
+        Wapas: (text, istemal hue chunk numbers, saare page numbers)."""
+        g, text = int(self.gid[doc]), m["text"] or ""
+        used, pages = {g}, list(m.get("page_numbers") or [])
+        prev, nxt = self._chunk_meta(g - 1), self._chunk_meta(g + 1)
+        same = lambda x: x and x.get("file") == m.get("file") and x.get("section_path") == m.get("section_path")
+        room = max(0, self.EXPAND_MAX - len(text)) // 2
+        if room < 200:
+            return text, used, pages
+        if same(prev) and (g - 1) not in covered:
+            joined = self._join(prev["text"] or "", text)
+            head = joined[:len(joined) - len(text)]
+            text = (("... " + head[-room:]) if len(head) > room else head) + text
+            used.add(g - 1)
+            pages += prev.get("page_numbers") or []
+        if same(nxt) and (g + 1) not in covered:
+            joined = self._join(m["text"] or "", nxt["text"] or "")
+            tail = joined[len(m["text"] or ""):]
+            text = text + ((tail[:room] + " ...") if len(tail) > room else tail)
+            used.add(g + 1)
+            pages += nxt.get("page_numbers") or []
+        return text, used, sorted(set(pages))
+        if same(prev):
+            joined = self._join(prev["text"] or "", text)
+            head = joined[:len(joined) - len(text)]
+            text = (("... " + head[-room:]) if len(head) > room else head) + text
+        if same(nxt):
+            joined = self._join(m["text"] or "", nxt["text"] or "")
+            tail = joined[len(m["text"] or ""):]
+            text = text + ((tail[:room] + " ...") if len(tail) > room else tail)
+        return text
 
     @staticmethod
     def _rules_sig():
@@ -403,6 +588,8 @@ class Retriever:
                 if dclean:
                     self.aliases[dclean] = self.aliases.get(dclean, set()) | {n}
         self._compact = {re.sub(r"[^a-z0-9]", "", a) for a in self.aliases}
+        # "names": spelling ki ghalti se milane ke liye sirf 5+ huroof wale naam (dell, nike jaise chhote nahi)
+        self._fuzzy_keys = sorted(a for a in self.aliases if len(a) >= 5 and not re.search(r"\d", a))
 
     def _detect_companies(self, query):
         q = " " + re.sub(r"[^a-z0-9&]+", " ", query.lower()) + " "
@@ -418,14 +605,52 @@ class Retriever:
         f = self._detect_companies(query)
         return sorted(f)[0] if len(f) == 1 else None
 
-    def _mentions_unknown_company(self, query):
+    def _mentions_unknown_company(self, query, extended=False):
         q = query.lower()
-        for name in self.WELL_KNOWN_COMPANIES:
-            if re.search(r"\b" + re.escape(name) + r"\b", q):
-                if self._detect_companies(name.title()):      # index mein kisi naam se hai (jaise Alphabet = Google)
+        if not extended:                                          # v2.1 jaisa
+            for name in self.WELL_KNOWN_COMPANIES:
+                if re.search(r"\b" + re.escape(name) + r"\b", q):
+                    if self._detect_companies(name.title()):      # index mein kisi naam se hai (Alphabet = Google)
+                        continue
+                    return name
+            return None
+        for name in self.WELL_KNOWN_COMPANIES + MORE_UNKNOWN_COMPANIES:
+            if re.search(r"(?<![\w&])" + re.escape(name) + r"(?![\w&])", q):
+                if self._detect_companies(name.title()) or self._detect_companies(name):   # index mein hai
                     continue
                 return name
         return None
+
+    def _fuzzy_companies(self, query):
+        """"names": spelling ki ghalti wala company naam -> index ki company.  ("Wallmart's" -> Walmart)
+        Sirf wo lafz jo data mein (almost) kabhi nahi aate -- asli English lafz kabhi company nahi banta."""
+        found, hits = set(), []
+        words = re.findall(r"[A-Za-z][A-Za-z&'’.\-]+", query)
+        cands = [(w, w) for w in words]
+        cands += [(f"{a} {b}", f"{a} {b}") for a, b in zip(words, words[1:])]      # do lafz wale naam
+        for raw, w in cands:
+            c = re.sub(r"(?:['’]s|['’])$", "", w).lower().strip(".-")
+            if len(c) < 5 or c in STOP_ENTITY or c in self.aliases:
+                continue
+            if " " not in c:
+                j = self.vocab.get(c)
+                df = int(self.df[j]) if j is not None else 0
+                if df > self.FUZZY_MAX_DF:
+                    continue
+            else:
+                df = 0
+            best, score = None, 0.0
+            for key in self._fuzzy_keys:
+                if (" " in key) != (" " in c) or abs(len(key) - len(c)) > 3:
+                    continue
+                s = difflib.SequenceMatcher(None, c, key).ratio()
+                if s > score:
+                    best, score = key, s
+            if best and (score >= self.FUZZY_CUTOFF or
+                         (score >= 0.80 and df == 0 and c[0] == best[0] and abs(len(c) - len(best)) <= 1)):
+                found |= self.aliases[best]
+                hits.append(re.sub(r"(?:['’]s|['’])$", "", raw))
+        return found, hits
 
     def _is_known_name(self, e):
         if self._detect_companies(e):
@@ -448,13 +673,16 @@ class Retriever:
                 return e
         return None
 
-    def _search_text(self, query, comps, years):
-        """'strip': filter ban chuke company naam, diye gaye saal aur "10-K / annual report" jaise alfaaz nikal do."""
+    def _search_text(self, query, comps, years, extra=(), legal=OLD_LEGAL_SUFFIX):
+        """'strip': filter ban chuke company naam, diye gaye saal aur "10-K / annual report" jaise alfaaz nikal do.
+        extra = spelling ki ghalti wale naam ("Wallmart") jo 'names' ne pehchane -- wo bhi nikalte hain."""
         s = " " + query + " "
+        for raw in extra:
+            s = re.sub(r"(?<![A-Za-z0-9&])" + re.escape(raw) + r"(?:['’]s\b|['’])?(?![A-Za-z0-9&])", " ", s)
         if comps:
             for a in sorted((a for a, ns in self.aliases.items() if ns & comps), key=len, reverse=True):
                 pat = (r"(?<![A-Za-z0-9&])" + r"[\W_]+".join(re.escape(w) for w in a.split()) +
-                       r"(?:,?\s+(?:inc|corp|corporation|co|company|plc|ltd)\b\.?)?(?:['’]s\b|['’])?(?![A-Za-z0-9&])")
+                       legal + r"(?:['’]s\b|['’])?(?![A-Za-z0-9&])")
                 s = re.sub(pat, " ", s, flags=re.I)
         for y in sorted(years or []):
             s = re.sub(r"(?:\b(?:in|for|during|of)\s+)?(?:\b(?:the\s+)?(?:fiscal(?:\s+year)?|fy)\s*)?['’]?(?<!\d)" + str(y) +
@@ -483,16 +711,45 @@ class Retriever:
         params.sel = faiss.IDSelectorBatch(len(ids), faiss.swig_ptr(ids))
         return self.index.search(q, k, params=params)
 
-    def _bm25(self, query, k1=1.5, b=0.75):
+    def _term(self, j, k1, b):
+        """Ek vocab lafz ka BM25 hissa: (kin chunks mein, kitna score)."""
+        s, e = self.X.indptr[j], self.X.indptr[j + 1]
+        rows, tf = self.X.indices[s:e], self.X.data[s:e]
+        idf = np.log(1 + (self.N - self.df[j] + 0.5) / (self.df[j] + 0.5))
+        return rows, idf * tf * (k1 + 1) / (tf + k1 * (1 - b + b * self.dl[rows] / self.avgdl))
+
+    def _variants(self, w):
+        """"stem": vocab mein is lafz ke saare roop (employ -> employ, employed, employees, employment ...)."""
+        if self._stem_ids is None:
+            m = {}
+            for v, j in self.vocab.items():
+                if len(v) >= 5 and v.isalpha():
+                    m.setdefault(stem(v), []).append(j)
+            self._stem_ids = m
+        ids = list(self._stem_ids.get(stem(w), []))
+        j = self.vocab.get(w)
+        if j is not None and j not in ids:
+            ids.append(j)
+        return ids
+
+    def _bm25(self, query, k1=1.5, b=0.75, use_stem=False):
         score = np.zeros(self.N, dtype=np.float32)
+        done = set()
         for w in set(tok(query)):
-            j = self.vocab.get(w)
-            if j is None:
+            ids = self._variants(w) if use_stem else ([self.vocab[w]] if w in self.vocab else [])
+            key = tuple(sorted(ids))
+            if not ids or key in done:                # "employ" aur "employees" dono sawal mein -> ek hi baar
                 continue
-            s, e = self.X.indptr[j], self.X.indptr[j + 1]
-            rows, tf = self.X.indices[s:e], self.X.data[s:e]
-            idf = np.log(1 + (self.N - self.df[j] + 0.5) / (self.df[j] + 0.5))
-            score[rows] += idf * tf * (k1 + 1) / (tf + k1 * (1 - b + b * self.dl[rows] / self.avgdl))
+            done.add(key)
+            if len(ids) == 1:
+                rows, c = self._term(ids[0], k1, b)
+                score[rows] += c
+                continue
+            g = np.zeros(self.N, dtype=np.float32)    # ek lafz ke kai roop: har chunk mein sab se acha roop
+            for j in ids:
+                rows, c = self._term(j, k1, b)
+                g[rows] = np.maximum(g[rows], c)
+            score += g
         return score
 
     # ------------------------------------------------------------------
@@ -500,22 +757,32 @@ class Retriever:
     # ------------------------------------------------------------------
     def search(self, query, top_k=5, company=None, year=None, chunk_type=None):
         F = self.features
+        NONE = lambda why: {"matched": False, "reason": why, "results": []}
 
-        unknown = self._mentions_unknown_company(query)
-        if unknown:
-            return {"matched": False, "reason": f"No indexed data for '{unknown}'.", "results": []}
+        if not F["oos2"]:                                   # v2.1: anjaan naam ki list sab se pehle
+            unknown = self._mentions_unknown_company(query)
+            if unknown:
+                return NONE(f"No indexed data for '{unknown}'.")
 
         comps = self._detect_companies(query)
         if company:
             comps = {n for n in self.known_companies if company.lower() in n.lower()}
+        typos = []
+        if F["oos2"] and not comps:                         # v2.2: list tab hi jab index ki koi company na ho
+            unknown = self._mentions_unknown_company(query, extended=True)
+            if unknown:
+                return NONE(f"No indexed data for '{unknown}'.")
+        if F["names"] and not comps:                        # "Wallmart" -> Walmart
+            comps, typos = self._fuzzy_companies(query)
         if F["guard"] and not comps:
             unknown = self._unknown_subject(query)
             if unknown:
-                return {"matched": False, "reason": f"No indexed data for '{unknown}'.", "results": []}
+                return NONE(f"No indexed data for '{unknown}'.")
         years = {int(y) for y in self.YEAR_PATTERN.findall(query)}
         if year:
             years = {int(year)}
-        wants_recent = bool(self.RECENCY_KEYWORDS.search(query)) and not years
+        recency_rx = self.RECENCY_V2 if F["recency"] else self.RECENCY_KEYWORDS
+        wants_recent = bool(recency_rx.search(query)) and not years
 
         needs_hard_filter = bool(comps or years or wants_recent)
         mask = np.ones(self.N, dtype=bool)
@@ -523,17 +790,16 @@ class Retriever:
         if comps:
             mask &= np.isin(self.ccode, [self.names.index(c) for c in comps])
             if not mask.any():
-                return {"matched": False, "reason": f"No data found for company '{sorted(comps)}'.", "results": []}
+                return NONE(f"No data found for company '{sorted(comps)}'.")
         if years:
             m2 = mask & np.isin(self.year, list(years))
             if not m2.any():
                 avail = {c: self._years_by_company.get(c, []) for c in (comps or [])}
                 extra = f" Available years: {avail}" if avail else ""
-                return {"matched": False, "reason": f"No data found for year(s) {sorted(years)}.{extra}", "results": []}
+                return NONE(f"No data found for year(s) {sorted(years)}.{extra}")
             mask = m2
         elif wants_recent:
-            latest = np.array([self.latest_year_by_company.get(n, 0) for n in self.names], dtype=np.int16)[self.ccode]
-            mask &= (self.year == latest)
+            mask &= (self.year == self._latest_arr[self.ccode])
         if chunk_type:
             mask &= (self.tcode == self.type_names.index(chunk_type))
         if F["clutter"]:
@@ -543,10 +809,14 @@ class Retriever:
 
         idx = np.where(mask)[0]
         if idx.size == 0:
-            return {"matched": False, "reason": "No sufficiently relevant data found for this query.", "results": []}
+            return NONE("No sufficiently relevant data found for this query.")
 
         item_types = line_item_types(query)            # number wala sawal? (total assets, revenue, D&A ...)
-        sq = self._search_text(query, comps, set() if item_types else years) if F["strip"] else query
+        if F["strip"]:
+            sq = self._search_text(query, comps, set() if item_types else years,
+                                   extra=typos, legal=LEGAL_SUFFIX if F["names"] else OLD_LEGAL_SUFFIX)
+        else:
+            sq = query
         q = self._embed(sq)
 
         # ---- dense (FAISS) : filter ke andar top POOL ----
@@ -557,7 +827,13 @@ class Retriever:
         best_dense = dense_hits[0][1] if dense_hits else 0.0
 
         # ---- keyword (BM25) : filter ke andar top POOL ----
-        bm = self._bm25(sq)[idx]
+        bq = sq
+        if F["synonyms"]:
+            more = synonym_terms(query)
+            if more:
+                bq = f"{sq} {more}"
+        bm_all = self._bm25(bq, use_stem=F["stem"])
+        bm = bm_all[idx]
         rb = {int(idx[i]): r for r, i in enumerate(np.argsort(-bm)[:self.POOL]) if bm[i] > 0}
         lists = [rd, rb]
 
@@ -569,12 +845,37 @@ class Retriever:
                 D3, I3 = self._dense(q, int(min(self.STMT_POOL, sel.size)), sel)
                 lists.append({int(i): r for r, i in enumerate(I3[0]) if i >= 0})
 
+        # ---- fresh: saal na diya ho to sab se naye 10-K ke behtareen chunks ko ek extra vote ----
+        if F["fresh"] and not years and not wants_recent:
+            new_idx = idx[self.year[idx] == self._latest_arr[self.ccode[idx]]]
+            if 0 < new_idx.size < idx.size:
+                Dn, In = self._dense(q, int(min(self.FRESH_POOL, new_idx.size)), new_idx)
+                bn = bm_all[new_idx]
+                rn = {}
+                for r, i in enumerate(In[0]):
+                    if i >= 0:
+                        rn[int(i)] = rn.get(int(i), 0.0) + 1.0 / (self.RRF_K + r + 1)
+                for r, i in enumerate(np.argsort(-bn)[:self.FRESH_POOL]):
+                    if bn[i] > 0:
+                        d = int(new_idx[i])
+                        rn[d] = rn.get(d, 0.0) + 1.0 / (self.RRF_K + r + 1)
+                lists.append({doc: r for r, doc in enumerate(sorted(rn, key=lambda x: -rn[x])[:self.FRESH_POOL])})
+
         rrf = {}
         for L in lists:
             for doc, r in L.items():
                 rrf[doc] = rrf.get(doc, 0.0) + 1.0 / (self.RRF_K + r + 1)
 
-        results, seen, same_text = [], set(), {}
+        # ---- diverse: do companies / do saal -> dono ke chunks baari baari ----
+        group_by = None
+        if F["diverse"]:
+            if len(comps) >= 2:
+                group_by = "company"
+            elif len(years) >= 2:
+                group_by = "year"
+        want = top_k * 4 if (group_by or F["expand"]) else top_k
+
+        cands, seen, same_text = [], set(), {}
         for doc in sorted(rrf, key=lambda x: -rrf[x]):
             g = int(self.gid[doc])
             if g in seen:                    # lambe table ke kai tukde -> ek hi baar
@@ -591,24 +892,53 @@ class Retriever:
                 "page_numbers": m["page_numbers"],
                 "chunk_type": m["chunk_type"],
                 "text": m["text"],
+                "_doc": doc,
+                "_m": m,
             }
             if F["dedup"]:                   # hu-ba-hu wahi paragraph doosre saal ka -> ek hi (naye saal wala)
                 sig = re.sub(r"\s+", " ", (m["text"] or "")[:250].lower()).strip()
                 j = same_text.get(sig)
                 if j is not None:
-                    if int(m["year"] or 0) > int(results[j]["year"] or 0):
-                        results[j] = item
+                    if int(m["year"] or 0) > int(cands[j]["year"] or 0):
+                        cands[j] = item
                     continue
-                same_text[sig] = len(results)
-            results.append(item)
-            if len(results) == top_k:
+                same_text[sig] = len(cands)
+            cands.append(item)
+            if len(cands) == want:
                 break
 
+        if group_by:
+            buckets = {}
+            for it in cands:                                    # pehle wala group = jis ka sab se acha chunk
+                buckets.setdefault(it[group_by], []).append(it)
+            order, ordered = list(buckets), []
+            while any(buckets[k] for k in order):
+                for k in order:
+                    if buckets[k]:
+                        ordered.append(buckets[k].pop(0))
+        else:
+            ordered = cands
+
+        results, covered = [], set()
+        for it in ordered:
+            if len(results) == top_k:
+                break
+            if F["expand"]:
+                g = int(self.gid[it["_doc"]])
+                if g in covered:                 # ye chunk upar wale result ke saath pehle hi aa chuka
+                    continue
+                it["text"], used, it["page_numbers"] = self._expanded_text(it["_doc"], it["_m"], covered)
+                covered |= used
+            results.append(it)
+        for it in cands:
+            it.pop("_doc", None)
+            it.pop("_m", None)
+
         if not results:
-            return {"matched": False, "reason": "No sufficiently relevant data found for this query.", "results": []}
-        if not needs_hard_filter:
-            if best_dense < self.MIN_CONFIDENCE_SCORE:
-                return {"matched": False, "reason": "No sufficiently relevant data found for this query.", "results": []}
+            return NONE("No sufficiently relevant data found for this query.")
+        gate = (not comps) if F["oos2"] else (not needs_hard_filter)
+        if gate and best_dense < self.MIN_CONFIDENCE_SCORE:
+            return NONE("No sufficiently relevant data found for this query.")
         return {"matched": True, "reason": None, "results": results}
 
 
@@ -631,12 +961,20 @@ TEST_QUESTIONS = {
     ],
     "Recency": [
         "What is Woodward's most recent total net sales?",
+        "How many employees does Woodward currently have?",
+    ],
+    "User ke apne alfaaz (v2.2)": [
+        "What was Woodward's headcount in 2025?",
+        "Which audit firm audits Nordson's financial statements?",
+        "What were Wallmart's total assets in 2022?",
     ],
     "Out-of-scope (should NOT match)": [
         "Who is the CEO of Tesla?",
         "What is the weather in Cupertino?",
         "What was Woodward's revenue in 2031?",
         "What risks does Samsung face?",
+        "how much revenue did samsung make in 2024",
+        "Who won the FIFA World Cup in 2022?",
     ],
 }
 
@@ -665,7 +1003,7 @@ if __name__ == "__main__":
     ap.add_argument("--year", type=int)
     ap.add_argument("--type", choices=["text", "table"])
     ap.add_argument("--store", default="STAGE_1/vector_store")
-    ap.add_argument("--off", default="", help="comma separated sudhaar band karo: guard,clutter,strip,stmt,dedup")
+    ap.add_argument("--off", default="", help="comma separated sudhaar band karo: " + ",".join(FEATURES))
     ap.add_argument("--test", action="store_true")
     a = ap.parse_args()
     retriever = Retriever(a.store)
