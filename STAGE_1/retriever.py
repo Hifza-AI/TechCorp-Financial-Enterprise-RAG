@@ -57,6 +57,7 @@ import difflib
 import inspect
 import json
 import re
+import sys
 import time
 import zlib
 from pathlib import Path
@@ -942,46 +943,87 @@ class Retriever:
         return {"matched": True, "reason": None, "results": results}
 
 
+# Test sawal: v2.2 ki tuning mukammal hone ke BAAD likhe gaye, aur inke results dekh kar koi setting nahi badli gayi.
+# Companies wahi dataset wali hain (in mein se kuch ke doosre sawal golden / v2 set mein hain) -- naye sirf sawal hain.
+# "--test" inhein chalata hai. Sir ya koi bhi apne sawal yahan jod sakta hai (category -> list).
 TEST_QUESTIONS = {
-    "Numbers (table lookup)": [
-        "What was Woodward's total assets in 2025?",
-        "What was Nordson's net income in 2016?",
-        "What was Caterpillar's total sales and revenues in 2025?",
+    "Paragraph: business aur strategy": [
+        "How does Alphabet make most of its revenue?",
+        "How does Adobe describe its subscription business model in fiscal 2020?",
+        "What products does Kennametal sell?",
+        "What does Roper Technologies say about its acquisition strategy?",
+        "What does Palo Alto Networks say about its platform strategy in fiscal 2023?",
     ],
-    "Conceptual / risk": [
-        "What supply chain risks does Caterpillar disclose in 2025?",
-        "What competitive conditions does Nordson describe in 2020?",
+    "Paragraph: risks": [
+        "What does Apple say about its dependence on outsourcing partners for manufacturing in 2021?",
+        "What food safety risks does Chipotle mention in 2019?",
+        "What does Meta say about privacy and data protection regulation in 2022?",
+        "What cybersecurity risks does Walmart describe in fiscal 2024?",
+        "What does Intel say about delays in its manufacturing process technology in 2020?",
+        "Tell me about the total savings of consruction industries of Caterpillar in 2020?",
     ],
-    "Business description": [
-        "What business segments does Woodward operate?",
+    "Paragraph: employees, customers, competition": [
+        "How many employees did Netflix have at the end of 2022?",
+        "Who are ServiceNow's main competitors?",
+        "How does Amazon describe its competition in 2020?",
+        "How does Starbucks describe the sourcing of its coffee in fiscal 2021?",
+        "How does Workday describe its customers in fiscal 2022?",
+        "Tell me the Balance in December of 2019 of Caterpillar.",
     ],
-    "Comparison (two years / two companies)": [
-        "How did Woodward's net sales change between 2022 and 2023?",
-        "Compare Woodward and Nordson total assets in 2024",
+    "Paragraph: segments aur operations": [
+        "What are Nvidia's reportable segments in fiscal 2023?",
+        "How is Carlisle organized into segments in 2021?",
+        "What does Watts Water say about raw materials in 2020?",
+        "How did COVID-19 affect Parker Hannifin's business in fiscal 2021?",
+        "What are Salesforce's main sources of revenue in fiscal 2022?",
+        "Why Chevron use MTBE as a gasoline addictive?",
+        "Tell me about the controls and procedures of Chevron in 2019."
     ],
-    "Recency": [
-        "What is Woodward's most recent total net sales?",
-        "How many employees does Woodward currently have?",
+    "Number (table) -- asli jawab SQL track se aayega": [
+        "What was Apple's total net sales in fiscal 2022?",
+        "How much did Microsoft spend on research and development in fiscal 2024?",
     ],
-    "User ke apne alfaaz (v2.2)": [
-        "What was Woodward's headcount in 2025?",
-        "Which audit firm audits Nordson's financial statements?",
-        "What were Wallmart's total assets in 2022?",
-    ],
-    "Out-of-scope (should NOT match)": [
-        "Who is the CEO of Tesla?",
-        "What is the weather in Cupertino?",
-        "What was Woodward's revenue in 2031?",
-        "What risks does Samsung face?",
-        "how much revenue did samsung make in 2024",
-        "Who won the FIFA World Cup in 2022?",
+    "Bahar ke sawal (jawab 'nahi mila' hona chahiye)": [
+        "What was Tesla's revenue in 2023?",
+        "what does spotify say about podcasts",
+        "Who won the Cricket World Cup in 2023?",
     ],
 }
 
+_PREVIEW_STOP = {
+    "what", "which", "who", "whom", "whose", "how", "when", "where", "why", "does", "did", "do", "is", "was", "were",
+    "are", "the", "a", "an", "of", "in", "on", "for", "to", "and", "or", "its", "their", "it", "this", "that", "these",
+    "those", "about", "say", "says", "said", "tell", "me", "please", "describe", "explain", "much", "many", "has", "have",
+    "had", "be", "been", "with", "from", "by", "as", "at", "any", "there", "company", "companies", "fiscal", "year",
+    "annual", "report", "main", "mention", "mentions", "january", "february", "march", "april", "may", "june", "july",
+    "august", "september", "october", "november", "december",
+}
 
-def _show(question, response):
+
+def answer_preview(text, query, n=2, width=320, skip=""):
+    """Result ke text mein se wo 1-2 jumle (ya table ki lines) jo sawal se sab se zyada milte hain. Sirf dikhane ke
+    liye -- search par koi asar nahi. Sir / Gemini se pehle aankh se check karne mein madad karta hai.
+    skip = company ka naam: har jumle mein hota hai, is liye us se jumla nahi chuna jata."""
+    skip_set = {stem(w) for w in tok(skip)}
+    want = {stem(w) for w in tok(query + " " + synonym_terms(query))
+            if w.isalpha() and len(w) > 2 and w not in _PREVIEW_STOP} - skip_set
+    if not want:
+        return []
+    parts = [p.strip() for p in re.split(r"(?<=[.!?])\s+|\n| / ", text or "") if len(p.strip()) > 25]
+    scored = []
+    for i, p in enumerate(parts):
+        have = {stem(w) for w in tok(p) if w.isalpha()}
+        s = len(want & have)
+        if s:
+            scored.append((s, -i, p))
+    best = sorted(scored, reverse=True)[:n]
+    best.sort(key=lambda x: -x[1])                      # PDF wali tarteeb mein
+    return [p if len(p) <= width else p[:width] + " ..." for _, _, p in best]
+
+
+def _show(question, response, label="Q"):
     print("\n" + "=" * 70)
-    print("Q:", question)
+    print(f"{label}:", question)
     print("=" * 70)
     if not response["matched"]:
         print("    ⚠️  ", response["reason"])
@@ -989,16 +1031,24 @@ def _show(question, response):
     for i, r in enumerate(response["results"], 1):
         pg = r["page_numbers"]
         pg = (f"{min(pg)}-{max(pg)}" if pg and min(pg) != max(pg) else (str(pg[0]) if pg else "?"))
-        print(f"\n[{i}] dense={r['score']:.3f} rrf={r['rrf_score']:.4f} | {r['company_display']} {r['year']} | "
-              f"{r['chunk_type']} | PDF page {pg}")
+        print(f"\n[{i}] {r['company_display']} {r['year']} | {r['chunk_type']} | PDF page {pg} | "
+              f"dense={r['score']:.3f} rrf={r['rrf_score']:.4f}")
         print("    Section:", r["section_path"][-110:])
-        print("    " + r["text"][:300].replace("\n", " / "))
+        lines = answer_preview(r["text"], question, skip=f"{r['company']} {r['company_display']}")
+        for s in lines:
+            print("    >>", s.replace("\n", " / "))
+        if not lines:
+            print("    " + r["text"][:300].replace("\n", " / "))
 
 
 if __name__ == "__main__":
+    try:
+        sys.stdout.reconfigure(errors="replace")    # output file mein bhejo (> out.txt) to ✓ / ⚠️ par crash na ho
+    except (AttributeError, ValueError):
+        pass
     ap = argparse.ArgumentParser()
     ap.add_argument("query", nargs="?")
-    ap.add_argument("-k", type=int, default=5)
+    ap.add_argument("-k", type=int, default=None, help="kitne results (sawal par 5, --test par 3)")
     ap.add_argument("--company")
     ap.add_argument("--year", type=int)
     ap.add_argument("--type", choices=["text", "table"])
@@ -1012,17 +1062,32 @@ if __name__ == "__main__":
             ap.error(f"'{f}' koi sudhaar nahi. In mein se: {', '.join(retriever.features)}")
         retriever.features[f] = False
     if a.test:
+        k = a.k or 3
         log = []
         for cat, qs in TEST_QUESTIONS.items():
             print("\n" + "#" * 70 + f"\n# CATEGORY: {cat}\n" + "#" * 70)
             for qn in qs:
-                resp = retriever.search(qn, top_k=3)
-                _show(qn, resp)
-                log.append({"category": cat, "question": qn, **resp})
+                resp = retriever.search(qn, top_k=k)
+                _show(qn, resp, label=f"Q{len(log) + 1:02d}")
+                log.append({"n": len(log) + 1, "category": cat, "question": qn, **resp})
         with open("retriever_test_results.json", "w", encoding="utf-8") as f:
             json.dump(log, f, indent=4, ensure_ascii=False)
-        print("\n\nFull results also saved to: retriever_test_results.json")
+        n_ok = sum(1 for x in log if x["matched"])
+        print(f"\n\n{len(log)} sawal: {n_ok} par results aaye (top {k}), {len(log) - n_ok} par 'nahi mila'.")
+        print("\nMARKING LIST -- upar har sawal ke '>>' padh kar [ ] mein likho:  ✓ jawab mila | ~ adhoora | ✗ nahi mila")
+        print("(bahar ke sawal par 'nahi mila' aaye to ✓; sahi company / saal bhi dekhna)")
+        for x in log:
+            if x["matched"]:
+                r = x["results"][0]
+                pg = r["page_numbers"]
+                got = f"#1: {r['company_display']} {r['year']} p{min(pg) if pg else '?'}"
+            else:
+                got = "nahi mila"
+            q_ = x["question"] if len(x["question"]) <= 62 else x["question"][:59] + "..."
+            print(f"[ ] Q{x['n']:02d}  {q_:<62}  -> {got}")
+        print("\nPoore results: retriever_test_results.json")
     elif a.query:
-        _show(a.query, retriever.search(a.query, top_k=a.k, company=a.company, year=a.year, chunk_type=a.type))
+        _show(a.query, retriever.search(a.query, top_k=a.k or 5, company=a.company, year=a.year,
+                                        chunk_type=a.type))
     else:
         ap.error("query do, ya --test lagao")
