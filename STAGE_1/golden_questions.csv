@@ -26,8 +26,7 @@ G24,Does any single customer account for more than 10% of Franklin Electric's sa
 G25,"In 2025, who did Northrop Grumman's chief information security officer report to?",Northrop Grumman,2025,reports to the CIDO,text,25,Item 1C cybersecurity governance (exists only in recent filings)
 G26,Which audit firm audits Intuit's financial statements?,Intuit,,Ernst & Young LLP,text,FY2026 p68,auditor name; same firm every year
 G27,Where is Nordson headquartered?,Nordson,,"Westlake, Ohio",text,FY2025 p5,"timeless fact, no year"
-G28,In how many countries are Colgate-Palmolive products sold?,Colgate-Palmolive, 200 countries and territories,text,FY2025 p3,hyphenated name; timeless fact
-G29,Which reportable segments does Pentair have in 2025?,Pentair,2025,"Flow, Water Solutions and Pool",text,4,segment names
+G28,In how many countries are Colgate-Palmolive products sold?,Colgate-Palmolive,,200 countries and territories,text,FY2025 p3,hyphenated name; timeless factG29,Which reportable segments does Pentair have in 2025?,Pentair,2025,"Flow, Water Solutions and Pool",text,4,segment names
 G30,What operating segments does Rockwell Automation have in 2025?,Rockwell Automation,2025,"Intelligent Devices, Software & Control, and Lifecycle Services",text,5,stored company name has a typo ('Rockwell Auomation') -- alias must work
 G31,How did Woodward's net earnings change from fiscal 2024 to 2025?,Woodward,2024|2025,"442,111|372,971",compare,70,"two years, one filing (FY2025 statement has both columns)"
 G32,Compare Xylem's revenue in 2024 and 2025.,Xylem,2024|2025,"9,035|8,562",compare,73,"two years, one filing"
