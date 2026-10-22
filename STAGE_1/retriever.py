@@ -47,6 +47,15 @@ v2.2 (golden set ke 56 asli-user jaise sawalon ke 23 fail dekh kar; zor paragrap
   diverse  Do companies ya do saal ka sawal: dono ke chunks baari baari (pehle sirf ek hi company aati thi).
   expand   Har result ke saath usi section ka pichla aur agla chunk bhi (jawab aksar chunk ki had par toot'ta
            hai, Gemini ko poori baat milni chahiye).
+v2.3 (22 Oct 2026) -- 100 sawal wale pehle test (pehla score 80/100) ki ghaltiyan dekh kar:
+  intent   "What does X make / sell", "growth plan / strategy", "auditor kaun tha" jaise sawal: Item 1 Business ka
+           overview, MD&A ka overview, ya auditor ke signature ("/s/ ... LLP") wala chunk ek extra vote leta hai.
+  typo     Sawal ka jo lafz data mein kabhi nahi aata aur kisi aam lafz se bohat milta hai, wo theek: proft -> profit.
+  roman    Roman Urdu ke aam alfaaz ka English matlab bhi search mein: banati -> make, bechti -> sell, kab bani -> founded.
+  tickers  Chhote / aam-lafz tickers sirf BARE huroof mein (PH, NOW, HD, COST, CRM ...), aur "nike's" / "apple's"
+           (possessive) chhote huroof mein bhi company.
+  words    Aam user ke kuch aur alfaaz -> 10-K ke alfaaz (sirf keyword search): layoffs -> restructuring workforce
+           reduction, profit -> net income, payout -> dividends, climate / carbon -> sustainability ...
 Har sudhaar FEATURES mein on/off; eval_retriever.py --ablation aur eval_golden.py --ablation har ek ka asar
 alag naapte hain.
 
@@ -73,14 +82,15 @@ from build_embeddings import EmbeddingIndexBuilder, tok, section_str, INC_REF, E
 # Har sudhaar on/off. eval_retriever.py --ablation / eval_golden.py --ablation inhein badal badal kar naapte hain.
 OLD_FEATURES = ["guard", "clutter", "strip", "stmt", "dedup"]                          # v2 / v2.1
 NEW_FEATURES = ["recency", "fresh", "synonyms", "stem", "names", "oos2", "diverse", "expand"]   # v2.2
-FEATURES = {f: True for f in OLD_FEATURES + NEW_FEATURES}
+V23_FEATURES = ["intent", "typo", "roman", "tickers", "words"]                                        # v2.3
+FEATURES = {f: True for f in OLD_FEATURES + NEW_FEATURES + V23_FEATURES}
 
 
 def ablation_variants():
-    """v2.1 (naye sudhaar band) -> har naya sudhaar akela -> sab on. Dono eval files yahi list use karti hain."""
-    base = {f: f in OLD_FEATURES for f in FEATURES}
-    return ([("v2.1 (naye off)", base)] + [(f"+ {f}", dict(base, **{f: True})) for f in NEW_FEATURES]
-            + [("v2.2 (sab on)", {f: True for f in FEATURES})])
+    """v2.2 (v2.3 ke sudhaar band) -> har v2.3 sudhaar akela -> sab on. Dono eval files yahi list use karti hain."""
+    base = {f: f not in V23_FEATURES for f in FEATURES}
+    return ([("v2.2 (naye off)", base)] + [(f"+ {f}", dict(base, **{f: True})) for f in V23_FEATURES]
+            + [("v2.3 (sab on)", {f: True for f in FEATURES})])
 
 
 # ---------------------------------------------------------------------------------------------
@@ -127,7 +137,7 @@ def display_name(company):
 # ---------------------------------------------------------------------------------------------
 # Chunk flags (flags.npz mein ek dafa bante hain)
 # ---------------------------------------------------------------------------------------------
-FLAGS_VERSION = 1          # (neeche ke rules badlein to flags.npz khud dobara banti hai -- _rules_sig dekho)
+FLAGS_VERSION = 2          # (neeche ke rules badlein to flags.npz khud dobara banti hai -- _rules_sig dekho)
 
 TABLE_TITLE = re.compile(r"^The following table shows (.+?) data for ", re.M)
 # Asli financial statement ka unwaan: 1 = balance sheet, 2 = income statement, 3 = cash flow,
@@ -362,6 +372,119 @@ def synonym_terms(query):
     return " ".join(add for rx, add in SYNONYMS if rx.search(query))
 
 
+# v2.3 "roman": Roman Urdu ke aam alfaaz -> 10-K ke English alfaaz (dense aur keyword dono query mein jurte hain)
+ROMAN = [
+    (r"\bbana(?:ti|ta|te)\b|\bbnati\b", "make manufacture products"),
+    (r"\bbech(?:ti|ta|te|na)\b|\bfarokht\b", "sell sales customers"),
+    (r"\bkab (?:bani|bana|qaim|shuru)\b|\bbuniyad\b", "founded incorporated"),
+    (r"\bnuqsan\b|\bnuksan\b|\bkhasar[ae]\b", "loss adversely affect harm"),
+    (r"\bmunaf[ae]h?\b|\bfaid[ae]\b", "profit net income"),
+    (r"\ba+mdani\b|\bkamai\b", "revenue income"),
+    (r"\bkharch[ae]?\b", "spending expense"),
+    (r"\bmulazi?m\w*|\bmulazmeen\b", "employees"),
+    (r"\bdaft[ae]r\b", "office headquarters"),
+    (r"\bhiss[ae]y?\b|\bshob[ae]y?\b", "segments"),
+    (r"\bmu[qk]abl[ae]\w*", "competition competitors"),
+    (r"\bkhatr[ae]\w*", "risk"),
+    (r"\bqarz[ae]?\b", "debt borrowings"),
+    (r"\bgaa?hak\b|\bkhareedar\w*", "customers"),
+]
+ROMAN = [(re.compile(p, re.I), add) for p, add in ROMAN]
+# "typo" in lafzon ko English ki ghalti samajh kar nahi badalta
+ROMAN_WORD = re.compile(r"^(?:kitn[aie]|kahan|kaise|kyun|banati|banata|banate|bechti|bechta|bechte|karti|karta|karte|"
+                        r"karein|karen|nuqsan|nuksan|munafa|munafe|aamdani|amdani|kharch\w*|mulazim\w*|mulazmeen|"
+                        r"daftar|hisse|shobay|muqabla|mukabla|khatra|khatre|qarza|thein|thiin|wapas|zyada|kitne)$", re.I)
+
+
+def roman_terms(query):
+    return " ".join(add for rx, add in ROMAN if rx.search(query))
+
+
+# v2.3 "words": synonyms jaisa (sirf keyword query), aam user ke mazeed alfaaz
+WORDS = [
+    (r"\blay ?offs?\b|\blaid off\b|\bjob cuts?\b|\bcut(?:ting)? jobs\b|\bdownsiz\w*|\bfir(?:e|ed|ing) (?:staff|employees|workers)\b",
+     "restructuring reduction workforce severance"),
+    (r"(?<!gross )(?<!operating )(?<!segment )\bprofits?\b(?! (?:sharing|margin))|\bearn(?:ed|s)?\b(?! per)",
+     "net income earnings"),
+    (r"\blos(?:e|t|ing) money\b|\bunprofitable\b", "net loss"),
+    (r"\bpay ?outs?\b|\bpaid (?:out )?to (?:shareholders|investors)\b", "dividends paid"),
+    (r"\bgreen\b|\bclimate\b|\bcarbon\b|\bnet[- ]zero\b|\beco[- ]friendly\b", "sustainability greenhouse gas emissions climate"),
+    (r"\bboss\b|\bwho runs\b|\bin charge of\b", "chief executive officer"),
+]
+WORDS = [(re.compile(p, re.I), add) for p, add in WORDS]
+
+
+def words_terms(query):
+    return " ".join(add for rx, add in WORDS if rx.search(query))
+
+
+# v2.3 "intent": sawal kis hisse ka hai -> wahan ke chunks ko ek extra vote (stmt jaisa). Bits: 1 = Item 1 Business
+# ka overview / products / strategy, 2 = MD&A ka overview, 4 = auditor ki report ka signature ("/s/ ... LLP").
+INTENT_BUSINESS = re.compile(
+    r"\bwhat (?:does|do|did)\b[^?]{0,50}\b(?:make|makes|sell|sells|produce|produces|offer|offers|manufactur\w*)\b|"
+    r"\bwhat (?:kinds?|types?|sorts?) of (?:products?|business(?:es)?|services?|company)\b|\bwhat (?:products?|services?)\b|"
+    r"\bwhat (?:is|are)\b[^?]{0,40}\b(?:main |core )?(?:business|products?|services?)\b|\bmake (?:most of )?(?:its |their )?"
+    r"(?:money|revenue)\b|\bsources? of revenue\b|\brevenue (?:sources?|streams?)\b|\bbusiness model\b|"
+    r"\bdescribe\b[^?]{0,40}\bbusiness\b|\b(?:company|business) overview\b|\bbana(?:ti|ta|te)\b|\bbech(?:ti|ta|te)\b|"
+    r"\bkaam kar(?:ti|ta|te)\b|\bkarobar\b", re.I)
+INTENT_STRATEGY = re.compile(
+    r"\bgrow(?:th|ing)?\b|\bexpan(?:d|sion)\b|\bstrateg\w*|\b(?:business|growth|expansion) plans?\b|\bplans? to\b|"
+    r"\bhow did\b[^?]{0,40}\b(?:do|perform|go)\b|\b(?:overall|financial) performance\b|\bhighlights?\b|\boutlook\b", re.I)
+INTENT_AUDITOR = re.compile(r"\baudit(?:or|ors|ed|s)?\b|\baccounting firm\b", re.I)
+
+
+def intent_bits(query):
+    b = 0
+    if INTENT_BUSINESS.search(query):
+        b |= 1
+    if INTENT_STRATEGY.search(query):
+        b |= 1 | 2
+    if INTENT_AUDITOR.search(query):
+        b |= 4
+    return b
+
+
+BIZ_ITEM = re.compile(r"\bitems?\s*1(?![0-9a-z]).{0,25}\bbusiness\b", re.I)
+BUSINESS_HEAD = re.compile(r"^\s*(?:business|general|overview|our business|business overview|company overview|the company|"
+                           r"our company|description of (?:the )?business|products(?: and services)?|our products|"
+                           r"strategy|our strategy|business strategy|who we are)\b", re.I)
+MDA = re.compile(r"management['’]?s\s+discussion|results of operations", re.I)
+MDA_OVERVIEW = re.compile(r"\b(?:overview|executive (?:summary|overview)|highlights|business outlook|outlook|strategy|"
+                          r"our business|summary of results|key (?:developments|events|trends))\b", re.I)
+NOT_OVERVIEW_ANY = re.compile(r"risk factors|item\s*1a\b|\bnotes? to (?:the )?(?:consolidated )?financial|accounting polic|"
+                              r"report of independent|controls and procedures|\bexhibits?\b|\bsignatures?\b|forward[- ]looking|"
+                              r"financial statements and supplementary", re.I)
+NOT_OVERVIEW_EL = re.compile(r"^\s*(?:item\s*\w{1,3}\s*[\.:\-–—]?\s*)?(?:risk factors|legal proceedings|properties|"
+                             r"(?:information about )?(?:our )?executive officers|available information|competition|"
+                             r"human capital|employees|seasonality|backlog|raw materials|intellectual property|patents|"
+                             r"trademarks|environmental|government regulation|regulation|cybersecurity|special note|"
+                             r"unresolved staff comments|mine safety)", re.I)
+AUDIT_SIG = re.compile(r"/s/\s*[A-Z][A-Za-z&.,'’\- ]{1,60}?\bL\.?L\.?P\b")
+
+
+def section_bits(m):
+    """v2.3 "intent" ke liye chunk ki qism (flags.npz mein ek dafa banti hai)."""
+    parts = [p.strip() for p in section_str(m).split(" > ") if p.strip()]
+    path = " > ".join(parts)
+    pages = m.get("page_numbers") or []
+    bits = 0
+    if not NOT_OVERVIEW_ANY.search(path) and not any(NOT_OVERVIEW_EL.search(p) for p in parts):
+        if any(BIZ_ITEM.search(p) for p in parts):
+            bits |= 1
+        elif pages and min(pages) <= 15 and not MDA.search(path) and any(BUSINESS_HEAD.search(p) for p in parts):
+            bits |= 1
+        if MDA.search(path) and parts and MDA_OVERVIEW.search(parts[-1]):
+            bits |= 2
+    if m.get("chunk_type") != "table" and AUDIT_SIG.search(m.get("text") or ""):
+        bits |= 4
+    return bits
+
+
+# v2.3 "tickers": ye tickers aam lafz bhi hain -> sirf BARE huroof mein company (PH, NOW, HD ...). ticker -> naam
+TICKER_NAMES = {"ph": "parker hannifin", "now": "servicenow", "crm": "salesforce", "hd": "home depot", "cost": "costco",
+                "cl": "colgate palmolive", "ba": "boeing", "ame": "ametek", "sq": "block", "xyz": "block"}
+
+
 # v2.2 "stem": lafz ki jarh (employees -> employ). Sirf keyword search ke liye, query ki taraf; index wahi rehta hai.
 _SUFFIXES = ("ations", "ation", "ments", "ment", "ings", "ing", "ers", "ees", "ed", "es", "er", "ee", "s", "ly")
 
@@ -414,6 +537,9 @@ class Retriever:
     RRF_K = 60
     POOL = 50
     STMT_POOL = 10
+    INTENT_POOL = 5         # "intent": sahi hisse ke itne behtareen chunks ko extra vote
+    TYPO_CUTOFF = 0.85      # "typo": kitna milta julta ho (difflib ratio)
+    TYPO_MIN_DF = 20        # "typo": sirf un alfaaz se badlo jo kam az kam itne chunks mein hain
 
     WELL_KNOWN_COMPANIES = [
         "tesla", "microsoft", "jpmorgan", "citigroup", "pfizer", "coca-cola", "costco", "cvs", "disney",
@@ -443,7 +569,7 @@ class Retriever:
         self.vocab = json.loads((d / "bm25_vocab.json").read_text(encoding="utf-8"))
         self.avgdl = float(self.dl.mean())
         self.df = np.diff(self.X.indptr)
-        self.stmt, self.clutter = self._load_flags(d)
+        self.stmt, self.clutter, self.sect = self._load_flags(d)
 
         self.embedder = EmbeddingIndexBuilder(cfg["model"])
         self.features = dict(FEATURES)
@@ -461,6 +587,7 @@ class Retriever:
                                   for ci, n in enumerate(self.names)}
         self._latest_arr = np.array([self.latest_year_by_company.get(n, 0) for n in self.names], dtype=np.int16)
         self._stem_ids = None                    # "stem": pehli zaroorat par banta hai (stem -> vocab ids)
+        self._typo_idx = None                    # "typo": pehli zaroorat par (pehla harf -> aam alfaaz)
         self._build_aliases()
 
     def _meta(self, i):
@@ -525,9 +652,10 @@ class Retriever:
         """Flags ke rules ka fingerprint: rule (regex / function) badla to purani flags.npz khud bekaar."""
         parts = [p.pattern for p in (STMT_TITLE, SUBTITLE, NOT_STMT, BAD_SUFFIX, TABLE_TITLE, ITEM_TITLES, EXH_LEAF,
                                      BIG_NUM, PAGE_LINE, ITEM_TOKEN, XBRL_DOC, ROMAN_ITEM, CONS_STMT,
-                                     INC_REF, EXHIBIT_REF, FORM_REF)]
+                                     INC_REF, EXHIBIT_REF, FORM_REF, BIZ_ITEM, BUSINESS_HEAD, MDA, MDA_OVERVIEW,
+                                     NOT_OVERVIEW_ANY, NOT_OVERVIEW_EL, AUDIT_SIG)]
         try:
-            parts += [inspect.getsource(f) for f in (statement_type, _stmt_code, clutter_reason)]
+            parts += [inspect.getsource(f) for f in (statement_type, _stmt_code, clutter_reason, section_bits)]
         except (OSError, TypeError):
             pass
         return zlib.crc32("\x00".join(parts).encode("utf-8"))
@@ -539,27 +667,29 @@ class Retriever:
         if fp.exists():
             try:
                 with np.load(fp) as z:                # 'with' -> Windows par file band ho jati hai
-                    if str(z["key"]) == key:
-                        return z["stmt"].copy(), z["clutter"].copy()
+                    if str(z["key"]) == key and "sect" in z.files:
+                        return z["stmt"].copy(), z["clutter"].copy(), z["sect"].copy()
             except Exception:
                 pass
         print("Pehli baar: chunks ke flags bana raha hoon (fehrist? financial statement?) -- sirf ek dafa...")
         t0 = time.time()
         stmt = np.zeros(self.N, dtype=np.int8)
         clut = np.zeros(self.N, dtype=bool)
-        last_g, last = None, (0, False)
+        sect = np.zeros(self.N, dtype=np.int8)
+        last_g, last = None, (0, False, 0)
         with open(mp, "rb") as fh:
             for i, line in enumerate(fh):
                 g = int(self.gid[i])
                 if g != last_g:                       # ek chunk ke saare tukde (windows) ek jaise
                     m = json.loads(line)
-                    last = (statement_type(m), clutter_reason(m) is not None)
+                    last = (statement_type(m), clutter_reason(m) is not None, section_bits(m))
                     last_g = g
-                stmt[i], clut[i] = last
-        np.savez(fp, key=np.array(key), stmt=stmt, clutter=clut)
+                stmt[i], clut[i], sect[i] = last
+        np.savez(fp, key=np.array(key), stmt=stmt, clutter=clut, sect=sect)
         print(f"  ho gaya ({time.time() - t0:.0f} sec): statement tukde {int((stmt > 0).sum())}, "
-              f"fehrist/exhibit tukde {int(clut.sum())}  -> {fp.name}")
-        return stmt, clut
+              f"fehrist/exhibit tukde {int(clut.sum())}, overview tukde {int(((sect & 3) > 0).sum())}, "
+              f"auditor signature {int(((sect & 4) > 0).sum())}  -> {fp.name}")
+        return stmt, clut, sect
 
     # ------------------------------------------------------------------
     # company / saal pehchan
@@ -593,14 +723,26 @@ class Retriever:
         self._compact = {re.sub(r"[^a-z0-9]", "", a) for a in self.aliases}
         # "names": spelling ki ghalti se milane ke liye sirf 5+ huroof wale naam (dell, nike jaise chhote nahi)
         self._fuzzy_keys = sorted(a for a in self.aliases if len(a) >= 5 and not re.search(r"\d", a))
+        # v2.3 "tickers": aam-lafz tickers sirf BARE huroof mein (fuzzy / compact list mein nahi)
+        self._upper_only = set()
+        for t, nm in TICKER_NAMES.items():
+            ns = self.aliases.get(nm)
+            if ns and t not in self.aliases:
+                self.aliases[t] = set(ns)
+                self._upper_only.add(t)
 
     def _detect_companies(self, query):
         q = " " + re.sub(r"[^a-z0-9&]+", " ", query.lower()) + " "
+        tick = self.features.get("tickers", True)
         found = set()
         for a, ns in self.aliases.items():
             if a and re.search(r"\b" + re.escape(a) + r"\b", q):
-                if a in AMBIGUOUS and not re.search(r"\b(?:" + re.escape(a.capitalize()) + "|" + re.escape(a.upper()) + r")\b", query):
-                    continue                         # "block of shares" -> Block company nahi
+                if a in getattr(self, "_upper_only", ()):           # "PH" haan, "ph" / "Ph" nahi
+                    if not tick or not re.search(r"(?<![A-Za-z0-9])" + re.escape(a.upper()) + r"(?![A-Za-z0-9])", query):
+                        continue
+                elif a in AMBIGUOUS and not re.search(r"\b(?:" + re.escape(a.capitalize()) + "|" + re.escape(a.upper()) + r")\b", query):
+                    if not (tick and re.search(r"\b" + re.escape(a) + r"['’]s\b", query, re.I)):
+                        continue                     # "block of shares" -> Block company nahi;  "nike's" -> Nike
                 found |= ns
         return found
 
@@ -675,6 +817,33 @@ class Retriever:
                     continue
                 return e
         return None
+
+    def _fix_typos(self, query, skip=()):
+        """"typo": 5+ huroof ka jo lafz data mein kabhi nahi aata, aur kisi aam lafz (TYPO_MIN_DF+ chunks) se bohat
+        milta hai, us ki jagah wo lafz: proft -> profit, reserch -> research. Company naam, BARE huroof wale lafz
+        (tickers) aur Roman Urdu nahi chhedte. Wapas: (naya sawal, {purana: naya})."""
+        if self._typo_idx is None:
+            ti = {}
+            for v, j in self.vocab.items():
+                if len(v) >= 4 and v.isalpha() and self.df[j] >= self.TYPO_MIN_DF:
+                    ti.setdefault(v[0], []).append(v)
+            self._typo_idx = ti
+        skip = {w.lower() for s in skip for w in re.findall(r"[A-Za-z]+", s)}
+        fixes = {}
+        for w in set(re.findall(r"[A-Za-z]{5,}", query)):
+            lw = w.lower()
+            if w.isupper() or lw in self.vocab or lw in self.aliases or lw in skip or ROMAN_WORD.match(lw):
+                continue
+            cands = [v for v in self._typo_idx.get(lw[0], ()) if abs(len(v) - len(lw)) <= 2]
+            cut = self.TYPO_CUTOFF if len(lw) > 5 else 0.9           # chhota lafz: zyada yaqeen chahiye (thier != tier)
+            best = difflib.get_close_matches(lw, cands, n=3, cutoff=cut)
+            if best:
+                sc = [difflib.SequenceMatcher(None, lw, b).ratio() for b in best]
+                keep = [b for b, x in zip(best, sc) if x >= sc[0] - 0.05][:2]   # barabar ke do: distributes distributors
+                fixes[w] = " ".join(keep)
+        if not fixes:
+            return query, {}
+        return re.sub(r"[A-Za-z]{5,}", lambda mm: fixes.get(mm.group(0), mm.group(0)), query), fixes
 
     def _search_text(self, query, comps, years, extra=(), legal=OLD_LEGAL_SUFFIX):
         """'strip': filter ban chuke company naam, diye gaye saal aur "10-K / annual report" jaise alfaaz nikal do.
@@ -814,12 +983,19 @@ class Retriever:
         if idx.size == 0:
             return NONE("No sufficiently relevant data found for this query.")
 
-        item_types = line_item_types(query)            # number wala sawal? (total assets, revenue, D&A ...)
+        query_t = query
+        if F["typo"]:                                  # v2.3: "proft" -> "profit" (company naam nahi chhedte)
+            query_t, _ = self._fix_typos(query, skip=typos)
+        item_types = line_item_types(query_t)          # number wala sawal? (total assets, revenue, D&A ...)
         if F["strip"]:
-            sq = self._search_text(query, comps, set() if item_types else years,
+            sq = self._search_text(query_t, comps, set() if item_types else years,
                                    extra=typos, legal=LEGAL_SUFFIX if F["names"] else OLD_LEGAL_SUFFIX)
         else:
-            sq = query
+            sq = query_t
+        if F["roman"]:                                 # v2.3: Roman Urdu -> English alfaaz (dense + keyword)
+            rt = roman_terms(query_t)
+            if rt:
+                sq = f"{sq} {rt}"
         q = self._embed(sq)
 
         # ---- dense (FAISS) : filter ke andar top POOL ----
@@ -832,9 +1008,13 @@ class Retriever:
         # ---- keyword (BM25) : filter ke andar top POOL ----
         bq = sq
         if F["synonyms"]:
-            more = synonym_terms(query)
+            more = synonym_terms(query_t)
             if more:
                 bq = f"{sq} {more}"
+        if F["words"]:                                 # v2.3: layoffs -> restructuring ... (sirf keyword)
+            more2 = words_terms(query_t)
+            if more2:
+                bq = f"{bq} {more2}"
         bm_all = self._bm25(bq, use_stem=F["stem"])
         bm = bm_all[idx]
         rb = {int(idx[i]): r for r, i in enumerate(np.argsort(-bm)[:self.POOL]) if bm[i] > 0}
@@ -847,6 +1027,23 @@ class Retriever:
             if sel.size:
                 D3, I3 = self._dense(q, int(min(self.STMT_POOL, sel.size)), sel)
                 lists.append({int(i): r for r, i in enumerate(I3[0]) if i >= 0})
+
+        # ---- intent (v2.3): overview / strategy / auditor sawal -> us hisse ke behtareen chunks ko ek extra vote ----
+        bits = intent_bits(query_t) if (F["intent"] and not item_types) else 0
+        if bits:
+            sel = idx[(self.sect[idx] & bits) != 0]
+            if sel.size:
+                Di, Ii = self._dense(q, int(min(self.INTENT_POOL, sel.size)), sel)
+                bi = bm_all[sel]
+                ri = {}
+                for r, i in enumerate(Ii[0]):
+                    if i >= 0:
+                        ri[int(i)] = ri.get(int(i), 0.0) + 1.0 / (self.RRF_K + r + 1)
+                for r, i in enumerate(np.argsort(-bi)[:self.INTENT_POOL]):
+                    if bi[i] > 0:
+                        d = int(sel[i])
+                        ri[d] = ri.get(d, 0.0) + 1.0 / (self.RRF_K + r + 1)
+                lists.append({doc: r for r, doc in enumerate(sorted(ri, key=lambda x: -ri[x])[:self.INTENT_POOL])})
 
         # ---- fresh: saal na diya ho to sab se naye 10-K ke behtareen chunks ko ek extra vote ----
         if F["fresh"] and not years and not wants_recent:
