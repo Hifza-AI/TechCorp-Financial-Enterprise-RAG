@@ -241,7 +241,7 @@ def main():
             L.append(f"{name:18s} {s['h5']:7.1%} {s['h5l']:8.1%} {s['h10']:7.1%} {100 * (s['h5'] - base):+6.1f}  | "
                      f"{s['oos'][0]:>2d}/{s['oos'][1]:<3d}")
             print(f"  {name} ho gaya")
-        L += ["", "dHit@5 = 'v2.1' ke muqable kitne points (+ acha, - bura). Jo sudhaar golden aur v2 dono mein - de,",
+        L += ["", "dHit@5 = pehli line (base) ke muqable kitne points (+ acha, - bura). Jo sudhaar dono test sets mein - de,",
               "use retriever.py ke FEATURES mein False kar dena."]
         text = "\n".join(L)
         print("\n" + text)
