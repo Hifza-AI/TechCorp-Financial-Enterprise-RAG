@@ -1,7 +1,7 @@
 # Known Limitations
 
 **Project:** TechCorp Financial Enterprise RAG: 500 SEC 10-K filings (50 companies × 10 fiscal years)
-**Last updated:** 21 Oct 2026
+**Last updated:** 23 Oct 2026
 
 **How to read this file**
 - **Impact:** *Data* = a value or label is wrong or missing · *Structure* = text is intact but sits under a wrong or split heading · *Cosmetic* = display only, no effect on answers.
@@ -13,6 +13,7 @@
 2. R1: Wrong parent headings in several filings (Colgate-Palmolive, Watts Water, Parker Hannifin, Chevron, Block, Alphabet).
 3. T4: Blank row labels recur across five companies (Meta, Nvidia, Rockwell Automation, Nordson, Lockheed Martin).
 4. R4: Exact statement numbers and two-number comparisons still miss the primary statement in some questions (golden dev set: 6 of 24 table-based questions; planned: SQL track).
+5. R20: 1.7% of bullet items in the PDFs never reach a chunk (table detection takes short list lines).
 
 ---
 
@@ -254,7 +255,45 @@ The clutter, statement and unknown-company rules are regular expressions designe
 With `expand`, each result includes the previous and next chunk of the same section (at most 3,200 characters), and its page numbers include the neighbours' pages. This gives the answer step complete sentences across chunk boundaries but makes the context longer. Hit scores are computed on this expanded text, which is what the answer step receives.
 
 **R13: Typo tolerance is limited** · Status: Known
-Fuzzy company matching only covers names of five or more letters (a typo in "Nike" or "Dell" is not corrected), and a rare real word that is very close to a company name could be read as that company.
+Fuzzy company matching only covers names of five or more letters (a typo in "Nike" or "Dell" is not corrected), and a rare real word that is very close to a company name could be read as that company. Since v2.3, `typo` repairs other query words (see R17).
+
+### Retrieval stage: retriever v2.3 and the 100-question fair test (21-23 Oct 2026)
+
+**Test set t100** (`STAGE_1/test_questions.csv`): 100 questions, 2 per company across all 50 companies, one 10-K each (fiscal 2016-2025). Topics and question styles were fixed by rotation before each PDF was read (13 paragraph topics, 12 fact topics; normal, casual, light typo, Roman Urdu, ticker, how/why, no year). Gold answers are exact PDF phrases or numbers with their page. Hifza picked the files; Claude wrote the questions from the PDFs; the set was committed to git before the first run. Three out-of-scope questions run alongside.
+
+| | Run #1: v2.2 (unbiased) | Run #2: v2.3 (same questions) |
+|---|---|---|
+| t100 Hit@1 | 52/100 | 56/100 |
+| t100 Hit@5 (gold text in top 5, right company and year) | **80/100** | **90/100** |
+| t100 MRR@5 | 0.63 | 0.70 |
+| t100 out-of-scope rejected | 3/3 | 3/3 |
+| Golden dev set Hit@5 (regression check) | 85.4% | 85.4% |
+| Golden dev set out-of-scope rejected | 7/8 | 7/8 |
+
+Gain of each v2.3 feature alone on t100 Hit@5: `intent` +5, `typo` +3, `tickers` +2, `words` +1, `roman` 0. v2.3 fixed 11 questions and lost 1 (T17). In run #1, 98 of 100 top results already had the right company (misses: "nike" in lower case, ticker "PH").
+
+**Caution:** v2.3 was designed from run #1's misses, so 90/100 is in-sample; run #1 (80/100) is the unbiased figure. An unbiased v2.3 figure needs a fresh, frozen set. Hifza's human check of run #1 (review page) is in progress. Files: `retriever_test_results_run1.json`, `STAGE_1/eval/t100/golden_ablation.txt`.
+
+**R14: Strategy and overview questions can miss the key sentence** · Status: Open
+T07 AMD and T45 Intel (answer in the MD&A overview) and T59 Netflix and T34 eBay (one sentence in Item 1) still miss after `intent`. The right filing is found; the sentence is not lifted into the top 5.
+
+**R15: Cover-page fields can be lost** · Impact: Data · Status: Open
+Carlisle FY2024: the cover chunk keeps "(State or other jurisdiction of incorporation)" but not the word "Delaware", so the state of incorporation cannot be answered from the index (T18).
+
+**R16: Latest-year lookups for facts on table pages** · Status: Open
+"Where is Xylem headquartered?" (no year) returns the 2021 properties page; the 2025 cover address is not ranked (T100).
+
+**R17: Typo repair can change ranking** · Status: Known
+`typo` replaces unknown words with close, frequent words (proft -> profit). It fixed 3 questions but also moved T17 (Carlisle segments, "busness" -> "business") from rank 4 to outside the top 5.
+
+**R18: Roman Urdu support is a word list** · Status: Known
+`roman` maps common words (banati, bechti, kab bani, nuqsan ...). Questions phrased mostly in Roman Urdu still depend on their English words (T55 Meta still misses); the embedding model is English-only.
+
+**R19: Some chunks start mid-word** · Impact: Cosmetic, minor for keyword search · Status: Open
+Example: "ct offerings in nine key categories" (Nike FY2017), most likely where a long text was split by characters. The first word of such a chunk is lost to keyword search.
+
+**R20: Bullet items missing from chunks** · Impact: Data · Status: Open
+`check_data.py --bullets`: 697 of 40,027 bullet items (1.7%) in the PDFs appear in no chunk. Cause: rescue passes 3 and 4 in `table_analyzer.py` take short list lines as table candidates, and `paragraph_parser.py` skips table lines. Planned: a bullet guard plus returning unused candidate lines to paragraphs.
 
 ---
 
