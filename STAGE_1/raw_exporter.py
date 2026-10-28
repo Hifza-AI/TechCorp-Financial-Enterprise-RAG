@@ -10,7 +10,7 @@ class RawExporter:
 
             self._export_report(report)
 
-    # ------------------------------------------------------
+    # --------------------------------------------------------
 
     def _export_report(self, report):
 
