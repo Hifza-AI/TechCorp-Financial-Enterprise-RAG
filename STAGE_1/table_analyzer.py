@@ -1479,7 +1479,7 @@ if __name__ == "__main__":
 
     print("\n======================================")
     print(" Table Analyzer Started")
-    print("======================================\n")
+    print("========================================\n")
 
     analyzer = TableAnalyzer()
 
