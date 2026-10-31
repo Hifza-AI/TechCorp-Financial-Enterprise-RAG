@@ -828,9 +828,9 @@ if __name__ == "__main__":
                     else:
                         total_paragraphs += 1
 
-        print("\n====================================")
+        print("\n=====================================")
         print(" Paragraph Parsing Completed")
-        print("======================================")
+        print("=======================================")
         print(f"Reports Parsed     : {len(parsed_reports)}")
         print(f"Heading Blocks     : {total_headings}")
         print(f"Paragraph Blocks   : {total_paragraphs}")
