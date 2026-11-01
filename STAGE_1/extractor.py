@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
     print("\n====================================")
     print(" PDF Extraction Completed")
-    print("====================================")
+    print("======================================")
     print(f"\nTotal Reports  : {len(reports)}")
     print(f"Failed Reports : {len(failed_files)}")
 
