@@ -103,7 +103,7 @@ class TextCleaner:
             "spans": span_metadata,
         }
 
-    # ---------------------------------------------------------
+    # ---------------------------------------------------------------
     def save_cleaned_reports(self, cleaned_reports, output_base_dir="STAGE_1/cleaned"):
         for report in cleaned_reports:
             output_folder = Path(output_base_dir) / report["company"]
