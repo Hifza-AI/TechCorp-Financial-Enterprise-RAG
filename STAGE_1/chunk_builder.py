@@ -599,7 +599,7 @@ if __name__ == "__main__":
 
         print("\n====================================")
         print(" Chunk Building Completed")
-        print("====================================")
+        print("======================================")
         print(f"Total Chunks       : {total_chunks}")
         print(f"Text Chunks        : {total_text_chunks}")
         print(f"Table Chunks       : {total_table_chunks}")
