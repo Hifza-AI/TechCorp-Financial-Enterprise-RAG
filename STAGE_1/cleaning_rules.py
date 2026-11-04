@@ -29,9 +29,9 @@ class CleaningRules:
             flags=re.IGNORECASE,
         )
 
-    # =====================================================
-    # 3. HTML files
     # ======================================================
+    # 3. HTML files
+    # =======================================================
 
     @staticmethod
     def remove_html_files(text):
