@@ -145,9 +145,9 @@ if __name__ == "__main__":
     extractor = PDFExtractor()
     reports, failed_files = extractor.extract(DATA_FOLDER)
 
-    print("\n====================================")
+    print("\n=====================================")
     print(" PDF Extraction Completed")
-    print("======================================")
+    print("=======================================")
     print(f"\nTotal Reports  : {len(reports)}")
     print(f"Failed Reports : {len(failed_files)}")
 
