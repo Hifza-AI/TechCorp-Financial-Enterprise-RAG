@@ -696,6 +696,6 @@ if __name__ == "__main__":
 
         print("\n====================================")
         print(" Hierarchy Building Completed")
-        print("====================================")
+        print("======================================")
         print("\nOutput:")
         print("STAGE_1/hierarchy")
