@@ -3041,7 +3041,7 @@ if __name__ == "__main__":
 
     else:
 
-        print("\n====================================")
+        print("\n=====================================")
         print(" Heading Detection Completed")
         print("====================================")
         print(f"Reports Processed : {processed}")
