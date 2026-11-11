@@ -2,7 +2,7 @@
 
 A local, verifiable Retrieval-Augmented Generation (RAG) knowledge base over **500 SEC 10-K annual reports** (50 US public companies × 10 fiscal years). Every answer is traceable to a company, fiscal year, section and page number in the original filing.
 
-**Final Year Project** — BS Computer Science, Emerson University Multan
+**Final Year Project** — BS INFORMATION TECHNOLOGY, Emerson University Multan
 **Supervisor:** Engr. Dr. Muhammad Naveed Yasir
 **Team:** Hifza Riaz (COSC232112112), Saman Saif (COSC232112102)
 
