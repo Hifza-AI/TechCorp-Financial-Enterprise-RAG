@@ -5,6 +5,8 @@ Ek ek karke (interactive):   python STAGE_1/ask.py
     Model load hone ke baad "Sawal>" aata hai: sawal likho, Enter dabao, results dekho, agla sawal likho.
     Page bhi check karna ho to:   23 | What does Nike say about its competitors in fiscal 2017?
     (23 = PDF viewer wala page number, jaise "23 / 140" -- page par chhapa hua number nahi)
+    Poora chunk dekhna ho to:     #2        (pichle sawal ka result [2] poora chhapta hai; #1, #3 ... waise hi)
+    Har result hamesha poora dikhana ho to:   python STAGE_1/ask.py --full
     Band karne ke liye: exit  (ya khaali Enter)
 
 File se, sab ek saath:      python STAGE_1/ask.py STAGE_1/my_questions.txt
@@ -40,10 +42,33 @@ def read_questions(path):
     return [parse_line(l) for l in text.splitlines() if l.strip() and not l.strip().startswith("#")]
 
 
-def ask_one(retriever, page, q, k, log, cat):
+def show_full(resp, i):
+    """Pichle sawal ke result [i] ka POORA text (terminal mein sirf 2-3 lines ka preview aata hai)."""
+    if not resp or not resp.get("matched"):
+        print("    Pichla sawal nahi hai ya us ka koi result nahi tha.")
+        return
+    rs = resp["results"]
+    if not 1 <= i <= len(rs):
+        print(f"    #1 se #{len(rs)} tak hi hain.")
+        return
+    r = rs[i - 1]
+    pg = r.get("page_numbers") or []
+    pg = f"{min(pg)}-{max(pg)}" if pg and min(pg) != max(pg) else (str(pg[0]) if pg else "?")
+    print("\n" + "-" * 70)
+    print(f"[{i}] POORA CHUNK  |  {r['company_display']} {r['year']}  |  {r['chunk_type']}  |  PDF page {pg}")
+    print("Section:", r["section_path"])
+    print("-" * 70)
+    print(r["text"])
+    print("-" * 70 + f"  ({len(r['text'])} chars)")
+
+
+def ask_one(retriever, page, q, k, log, cat, full=False):
     resp = retriever.search(q, top_k=k)
     n = len(log) + 1
     _show(q, resp, label=f"Q{n:02d}")
+    if full and resp["matched"]:
+        for i in range(1, len(resp["results"]) + 1):
+            show_full(resp, i)
     entry = {"n": n, "category": cat, "question": q}
     if page:
         ranks = ([i for i, r in enumerate(resp["results"], 1) if page in (r.get("page_numbers") or [])]
@@ -95,6 +120,7 @@ def main():
     ap.add_argument("-k", type=int, default=5, help="kitne results (default 5)")
     ap.add_argument("--store", default="STAGE_1/vector_store")
     ap.add_argument("--out", default="my_questions_results.json")
+    ap.add_argument("--full", action="store_true", help="har result ka poora chunk chhapo (sirf preview nahi)")
     a = ap.parse_args()
 
     qs = read_questions(a.file) if a.file else None
@@ -106,12 +132,13 @@ def main():
         cat = f"Mere sawal ({Path(a.file).name})"
         print(f"{a.file}: {len(qs)} sawal")
         for page, q in qs:
-            ask_one(retriever, page, q, a.k, log, cat)
+            ask_one(retriever, page, q, a.k, log, cat, a.full)
             save(log, a.out)
     else:
         cat = "Mere sawal (ek ek karke)"
         print("\nModel tayyar hai. Sawal likho aur Enter dabao.")
-        print("Page bhi check karna ho to:  23 | sawal        Band karne ke liye: exit  (ya khaali Enter)")
+        print("Page bhi check karna ho to:  23 | sawal      Poora chunk:  #2      Band karne ke liye: exit")
+        last = None
         while True:
             try:
                 line = input("\nSawal> ").strip()
@@ -120,8 +147,17 @@ def main():
                 break
             if not line or line.lower() in STOP:
                 break
+            m = re.fullmatch(r"#\s*(\d{1,2})", line)
+            if m:
+                show_full(last, int(m.group(1)))
+                continue
+            if line.lower() in ("#", "#all", "full"):
+                for i in range(1, len((last or {}).get("results") or []) + 1):
+                    show_full(last, i)
+                continue
             page, q = parse_line(line)
-            ask_one(retriever, page, q, a.k, log, cat)
+            ask_one(retriever, page, q, a.k, log, cat, a.full)
+            last = log[-1]
             save(log, a.out)
     summary(log, a.k, a.out)
 
