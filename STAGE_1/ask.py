@@ -19,6 +19,7 @@ import argparse
 import json
 import re
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -119,9 +120,12 @@ def main():
     ap.add_argument("file", nargs="?", help="sawalon ki .txt file; na do to ek ek karke poochho")
     ap.add_argument("-k", type=int, default=5, help="kitne results (default 5)")
     ap.add_argument("--store", default="STAGE_1/vector_store")
-    ap.add_argument("--out", default="my_questions_results.json")
+    ap.add_argument("--out", default=None,
+                    help="results file (default: my_questions_<tareekh>_<waqt>.json -- har run ki alag file, purani nahi mitti)")
     ap.add_argument("--full", action="store_true", help="har result ka poora chunk chhapo (sirf preview nahi)")
     a = ap.parse_args()
+    if not a.out:
+        a.out = time.strftime("my_questions_%Y%m%d_%H%M.json")
 
     qs = read_questions(a.file) if a.file else None
     if a.file and not qs:
@@ -164,4 +168,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
