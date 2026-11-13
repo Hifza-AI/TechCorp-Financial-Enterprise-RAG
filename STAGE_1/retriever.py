@@ -56,6 +56,13 @@ v2.3 (22 Oct 2026) -- 100 sawal wale pehle test (pehla score 80/100) ki ghaltiya
            (possessive) chhote huroof mein bhi company.
   words    Aam user ke kuch aur alfaaz -> 10-K ke alfaaz (sirf keyword search): layoffs -> restructuring workforce
            reduction, profit -> net income, payout -> dividends, climate / carbon -> sustainability ...
+v2.4 (13 Nov 2026) -- supervisor demo (Amazon 2022, page 26) ki ghalti dekh kar:
+  heading  Sawal mein kisi SECTION ka title ho ("Management's Discussion and Analysis ...", "Risk Factors",
+           "Human Capital Resources") ya "Item 7" / "MD&A" -- to us section ke chunks ko extra vote, section ka
+           PEHLA chunk (jahan heading hai) sab se upar. Pehle sirf chunk ka text dekha jata tha, is liye wo chunks
+           aate the jin mein title cross-reference mein likha tha ("see Item 7 ...") aur section ka asli page nahi.
+           Number wale sawal (net income, revenue ...) par ye band rehta hai. Section titles ka index pehli baar
+           headings.json mein banta hai.
 Har sudhaar FEATURES mein on/off; eval_retriever.py --ablation aur eval_golden.py --ablation har ek ka asar
 alag naapte hain.
 
@@ -83,14 +90,17 @@ from build_embeddings import EmbeddingIndexBuilder, tok, section_str, INC_REF, E
 OLD_FEATURES = ["guard", "clutter", "strip", "stmt", "dedup"]                          # v2 / v2.1
 NEW_FEATURES = ["recency", "fresh", "synonyms", "stem", "names", "oos2", "diverse", "expand"]   # v2.2
 V23_FEATURES = ["intent", "typo", "roman", "tickers", "words"]                                        # v2.3
-FEATURES = {f: True for f in OLD_FEATURES + NEW_FEATURES + V23_FEATURES}
+V24_FEATURES = ["heading"]                                                                            # v2.4
+FEATURES = {f: True for f in OLD_FEATURES + NEW_FEATURES + V23_FEATURES + V24_FEATURES}
 
 
 def ablation_variants():
-    """v2.2 (v2.3 ke sudhaar band) -> har v2.3 sudhaar akela -> sab on. Dono eval files yahi list use karti hain."""
-    base = {f: f not in V23_FEATURES for f in FEATURES}
+    """v2.2 -> har v2.3 sudhaar akela -> v2.3 -> har v2.4 sudhaar akela -> sab on. Dono eval files yahi list use karti hain."""
+    base = {f: f not in V23_FEATURES + V24_FEATURES for f in FEATURES}
+    v23 = {f: f not in V24_FEATURES for f in FEATURES}
     return ([("v2.2 (naye off)", base)] + [(f"+ {f}", dict(base, **{f: True})) for f in V23_FEATURES]
-            + [("v2.3 (sab on)", {f: True for f in FEATURES})])
+            + [("v2.3 (sab on)", v23)] + [(f"+ {f}", dict(v23, **{f: True})) for f in V24_FEATURES]
+            + [("v2.4 (sab on)", {f: True for f in FEATURES})])
 
 
 # ---------------------------------------------------------------------------------------------
@@ -518,6 +528,62 @@ LEGAL_SUFFIX = (r"(?:,?\s+(?:inc|corp|corporation|co|company|plc|ltd|technologie
 OLD_LEGAL_SUFFIX = r"(?:,?\s+(?:inc|corp|corporation|co|company|plc|ltd)\b\.?)?"
 
 
+# ----------------------------------------------------------------------
+# v2.4 "heading": sawal mein section ka TITLE ho ("Management's Discussion and Analysis...", "Risk Factors",
+# "Human Capital Resources") ya "Item 7" -- to us section ke chunks ko extra vote, section ka PEHLA chunk sab se
+# upar. Pehle retriever sirf chunk ke text mein dhoondta tha, is liye heading wale sawal par wo chunks aate the
+# jin ke text mein ye title cross-reference ke taur par likha tha ("see Item 7, Management's Discussion..."),
+# aur section ka asli pehla page (jahan heading hai) aata hi nahi tha (Amazon 2022 page 26 par confirm hua).
+# ----------------------------------------------------------------------
+HEAD_VERSION = 1
+HEAD_FILLER = {
+    "tell", "me", "about", "the", "of", "in", "for", "a", "an", "and", "or", "what", "is", "are", "does", "do",
+    "say", "says", "said", "describe", "explain", "discuss", "summarize", "summary", "give", "show",
+    "section", "item", "part", "report", "annual", "10", "k", "10k", "filing", "fiscal", "year", "years",
+    "company", "companys", "its", "their", "please", "can", "you", "how", "on", "to", "from", "with", "by", "at",
+    "as", "that", "this", "which", "be", "was", "were", "it", "under", "per", "according", "according", "did",
+    "has", "have", "had", "there", "any", "all", "some", "i", "want", "know", "read", "find", "information",
+    "details", "detail", "regarding", "related", "overview", "brief", "briefly", "mention", "mentioned", "write",
+}
+HEAD_ITEM = re.compile(r"\bitem\s*(\d{1,2})\s*([a-c])?\b", re.I)
+HEAD_MDA = re.compile(r"\bmd\s*&\s*a\b|\bmda\b", re.I)
+# 10-K ke standard Item titles: kai filings mein hierarchy ka top element sirf "Item 7." hota hai (title alag line
+# par tha), is liye sawal mein title ho to Item number se section milta hai. Sirf 2+ alfaaz wale titles.
+CANON_ITEMS = [
+    ("1a", "Risk Factors"), ("1b", "Unresolved Staff Comments"), ("3", "Legal Proceedings"),
+    ("4", "Mine Safety Disclosures"), ("5", "Market for Registrant's Common Equity"),
+    ("5", "Market for Registrant's Common Equity, Related Stockholder Matters and Issuer Purchases of Equity Securities"),
+    ("6", "Selected Financial Data"),
+    ("7", "Management's Discussion and Analysis"),
+    ("7", "Management's Discussion and Analysis of Financial Condition and Results of Operations"),
+    ("7a", "Quantitative and Qualitative Disclosures About Market Risk"),
+    ("8", "Financial Statements and Supplementary Data"),
+    ("9", "Changes in and Disagreements with Accountants on Accounting and Financial Disclosure"),
+    ("9a", "Controls and Procedures"), ("9b", "Other Information"),
+    ("10", "Directors, Executive Officers and Corporate Governance"), ("11", "Executive Compensation"),
+    ("12", "Security Ownership of Certain Beneficial Owners and Management"),
+    ("13", "Certain Relationships and Related Transactions, and Director Independence"),
+    ("14", "Principal Accountant Fees and Services"), ("15", "Exhibits and Financial Statement Schedules"),
+]
+
+
+def head_tokens(text):
+    """Heading match ke liye alfaaz: chhote harf, apostrophe hata kar (management's -> managements)."""
+    return re.findall(r"[a-z0-9]+", (text or "").lower().replace("'", "").replace("\u2019", ""))
+
+
+def head_key(title):
+    """Section ke ek element ka 'matlab' (filler alfaaz nikaal kar): frozenset ya None agar 2 se kam alfaaz bachein."""
+    toks = frozenset(t for t in head_tokens(title) if t not in HEAD_FILLER)
+    return toks if 2 <= len(toks) <= 10 else None
+
+
+def head_item_id(top_element):
+    """'Item 7.' / 'Item 7A - ...' -> '7' / '7a'; warna None."""
+    m = HEAD_ITEM.match((top_element or "").strip())
+    return (m.group(1) + (m.group(2) or "")).lower() if m else None
+
+
 class Retriever:
 
     RECENCY_KEYWORDS = re.compile(
@@ -538,6 +604,8 @@ class Retriever:
     POOL = 50
     STMT_POOL = 10
     INTENT_POOL = 5         # "intent": sahi hisse ke itne behtareen chunks ko extra vote
+    HEAD_POOL = 8           # "heading": section ke pehle itne chunks (page ki tarteeb mein) ko vote
+    HEAD_WEIGHT = 3         # "heading": wo vote itni dafa (dense + keyword dono cross-reference par ja sakte hain)
     TYPO_CUTOFF = 0.85      # "typo": kitna milta julta ho (difflib ratio)
     TYPO_MIN_DF = 20        # "typo": sirf un alfaaz se badlo jo kam az kam itne chunks mein hain
 
@@ -588,6 +656,8 @@ class Retriever:
         self._latest_arr = np.array([self.latest_year_by_company.get(n, 0) for n in self.names], dtype=np.int16)
         self._stem_ids = None                    # "stem": pehli zaroorat par banta hai (stem -> vocab ids)
         self._typo_idx = None                    # "typo": pehli zaroorat par (pehla harf -> aam alfaaz)
+        self._head = None                        # "heading": pehli zaroorat par (section titles ka index)
+        self._store_dir = d
         self._build_aliases()
 
     def _meta(self, i):
@@ -690,6 +760,95 @@ class Retriever:
               f"fehrist/exhibit tukde {int(clut.sum())}, overview tukde {int(((sect & 3) > 0).sum())}, "
               f"auditor signature {int(((sect & 4) > 0).sum())}  -> {fp.name}")
         return stmt, clut, sect
+
+    # ------------------------------------------------------------------
+    # v2.4 "heading": section titles ka index (ek dafa ban kar headings.json mein)
+    # ------------------------------------------------------------------
+    def _load_headings(self):
+        if self._head is not None:
+            return self._head
+        d = self._store_dir
+        mp, hp = d / "meta.jsonl", d / "headings.json"
+        key = f"{HEAD_VERSION}|{mp.stat().st_size}|{self.N}"
+        data = None
+        if hp.exists():
+            try:
+                data = json.loads(hp.read_text(encoding="utf-8"))
+                if data.get("key") != key:
+                    data = None
+            except Exception:
+                data = None
+        if data is None:
+            print("Pehli baar: section titles ka index bana raha hoon -- sirf ek dafa...")
+            t0 = time.time()
+            paths, pid, page0 = {}, np.zeros(self.N, dtype=np.int32), np.zeros(self.N, dtype=np.int32)
+            last_g, last = None, (0, 0)
+            with open(mp, "rb") as fh:
+                for i, line in enumerate(fh):
+                    g = int(self.gid[i])
+                    if g != last_g:
+                        m = json.loads(line)
+                        sp = (m.get("section_path") or "").split(" | ")[0].strip()
+                        pg = m.get("page_numbers") or []
+                        last = (paths.setdefault(sp, len(paths)), int(min(pg)) if pg else 0)
+                        last_g = g
+                    pid[i], page0[i] = last
+            data = {"key": key, "paths": [None] * len(paths), "pid": pid.tolist(), "page0": page0.tolist()}
+            for sp, j in paths.items():
+                data["paths"][j] = sp
+            hp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            print(f"  ho gaya ({time.time() - t0:.0f} sec): {len(paths)} alag section paths -> {hp.name}")
+        paths = data["paths"]
+        pid = np.asarray(data["pid"], dtype=np.int32)
+        page0 = np.asarray(data["page0"], dtype=np.int32)
+        # har path: elements ki keys, aur top element ka Item id
+        elem_paths = {}                      # frozenset(tokens) -> set(path ids)
+        elem_label = {}                      # frozenset(tokens) -> title jaisa likha tha (dikhane ke liye)
+        item_paths = {}                      # '7' -> set(path ids)
+        for j, sp in enumerate(paths):
+            elems = [e.strip() for e in sp.split(" > ") if e.strip()]
+            if not elems:
+                continue
+            iid = head_item_id(elems[0])
+            if iid:
+                item_paths.setdefault(iid, set()).add(j)
+            for e in elems:
+                k = head_key(e)
+                if k:
+                    elem_paths.setdefault(k, set()).add(j)
+                    elem_label.setdefault(k, e)
+        for iid, title in CANON_ITEMS:       # standard title -> us Item ke saare paths
+            k = head_key(title)
+            if k and iid in item_paths:
+                elem_paths.setdefault(k, set()).update(item_paths[iid])
+                elem_label[k] = f"Item {iid.upper()} ({title})"
+        first = np.ones(self.N, dtype=bool)  # ek chunk ke kai tukde -> sirf pehla
+        first[1:] = self.gid[1:] != self.gid[:-1]
+        self._head = {"paths": paths, "pid": pid, "page0": page0, "elem": elem_paths, "label": elem_label,
+                      "item": item_paths, "first": first}
+        return self._head
+
+    def _heading_match(self, query, comps, typos=()):
+        """Sawal mein section title / Item N hai? -> (label, set(path ids)) ya None. Conservative: title ke SAARE
+        matlab-wale alfaaz sawal mein hon, aur ya to title 3+ alfaaz ka ho, ya sawal mein title ke ilawa kuch na ho."""
+        H = self._load_headings()
+        q = set(head_tokens(query))
+        for c in list(comps) + list(typos):
+            q -= set(head_tokens(c)) | set(head_tokens(display_name(c))) | set(head_tokens(re.sub(r"\(.*?\)", "", c)))
+        q -= {t for t in q if t.isdigit() and len(t) == 4}          # saal
+        qc = {t for t in q if t not in HEAD_FILLER}
+        best, best_label = None, None
+        for k, pids in H["elem"].items():
+            if k <= q and (len(k) >= 3 or qc <= k):
+                if best is None or len(k) > len(best):
+                    best, best_label = k, pids
+        if best is not None:
+            return H["label"].get(best, " ".join(sorted(best))), best_label
+        m = HEAD_ITEM.search(query)
+        iid = (m.group(1) + (m.group(2) or "")).lower() if m else ("7" if HEAD_MDA.search(query) else None)
+        if iid and iid in H["item"]:
+            return f"Item {iid.upper()}", H["item"][iid]
+        return None
 
     # ------------------------------------------------------------------
     # company / saal pehchan
@@ -1045,6 +1204,32 @@ class Retriever:
                         ri[d] = ri.get(d, 0.0) + 1.0 / (self.RRF_K + r + 1)
                 lists.append({doc: r for r, doc in enumerate(sorted(ri, key=lambda x: -ri[x])[:self.INTENT_POOL])})
 
+        # ---- heading (v2.4): sawal = section ka title / Item N -> us section ke chunks ko vote, pehla chunk upar ----
+        heading_label = None
+        hm = self._heading_match(query_t, comps, typos) if (F["heading"] and not item_types) else None
+        if hm:
+            H = self._load_headings()
+            label, pids = hm
+            sel = idx[np.isin(H["pid"][idx], list(pids)) & H["first"][idx]]
+            if sel.size:
+                heading_label = label
+                # list A: section ki tarteeb mein (naya saal pehle, phir page) -> pehla chunk sab se upar; HEAD_WEIGHT dafa
+                order = np.lexsort((sel, H["page0"][sel], -self.year[sel].astype(np.int32)))
+                la = {int(sel[i]): r for r, i in enumerate(order[:self.HEAD_POOL])}
+                lists += [la] * self.HEAD_WEIGHT
+                # list B: usi section ke andar behtareen content (dense + keyword), intent ki tarah
+                Dh, Ih = self._dense(q, int(min(self.INTENT_POOL, sel.size)), sel)
+                bh = bm_all[sel]
+                rh = {}
+                for r, i in enumerate(Ih[0]):
+                    if i >= 0:
+                        rh[int(i)] = rh.get(int(i), 0.0) + 1.0 / (self.RRF_K + r + 1)
+                for r, i in enumerate(np.argsort(-bh)[:self.INTENT_POOL]):
+                    if bh[i] > 0:
+                        dd = int(sel[i])
+                        rh[dd] = rh.get(dd, 0.0) + 1.0 / (self.RRF_K + r + 1)
+                lists.append({doc: r for r, doc in enumerate(sorted(rh, key=lambda x: -rh[x])[:self.INTENT_POOL])})
+
         # ---- fresh: saal na diya ho to sab se naye 10-K ke behtareen chunks ko ek extra vote ----
         if F["fresh"] and not years and not wants_recent:
             new_idx = idx[self.year[idx] == self._latest_arr[self.ccode[idx]]]
@@ -1139,7 +1324,7 @@ class Retriever:
         gate = (not comps) if F["oos2"] else (not needs_hard_filter)
         if gate and best_dense < self.MIN_CONFIDENCE_SCORE:
             return NONE("No sufficiently relevant data found for this query.")
-        return {"matched": True, "reason": None, "results": results}
+        return {"matched": True, "reason": None, "results": results, "heading": heading_label}
 
 
 # Test sawal (21 Oct 2026): 50 companies x 2 = 100 sawal, aam user ke andaz mein (casual, Roman Urdu, halki typo,
@@ -1372,6 +1557,8 @@ def _show(question, response, label="Q", gold=None):
     if not response["matched"]:
         print("    ⚠️  ", response["reason"])
         return
+    if response.get("heading"):
+        print(f"    Section pehchana: {response['heading']}  (us section ka pehla chunk upar)")
     for i, r in enumerate(response["results"], 1):
         pg = r["page_numbers"]
         pg = (f"{min(pg)}-{max(pg)}" if pg and min(pg) != max(pg) else (str(pg[0]) if pg else "?"))

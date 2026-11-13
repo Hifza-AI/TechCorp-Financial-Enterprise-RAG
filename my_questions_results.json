@@ -2,131 +2,39 @@
     {
         "n": 1,
         "category": "Mere sawal (ek ek karke)",
-        "question": "Tell me about the Liquidity and Capital Resources of Amazon in 222",
+        "question": "Tell me about the Management’s Discussion and Analysis of Financial Condition and Results of Operations of Amazon in 2022",
         "matched": true,
         "reason": null,
         "results": [
             {
-                "score": 0.7156590819358826,
-                "rrf_score": 0.04471759683223485,
-                "company": "Amazon",
-                "company_display": "Amazon",
-                "year": 2025,
-                "section_path": "Item 7. > Liquidity and Capital Resources",
-                "page_numbers": [
-                    29
-                ],
-                "chunk_type": "text",
-                "text": "Cash provided by (used in):\nCash provided by (used in): Our principal sources of liquidity are cash flows generated from operations and our cash, cash equivalents, and marketable securities balances, which, at fair value, were $101.2 billion and $123.0 billion as of December 31, 2024 and 2025. Amounts held in foreign currencies were $25.5 billion and $29.7 billion as of December 31, 2024 and 2025. Our foreign currency balances include British Pounds, Canadian Dollars, Euros, Indian Rupees, and Japanese Yen. Cash provided by (used in) operating activities was $115.9 billion and $139.5 billion in 2024 and 2025. Our operating cash flows result primarily from cash received from our consumer, seller, developer, enterprise, and content creator customers, and advertisers, offset by cash payments we make for products and services, employee compensation, payment processing and related transaction costs, operating leases, and interest payments. Cash received from our customers and other activities generally corresponds to our net sales. The increase in operating cash flow in 2025, compared to the prior year, was due to an increase in net income (loss), excluding non-cash expenses, and changes in working capital. Working capital at any specific"
-            },
-            {
-                "score": 0.6922251582145691,
-                "rrf_score": 0.04114419296152116,
-                "company": "Amazon",
-                "company_display": "Amazon",
-                "year": 2025,
-                "section_path": "Item 7. > Liquidity and Capital Resources",
-                "page_numbers": [
-                    29,
-                    31
-                ],
-                "chunk_type": "table",
-                "text": "s or to further strengthen our financial position. The sale of additional equity or convertible debt securities would be dilutive to our shareholders. In addition, we will, from time to time, consider the acquisition of, or investment in, complementary businesses, products, services, capital infrastructure, and technologies, which might affect our liquidity requirements or cause us to secure additional financing, or issue additional equity or debt securities. There can be no assurance that additional credit lines or financing instruments will be available in amounts or on terms acceptable to us, if at all. In addition, economic conditions and actions by policymaking bodies are contributing to changing interest rates and significant capital market volatility, which, along with any increases in our borrowing levels, could increase our future borrowing costs.\nThe following table shows Liquidity and Capital Resources data for Amazon 2025:\nColumns: 2024, 2025\nOperating activities -- 2024: 115,877, 2025: 139,514\nInvesting activities -- 2024: (94,342), 2025: (142,545)\nFinancing activities -- 2024: (11,812), 2025: 9,661"
-            },
-            {
-                "score": 0.5792685747146606,
-                "rrf_score": 0.032266458495966696,
-                "company": "Amazon",
-                "company_display": "Amazon",
-                "year": 2025,
-                "section_path": "Item 7A. > Quantitative and Qualitative Disclosures About Market Risk",
-                "page_numbers": [
-                    41
-                ],
-                "chunk_type": "text",
-                "text": "We are exposed to market risk for the effect of interest rate changes, foreign currency fluctuations, and changes in the market values of our investments. Information relating to quantitative and qualitative disclosures about market risk is set forth below and in Item 7 of Part II, \"Management's Discussion and Analysis of Financial Condition and Results of Operations - Liquidity and Capital Resources.\""
-            },
-            {
-                "score": 0.7041911482810974,
-                "rrf_score": 0.027799227799227798,
-                "company": "Amazon",
-                "company_display": "Amazon",
-                "year": 2024,
-                "section_path": "Item 7. > Liquidity and Capital Resources",
-                "page_numbers": [
-                    30,
-                    32
-                ],
-                "chunk_type": "table",
-                "text": "There can be no assurance that additional credit lines or financing instruments will be available in amounts or on terms acceptable to us, if at all. In addition, economic conditions and actions by policymaking bodies are contributing to changing interest rates and significant capital market volatility, which, along with any increases in our borrowing levels, could increase our future borrowing costs.\nThe following table shows Liquidity and Capital Resources data for Amazon 2024:\nColumns: 2023, 2024\nOperating activities -- 2023: 84,946, 2024: 115,877\nInvesting activities -- 2023: (49,833), 2024: (94,342)\nFinancing activities -- 2023: (15,879), 2024: (11,812)"
-            },
-            {
-                "score": 0.7012466192245483,
-                "rrf_score": 0.026709401709401708,
-                "company": "Amazon",
-                "company_display": "Amazon",
-                "year": 2021,
-                "section_path": "Item 7. > Liquidity and Capital Resources",
-                "page_numbers": [
-                    21,
-                    22
-                ],
-                "chunk_type": "table",
-                "text": "debt for strategic reasons or to further strengthen our financial position. We expect to fund the acquisition of MGM Holdings Inc. with cash on hand. The sale of additional equity or convertible debt securities would be dilutive to our shareholders. In addition, we will, from time to time, consider the acquisition of, or investment in, complementary businesses, products, services, capital infrastructure, and technologies, which might affect our liquidity requirements or cause us to secure additional financing, or issue additional equity or debt securities. There can be no assurance that additional credit lines or financing instruments will be available in amounts or on terms acceptable to us, if at all.\nThe following table shows Liquidity and Capital Resources data for Amazon 2021:\nColumns: 2020, 2021\nOperating activities -- 2020: 66,064, 2021: 46,327\nInvesting activities -- 2020: (59,611), 2021: (58,154)\nFinancing activities -- 2020: (1,104), 2021: 6,291"
-            }
-        ]
-    },
-    {
-        "n": 2,
-        "category": "Mere sawal (ek ek karke)",
-        "question": "Tell me about the Liquidity and Capital Resourcs of Amazon in 2022",
-        "matched": true,
-        "reason": null,
-        "results": [
-            {
-                "score": 0.7475454807281494,
+                "score": 0.6769133806228638,
                 "rrf_score": 0.032266458495966696,
                 "company": "Amazon",
                 "company_display": "Amazon",
                 "year": 2022,
-                "section_path": "Item 7. > Liquidity and Capital Resources",
+                "section_path": "Risk Factors",
                 "page_numbers": [
-                    30,
-                    31
+                    8
                 ],
                 "chunk_type": "text",
-                "text": "Cash provided by (used in): Our principal sources of liquidity are cash flows generated from operations and our cash, cash equivalents, and marketable securities balances, which, at fair value, were $96.0 billion and $70.0 billion as of December 31, 2021 and 2022. Amounts held in foreign currencies were $22.7 billion and $18.3 billion as of December 31, 2021 and 2022. Our foreign currency balances include British Pounds, Canadian Dollars, Euros, and Japanese Yen. Cash provided by (used in) operating activities was $46.3 billion and $46.8 billion in 2021 and 2022. Our operating cash flows result primarily from cash received from our consumer, seller, developer, enterprise, and content creator customers, and advertisers, offset by cash payments we make for products and services, employee compensation, payment processing and related transaction costs, operating leases, and interest payments. Cash received from our customers and other activities generally corresponds to our net sales. The increase in operating cash flow in 2022, compared to the prior year, was primarily due to the increase in net income, excluding non-cash expenses, partially offset by changes in working capital. Working capital at any specific point in time is subject to many variables, including variability in demand, inventory management and category expansion, the timing of cash receipts and payments, customer and vendor payment terms, and fluctuations in foreign exchange rates. Cash provided by (used in) investing activities corresponds with cash capital expenditures, including leasehold improvements, incentives received from property and equipment vendors, proceeds from asset sales, cash outlays for acquisitions, investments in other companies and intellectual property rights, and purchases, sales, and maturities of marketable securities. Cash provided by (used in) investing activities was $(58.2) billion and $(37.6) billion in 2021 and 2022, with the variability caused primarily by purchases, sales, and maturities of marketable securities. Cash capital expenditures were $55.4 billion, and $58.3 billion in 2021 and 2022, which primarily reflect investments in technology infrastructure (the majority of which is to support AWS business growth) and in additional capacity to support our fulfillment network. We expect to continue these investments over time, with increased spending on technology infrastructure. We made cash payments, net of acquired cash, related to acquisition and other investment activity of $2.0 billion and $8.3 billion in 2021 and 2022. We funded the acquisition of MGM Holdings Inc. with cash on hand."
+                "text": "Please carefully consider the following discussion of significant factors, events, and uncertainties that make an investment in our securities risky. The events and consequences discussed in these risk factors could, in circumstances we may or may not be able to accurately predict, recognize, or control, have a material adverse effect on our business, growth, reputation, prospects, financial condition, operating results (including components of our financial results), cash flows, liquidity, and stock price. These risk factors do not identify all risks that we face; our operations could also be affected by factors, events, or uncertainties that are not presently known to us or that we currently do not consider to present significant risks to our operations. In addition to the factors discussed in Item 7 of Part II, \"Management's Discussion and Analysis of Financial Condition and Results of Operations-Overview,\" and in the risk factors below, global economic and geopolitical conditions and additional or unforeseen circumstances, developments, or events may give rise to or amplify many of the risks discussed below. Many of the risks discussed below also impact our customers, including third-party sellers, which could indirectly have a material adverse effect on us."
             },
             {
-                "score": 0.7295548915863037,
-                "rrf_score": 0.032018442622950824,
+                "score": 0.6315909624099731,
+                "rrf_score": 0.032266458495966696,
                 "company": "Amazon",
                 "company_display": "Amazon",
                 "year": 2022,
-                "section_path": "Item 7. > Liquidity and Capital Resources",
+                "section_path": "Item 7. > Overview",
                 "page_numbers": [
-                    30,
-                    31
-                ],
-                "chunk_type": "table",
-                "text": "There can be no assurance that additional credit lines or financing instruments will be available in amounts or on terms acceptable to us, if at all. In addition, economic conditions and actions by policymaking bodies are contributing to rising interest rates and significant capital market volatility, which, along with increases in our borrowing levels, could increase our future borrowing costs.\nThe following table shows Liquidity and Capital Resources data for Amazon 2022:\nColumns: 2021, 2022\nOperating activities -- 2021: 46,327, 2022: 46,752\nInvesting activities -- 2021: (58,154), 2022: (37,601)\nFinancing activities -- 2021: 6,291, 2022: 9,718"
-            },
-            {
-                "score": 0.7280178666114807,
-                "rrf_score": 0.03076923076923077,
-                "company": "Amazon",
-                "company_display": "Amazon",
-                "year": 2022,
-                "section_path": "Item 7. > Liquidity and Capital Resources",
-                "page_numbers": [
-                    31
+                    28
                 ],
                 "chunk_type": "text",
-                "text": "... nses. Cash taxes paid (net of refunds) were $3.7 billion and $6.0 billion for 2021 and 2022. As of December 31, 2021 and 2022, restricted cash, cash equivalents, and marketable securities were $260 million and $365 million. See Item 8 of Part II, \"Financial Statements and Supplementary Data - Note 6 - Debt\" and \"Financial Statements and Supplementary Data - Note 7 - Commitments and Contingencies\" for additional discussion of our principal contractual commitments, as well as our pledged assets. Additionally, we have purchase obligations and open purchase orders, including for inventory and capital expenditures, that support normal operations and are primarily due in the next twelve months. These purchase obligations and open purchase orders are generally cancellable in full or in part through the contractual provisions. We believe that cash flows generated from operations and our cash, cash equivalents, and marketable securities balances, as well as our borrowing arrangements, will be sufficient to meet our anticipated operating cash needs for at least the next twelve months. However, any projections of future cash needs and cash flows are subject to substantial uncertainty. See Item 1A of Part I, \"Risk Factors.\" We continually evaluate opportunities to sell additional equity or debt securities, obtain credit facilities, obtain finance and operating lease arrangements, enter into financing obligations, repurchase common stock, pay dividends, or repurchase, refinance, or otherwise restructure our debt for strategic reasons or to further strengthen our financial position. The sale of additional equity or convertible debt securities would be dilutive to our shareholders. In addition, we will, from time to time, consider the acquisition of, or investment in, complementary businesses, products, services, capital infrastructure, and technologies, which might affect our liquidity requirements or cause us to secure additional financing, or issue additional equity or debt securities. There can be no assurance that additional credit lines or financing instruments will be available in amounts or on terms acceptable to us, if at all."
+                "text": "... oyees. In measuring shareholder dilution, we include all vested and unvested stock awards outstanding, without regard to estimated forfeitures. Total shares outstanding plus outstanding stock awards were 10.5 billion and 10.6 billion as of December 31, 2021 and 2022. Our financial reporting currency is the U.S. Dollar and changes in foreign exchange rates significantly affect our reported results and consolidated trends. For example, if the U.S. Dollar weakens year-over-year relative to currencies in our international locations, our consolidated net sales and operating expenses will be higher than if currencies had remained constant. Likewise, if the U.S. Dollar strengthens year-over-year relative to currencies in our international locations, our consolidated net sales and operating expenses will be lower than if currencies had remained constant. We believe that our increasing diversification beyond the U.S. economy through our growing international businesses benefits our shareholders over the long-term. We also believe it is useful to evaluate our operating results and growth rates before and after the effect of currency changes. In addition, the remeasurement of our intercompany balances can result in significant gains and losses associated with the effect of movements in foreign currency exchange rates. Currency volatilities may continue, which may significantly impact (either positively or negatively) our reported results and consolidated trends and comparisons. For additional information about each line item addressed above, refer to Item 8 of Part II, \"Financial Statements and Supplementary Data - Note 1 - Description of Business, Accounting Policies, and Supplemental Disclosures.\" Our Annual Report on Form 10-K for the year ended December 31, 2021 includes a discussion and analysis of our financial condition and results of operations for the year ended December 31, 2020 in Item 7 of Part II, \"Management's Discussion and Analysis of Financial Condition and Results of Operations.\""
             },
             {
-                "score": 0.6442776918411255,
-                "rrf_score": 0.030017921146953404,
+                "score": 0.6103084087371826,
+                "rrf_score": 0.030621785881252923,
                 "company": "Amazon",
                 "company_display": "Amazon",
                 "year": 2022,
@@ -139,17 +47,30 @@
                 "text": "Item 1A of Part I, \"Risk Factors.\" First Quarter 2023 Guidance - This guidance assumes, among other things, that no additional business acquisitions, restructurings, or legal settlements We are exposed to market risk for the effect of interest rate changes, foreign currency fluctuations, and changes in the market values of our investments. Information relating to quantitative and qualitative disclosures about market risk is set forth below and in Item 7 of Part II, \"Management's Discussion and Analysis of Financial Condition and Results of Operations - Liquidity and Capital Resources.\""
             },
             {
-                "score": 0.6981334686279297,
-                "rrf_score": 0.029437229437229435,
+                "score": 0.6691138744354248,
+                "rrf_score": 0.027623285131627734,
                 "company": "Amazon",
                 "company_display": "Amazon",
                 "year": 2022,
-                "section_path": "Item 7. > Liquidity and Capital Resources",
+                "section_path": "Item 9A. > Management's Report on Internal Control over Financial Reporting",
                 "page_numbers": [
-                    31
+                    88
                 ],
                 "chunk_type": "text",
-                "text": "ion and other investment activity of $2.0 billion and $8.3 billion in 2021 and 2022. We funded the acquisition of MGM Holdings Inc. with cash on hand. We expect to fund the acquisitions of 1Life Healthcare, Inc. (One Medical) and iRobot Corporation with cash on hand. Cash provided by (used in) financing activities was $6.3 billion and $9.7 billion in 2021 and 2022. Cash inflows from financing activities resulted from proceeds from short-term debt, and other and long-term-debt of $27.0 billion and $62.7 billion in 2021 and 2022. Cash outflows from financing activities resulted from repurchases of common stock, payments of short-term debt, and other, long-term debt, finance leases, and financing obligations of $20.7 billion and $53.0 billion in 2021 and 2022. Property and equipment acquired under finance leases was $7.1 billion and $675 million in 2021 and 2022. We had no borrowings outstanding under the two unsecured revolving credit facilities, $6.8 billion of borrowings outstanding under the commercial paper programs, and $1.0 billion of borrowings outstanding under the secured revolving credit facility as of December 31, 2022. See Item 8 of Part II, \"Financial Statements and Supplementary Data - Note 6 - Debt\" for additional information. As of December 31, 2022, cash, cash equivalents, and marketable securities held by foreign subsidiaries were $4.7 billion. We intend to invest substantially all of our foreign subsidiary earnings, as well as our capital in our foreign subsidiaries, indefinitely outside of the U.S. in those jurisdictions in which we would incur significant, additional costs upon repatriation of such amounts. Our U.S. taxable income is reduced by accelerated depreciation deductions and increased by the impact of capitalized research and development expenses. U.S. tax rules provide for enhanced accelerated depreciation deductions by allowing the election of full expensing of qualified property, primarily equipment, through 2022. Our federal tax provision included a partial election for 2020 and 2021, and a full election for 2022. Effective January 1, 2022, research and development expenses are required to be capitalized and amortized for U.S. tax purposes, which delays the d ..."
+                "text": "Management is responsible for establishing and maintaining adequate internal control over financial reporting, as defined in Rule 13a-15(f) of the 1934 Act. Management has assessed the effectiveness of our internal control over financial reporting as of December 31, 2022 based on criteria established in Internal Control - Integrated Framework (2013) issued by the Committee of Sponsoring Organizations of the Treadway Commission. As a result of this assessment, management concluded that, as of December 31, 2022, our internal control over financial reporting was effective in providing reasonable assurance regarding the reliability of financial reporting and the preparation of financial statements for external purposes in accordance with generally accepted accounting principles. Ernst & Young has independently assessed the effectiveness of our internal control over financial reporting and its report is included below."
+            },
+            {
+                "score": 0.6187336444854736,
+                "rrf_score": 0.027432808155699723,
+                "company": "Amazon",
+                "company_display": "Amazon",
+                "year": 2022,
+                "section_path": "Item 9A. > Report of Independent Registered Public Accounting Firm > Basis for Opinion",
+                "page_numbers": [
+                    89
+                ],
+                "chunk_type": "text",
+                "text": "The Company's management is responsible for maintaining effective internal control over financial reporting, and for its assessment of the effectiveness of internal control over financial reporting included in the accompanying Management's Report on Internal Control over Financial Reporting. Our responsibility is to express an opinion on the Company's internal control over financial reporting based on our audit. We are a public accounting firm registered with the PCAOB and are required to be independent with respect to the Company in accordance with the U.S. federal securities laws and the applicable rules and regulations of the Securities and Exchange Commission and the PCAOB. We conducted our audit in accordance with the standards of the PCAOB. Those standards require that we plan and perform the audit to obtain reasonable assurance about whether effective internal control over financial reporting was maintained in all material respects. Our audit included obtaining an understanding of internal control over financial reporting, assessing the risk that a material weakness exists, testing and evaluating the design and operating effectiveness of internal control based on the assessed risk, and performing such other procedures as we considered necessary in the circumstances. We believe that our audit provides a reasonable basis for our opinion."
             }
         ]
     }
