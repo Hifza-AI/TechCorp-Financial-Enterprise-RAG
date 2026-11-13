@@ -309,3 +309,6 @@ The check flags Kennametal Item 1A and Franklin Electric Item 3. These are known
 - **Ametek, Rockwell Automation, Roper Technologies, Nordson (FY2016 and FY2025):** all Items cross-checked against the PDF table of contents; core financial statements verified line by line; cross-statement totals consistent (for example net income ties across the income, comprehensive income and cash-flow statements).
 - **Alphabet FY2025 (Tier-2 audit):** core statements, segment and executive overview, cost lines, tax provision, share repurchases and most lease tables match the PDF (exception: T5).
 - **Meta FY2025:** core statements match 100% (revenue, cost of revenue, R&D, net income, cash flow); no boilerplate or date-header leaks; charts correctly skipped rather than turned into fake tables (exceptions: H4, T4, T9).
+
+
+R21 — Section-title questions returned cross-reference chunks instead of the section’s first page (Amazon 2022 p26, found by supervisor). Fixed in v2.4 ‘heading’ feature.
