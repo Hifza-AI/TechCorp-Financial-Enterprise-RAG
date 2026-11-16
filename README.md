@@ -6,7 +6,7 @@ A local, verifiable Retrieval-Augmented Generation (RAG) knowledge base over **5
 **Supervisor:** Engr. Dr. Muhammad Naveed Yasir
 **Team:** Hifza Riaz (COSC232112112), Saman Saif (COSC232112102)
 
----
+-----
 
 ## Why this project
 
