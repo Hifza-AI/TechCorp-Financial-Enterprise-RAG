@@ -35,7 +35,9 @@ DEFAULT_MODEL = "gemini-2.5-flash"
 # .env mein badal sakte ho:  GEMINI_FALLBACK_MODELS=gemini-2.5-flash-lite,gemini-2.0-flash
 FALLBACK_MODELS = ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-2.0-flash-lite"]
 NOT_STATED = "Not stated in the provided filings."
+TRUNCATED = "[jawab lamba tha, yahan kat gaya]"
 STOP = {"exit", "quit", "q", "band", "bas"}
+REQUEST_TIMEOUT_MS = 45_000   # ek model ko max 45 sec, phir agla
 COMPARE_K = 8          # comparison sawal par zyada chunks (dono taraf ke liye jagah)
 COMPARE_WORDS = re.compile(
     r"\b(compare[sd]?|comparison|comparing|vs\.?|versus|difference|differ(?:ent|s)?|"
@@ -89,7 +91,17 @@ def make_client():
     if not key:
         raise SystemExit("API key nahi mili. Repo ke root mein .env file banao:  GEMINI_API_KEY=...  "
                          "(aur .gitignore mein .env likho)")
-    return genai.Client(api_key=key)
+    # Har request ki time-limit, aur library ke apne andar wale retries band: hum khud agla model try karte hain.
+    # (Iske baghair ek atki hui request program ko hamesha ke liye rok deti thi.)
+    try:
+        from google.genai import types
+        opts = types.HttpOptions(timeout=REQUEST_TIMEOUT_MS, retry_options=types.HttpRetryOptions(attempts=1))
+        return genai.Client(api_key=key, http_options=opts)
+    except (AttributeError, TypeError):
+        try:
+            return genai.Client(api_key=key, http_options=types.HttpOptions(timeout=REQUEST_TIMEOUT_MS))
+        except (AttributeError, TypeError):
+            return genai.Client(api_key=key)
 
 
 # ----------------------------------------------------------------------
@@ -185,7 +197,7 @@ def call_gemini(client, model, prompt):
     def cfg():
         # 2.5 models jawab se pehle "sochte" hain aur wo sochna bhi max_output_tokens mein ginta hai -> lamba
         # jawab beech mein kat jata tha. Sources mein se jawab nikaalne ke liye sochna zaroori nahi: band (tez bhi).
-        kw = dict(temperature=0.1, max_output_tokens=2048)
+        kw = dict(temperature=0.1, max_output_tokens=2048 if _NO_THINKING["ok"] else 8192)
         if _NO_THINKING["ok"]:
             kw["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
         return types.GenerateContentConfig(**kw)
@@ -199,7 +211,7 @@ def call_gemini(client, model, prompt):
             except (AttributeError, IndexError, TypeError):
                 reason = ""
             if "MAX_TOKENS" in reason:
-                text += "\n[jawab lamba tha, yahan kat gaya]"
+                text += "\n" + TRUNCATED
             return text
         except Exception as e:
             msg = str(e)
@@ -209,7 +221,8 @@ def call_gemini(client, model, prompt):
             is_429 = "429" in msg or "RESOURCE_EXHAUSTED" in msg
             if is_429 and ("PerDay" in msg or "per day" in msg or re.search(r"limit:\s*0\b", msg)):
                 raise DailyQuota(model)             # aaj ki limit khatam, ya is model ki free limit hai hi 0
-            busy = any(x in msg for x in ("429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE", "overloaded"))
+            busy = any(x in msg for x in ("429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE", "overloaded",
+                                          "timed out", "Timeout", "timeout", "504", "DEADLINE"))
             if busy:                                 # minute ki limit / server busy -> wait nahi, agla model
                 m = re.search(r"retry in (\d+(?:\.\d+)?)s", msg) or re.search(r"retryDelay['\"]?:\s*['\"]?(\d+)", msg)
                 raise Busy(model, int(float(m.group(1))) + 1 if m else 20)
@@ -281,6 +294,10 @@ def answer_one(retriever, client, cache, chain, question, k=5):
     prompt = build_prompt(question, sources, compare)
     ck = Cache.key("gemini", prompt)          # model ka naam key mein nahi: fallback model ka jawab bhi cache ho
     hit = cache.get(ck)
+    if isinstance(hit, dict) and hit.get("text", "").endswith(TRUNCATED):
+        hit = None                                # purana adhoora jawab -> dobara banao
+    elif isinstance(hit, str) and hit.endswith(TRUNCATED):
+        hit = None
     if isinstance(hit, dict):
         text, used, cached = hit["text"], hit.get("model"), True
     elif hit is not None:                     # purana cache (sirf text)
@@ -294,7 +311,8 @@ def answer_one(retriever, client, cache, chain, question, k=5):
                          seconds=round(time.time() - t0, 2), error="daily_quota")
             return entry
         cached = False
-        cache.put(ck, {"text": text, "model": used})
+        if not text.endswith(TRUNCATED):          # adhoora jawab cache mat karo, agli dafa dobara banega
+            cache.put(ck, {"text": text, "model": used})
     entry["model"] = used
     cites = cited_sources(text, sources)
     entry.update(
