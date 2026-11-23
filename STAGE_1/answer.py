@@ -36,6 +36,19 @@ DEFAULT_MODEL = "gemini-2.5-flash"
 FALLBACK_MODELS = ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-2.0-flash-lite"]
 NOT_STATED = "Not stated in the provided filings."
 STOP = {"exit", "quit", "q", "band", "bas"}
+COMPARE_K = 8          # comparison sawal par zyada chunks (dono taraf ke liye jagah)
+COMPARE_WORDS = re.compile(
+    r"\b(compare[sd]?|comparison|comparing|vs\.?|versus|difference|differ(?:ent|s)?|"
+    r"change[sd]? (?:from|between)|grew|growth (?:from|between)|increase[sd]? from|decrease[sd]? from|"
+    r"higher|lower|more than|less than|muqabla|farq)\b", re.I)
+
+COMPARE_PROMPT = """This is a COMPARISON question. In addition to the rules:
+- State each side separately: company, fiscal year, value or point, with its citation.
+- If numbers are compared, add a small markdown table (rows = items, columns = companies or years), then the
+  difference: absolute and percent, computed only from the cited numbers. Show the arithmetic in one line,
+  e.g. (46,710 - 44,538) / 44,538 = 4.9%. Both numbers must be in the same unit before you subtract.
+- If one side is missing from the sources, say exactly which one and do not guess it.
+"""
 
 SYSTEM_PROMPT = f"""You are a financial analyst assistant answering questions about SEC 10-K annual reports.
 
@@ -105,12 +118,23 @@ def build_sources(results):
     return out
 
 
-def build_prompt(question, sources):
+def build_prompt(question, sources, compare=False):
     blocks = []
     for s in sources:
         blocks.append(f"[{s['tag']}] {s['company']} | fiscal year {s['year']} | {s['type']} | "
                       f"PDF page {page_str(s['pages'])} | section: {s['section']}\n{s['text']}")
-    return "SOURCES:\n\n" + "\n\n---\n\n".join(blocks) + f"\n\nQUESTION: {question}\n\nANSWER:"
+    head = COMPARE_PROMPT + "\n" if compare else ""
+    return head + "SOURCES:\n\n" + "\n\n---\n\n".join(blocks) + f"\n\nQUESTION: {question}\n\nANSWER:"
+
+
+def is_comparison(retriever, question):
+    """Do companies, do saal, ya 'compare / vs / difference' jaise alfaaz -> comparison."""
+    try:
+        comps = retriever._detect_companies(question)
+    except Exception:
+        comps = set()
+    years = {int(y) for y in retriever.YEAR_PATTERN.findall(question)}
+    return len(comps) >= 2 or len(years) >= 2 or bool(COMPARE_WORDS.search(question))
 
 
 # ----------------------------------------------------------------------
@@ -145,10 +169,14 @@ class DailyQuota(Exception):
     """Is model ki aaj ki free limit khatam (dobara koshish ka faida nahi, kal reset hogi)."""
 
 
+class Busy(Exception):
+    """Is model ki is MINUTE ki limit / server busy. args[1] = kitne second baad dobara (andaza)."""
+
+
 _NO_THINKING = {"ok": True}     # thinking_budget band na ho sake (purana API version) to ek dafa yaad rakho
 
 
-def call_gemini(client, model, prompt, tries=4):
+def call_gemini(client, model, prompt):
     from google.genai import types
     # Hidayat (SYSTEM_PROMPT) sawal ke saath hi bheji jaati hai, alag "system_instruction" mein nahi:
     # kuch API versions (v1) mein system_instruction band hai -> 400 INVALID_ARGUMENT.
@@ -162,10 +190,7 @@ def call_gemini(client, model, prompt, tries=4):
             kw["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
         return types.GenerateContentConfig(**kw)
 
-    wait = 15
-    attempt = 0
     while True:
-        attempt += 1
         try:
             resp = client.models.generate_content(model=model, contents=prompt, config=cfg())
             text = (resp.text or "").strip()
@@ -180,19 +205,14 @@ def call_gemini(client, model, prompt, tries=4):
             msg = str(e)
             if _NO_THINKING["ok"] and "thinking" in msg.lower() and ("400" in msg or "INVALID" in msg):
                 _NO_THINKING["ok"] = False          # ye version thinking_config nahi leta -> uske baghair dobara
-                attempt -= 1
                 continue
             is_429 = "429" in msg or "RESOURCE_EXHAUSTED" in msg
             if is_429 and ("PerDay" in msg or "per day" in msg or re.search(r"limit:\s*0\b", msg)):
                 raise DailyQuota(model)             # aaj ki limit khatam, ya is model ki free limit hai hi 0
             busy = any(x in msg for x in ("429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE", "overloaded"))
-            if busy and attempt < tries:
+            if busy:                                 # minute ki limit / server busy -> wait nahi, agla model
                 m = re.search(r"retry in (\d+(?:\.\d+)?)s", msg) or re.search(r"retryDelay['\"]?:\s*['\"]?(\d+)", msg)
-                sec = int(float(m.group(1))) + 1 if m else wait
-                print(f"    (Gemini busy / limit -- {sec} sec ruk kar dobara, koshish {attempt + 1}/{tries})")
-                time.sleep(sec)
-                wait *= 2
-                continue
+                raise Busy(model, int(float(m.group(1))) + 1 if m else 20)
             if "404" in msg or "NOT_FOUND" in msg:
                 raise LookupError(model)
             raise
@@ -211,18 +231,32 @@ class ModelChain:
                 return m
         return None
 
-    def generate(self, client, prompt):
-        while True:
-            m = self.current()
-            if m is None:
-                raise DailyQuota("sab")
-            try:
-                return m, call_gemini(client, m, prompt)
-            except DailyQuota:
-                print(f"    ({m}: aaj ki free limit khatam -- agla model try kar raha hoon)")
-            except LookupError:
-                print(f"    ({m}: is key par ye model nahi -- agla)")
-            self.dead.add(m)
+    def generate(self, client, prompt, rounds=2):
+        """Models ek ek karke. Minute-limit wala (Busy) sirf is sawal ke liye chhodo; din-limit wala hamesha ke liye.
+        Sab busy hon to sab se kam wait karke ek dafa aur poori line try."""
+        for rnd in range(rounds):
+            waits = []
+            for m in self.models:
+                if m in self.dead:
+                    continue
+                try:
+                    return m, call_gemini(client, m, prompt)
+                except DailyQuota:
+                    print(f"    ({m}: aaj ki free limit khatam -- agla model)")
+                    self.dead.add(m)
+                except LookupError:
+                    print(f"    ({m}: is key par ye model nahi -- agla)")
+                    self.dead.add(m)
+                except Busy as b:
+                    print(f"    ({m}: abhi busy / minute ki limit -- agla model)")
+                    waits.append(b.args[1])
+            if not waits:
+                break
+            if rnd + 1 < rounds:
+                sec = min(min(waits), 60)
+                print(f"    (sab models busy -- {sec} sec ruk kar dobara)")
+                time.sleep(sec)
+        raise DailyQuota("sab")
 
 
 # ----------------------------------------------------------------------
@@ -235,15 +269,16 @@ def cited_sources(answer, sources):
 
 def answer_one(retriever, client, cache, chain, question, k=5):
     t0 = time.time()
-    resp = retriever.search(question, top_k=k)
+    compare = is_comparison(retriever, question)
+    resp = retriever.search(question, top_k=max(k, COMPARE_K) if compare else k)
     entry = {"question": question, "model": None, "retrieval_matched": resp["matched"],
-             "heading": resp.get("heading")}
+             "heading": resp.get("heading"), "comparison": compare}
     if not resp["matched"]:
         entry.update(answer=f"{NOT_STATED} ({resp['reason']})", not_stated=True, cached=False,
                      sources=[], citations=[], seconds=round(time.time() - t0, 2))
         return entry
     sources = build_sources(resp["results"])
-    prompt = build_prompt(question, sources)
+    prompt = build_prompt(question, sources, compare)
     ck = Cache.key("gemini", prompt)          # model ka naam key mein nahi: fallback model ka jawab bhi cache ho
     hit = cache.get(ck)
     if isinstance(hit, dict):
@@ -254,7 +289,7 @@ def answer_one(retriever, client, cache, chain, question, k=5):
         try:
             used, text = chain.generate(client, prompt)
         except DailyQuota:
-            entry.update(answer="[Gemini ki aaj ki free limit sab models par khatam -- kal dobara, ya billing on karo]",
+            entry.update(answer="[Abhi koi Gemini model dastiyab nahi (limits) -- thori der baad dobara poochho]",
                          not_stated=False, cached=False, sources=sources, citations=[],
                          seconds=round(time.time() - t0, 2), error="daily_quota")
             return entry
@@ -280,6 +315,8 @@ def show(entry, n):
     print("=" * 74)
     if entry.get("heading"):
         print(f"(Section pehchana: {entry['heading']})")
+    if entry.get("comparison"):
+        print(f"(Comparison sawal -- {len(entry['sources'])} sources)")
     print("\n" + entry["answer"] + "\n")
     if entry["citations"]:
         print("Sources:")
