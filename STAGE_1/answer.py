@@ -64,6 +64,10 @@ Rules:
    If they contain only part of it, answer that part and say what is missing.
 6. If sources disagree (for example, different fiscal years), say so and cite both.
 7. Be concise: 1-4 sentences for a factual question, a short paragraph or bullet list for a "tell me about" question.
+8. Use only names, definitions and expansions that appear in the sources. If a source uses an abbreviation
+   (for example "CWT") without spelling it out, keep the abbreviation; never guess what it stands for.
+9. Keep each number's exact meaning from its source. A total is not a change and a change is not a total:
+   "profit was $8,884 million" must never become "profit decreased by $8,884 million".
 """
 
 
@@ -121,6 +125,7 @@ def build_sources(results):
         out.append({
             "tag": f"S{i}",
             "company": r["company_display"],
+            "company_key": r["company"],
             "year": r["year"],
             "section": r["section_path"],
             "pages": r.get("page_numbers") or [],
@@ -181,6 +186,10 @@ class DailyQuota(Exception):
     """Is model ki aaj ki free limit khatam (dobara koshish ka faida nahi, kal reset hogi)."""
 
 
+class NetworkDown(Exception):
+    """Internet / DNS nahi -- har model par yahi hoga, is liye agla model try karne ka faida nahi."""
+
+
 class Busy(Exception):
     """Is model ki is MINUTE ki limit / server busy. args[1] = kitne second baad dobara (andaza)."""
 
@@ -188,47 +197,86 @@ class Busy(Exception):
 _NO_THINKING = {"ok": True}     # thinking_budget band na ho sake (purana API version) to ek dafa yaad rakho
 
 
-def call_gemini(client, model, prompt):
+def _config():
     from google.genai import types
+    # 2.5+ models jawab se pehle "sochte" hain aur wo sochna bhi max_output_tokens mein ginta hai -> lamba
+    # jawab beech mein kat jata tha. Sources mein se jawab nikaalne ke liye sochna zaroori nahi: band (tez bhi).
+    kw = dict(temperature=0.1, max_output_tokens=2048 if _NO_THINKING["ok"] else 8192)
+    if _NO_THINKING["ok"]:
+        kw["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+    return types.GenerateContentConfig(**kw)
+
+
+def _classify(e, model):
+    """Gemini error -> hamari qisam. 'retry' = thinking_config ke baghair dobara; warna exception raise."""
+    msg = str(e)
+    if any(x in msg for x in ("getaddrinfo", "ConnectError", "Name or service not known", "nodename nor servname",
+                              "Network is unreachable", "No route to host")) or type(e).__name__ == "ConnectError":
+        raise NetworkDown(msg[:120])
+    if _NO_THINKING["ok"] and "thinking" in msg.lower() and ("400" in msg or "INVALID" in msg):
+        _NO_THINKING["ok"] = False
+        return "retry"
+    is_429 = "429" in msg or "RESOURCE_EXHAUSTED" in msg
+    if is_429 and ("PerDay" in msg or "per day" in msg or re.search(r"limit:\s*0\b", msg)):
+        raise DailyQuota(model)                 # aaj ki limit khatam, ya is model ki free limit hai hi 0
+    busy = any(x in msg for x in ("429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE", "overloaded",
+                                  "timed out", "Timeout", "timeout", "504", "DEADLINE"))
+    if busy:                                     # minute ki limit / server busy -> wait nahi, agla model
+        m = re.search(r"retry in (\d+(?:\.\d+)?)s", msg) or re.search(r"retryDelay['\"]?:\s*['\"]?(\d+)", msg)
+        raise Busy(model, int(float(m.group(1))) + 1 if m else 20)
+    if "404" in msg or "NOT_FOUND" in msg:
+        raise LookupError(model)
+    raise e
+
+
+def _finish_reason(resp):
+    try:
+        return str(resp.candidates[0].finish_reason or "")
+    except (AttributeError, IndexError, TypeError):
+        return ""
+
+
+def call_gemini(client, model, prompt):
+    """Poora jawab ek saath (terminal / evaluation ke liye)."""
     # Hidayat (SYSTEM_PROMPT) sawal ke saath hi bheji jaati hai, alag "system_instruction" mein nahi:
     # kuch API versions (v1) mein system_instruction band hai -> 400 INVALID_ARGUMENT.
-    prompt = SYSTEM_PROMPT + "\n\n" + prompt
-
-    def cfg():
-        # 2.5 models jawab se pehle "sochte" hain aur wo sochna bhi max_output_tokens mein ginta hai -> lamba
-        # jawab beech mein kat jata tha. Sources mein se jawab nikaalne ke liye sochna zaroori nahi: band (tez bhi).
-        kw = dict(temperature=0.1, max_output_tokens=2048 if _NO_THINKING["ok"] else 8192)
-        if _NO_THINKING["ok"]:
-            kw["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
-        return types.GenerateContentConfig(**kw)
-
+    full = SYSTEM_PROMPT + "\n\n" + prompt
     while True:
         try:
-            resp = client.models.generate_content(model=model, contents=prompt, config=cfg())
-            text = (resp.text or "").strip()
-            try:
-                reason = str(resp.candidates[0].finish_reason or "")
-            except (AttributeError, IndexError, TypeError):
-                reason = ""
-            if "MAX_TOKENS" in reason:
-                text += "\n" + TRUNCATED
-            return text
+            resp = client.models.generate_content(model=model, contents=full, config=_config())
         except Exception as e:
-            msg = str(e)
-            if _NO_THINKING["ok"] and "thinking" in msg.lower() and ("400" in msg or "INVALID" in msg):
-                _NO_THINKING["ok"] = False          # ye version thinking_config nahi leta -> uske baghair dobara
+            if _classify(e, model) == "retry":
                 continue
-            is_429 = "429" in msg or "RESOURCE_EXHAUSTED" in msg
-            if is_429 and ("PerDay" in msg or "per day" in msg or re.search(r"limit:\s*0\b", msg)):
-                raise DailyQuota(model)             # aaj ki limit khatam, ya is model ki free limit hai hi 0
-            busy = any(x in msg for x in ("429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE", "overloaded",
-                                          "timed out", "Timeout", "timeout", "504", "DEADLINE"))
-            if busy:                                 # minute ki limit / server busy -> wait nahi, agla model
-                m = re.search(r"retry in (\d+(?:\.\d+)?)s", msg) or re.search(r"retryDelay['\"]?:\s*['\"]?(\d+)", msg)
-                raise Busy(model, int(float(m.group(1))) + 1 if m else 20)
-            if "404" in msg or "NOT_FOUND" in msg:
-                raise LookupError(model)
-            raise
+        text = (resp.text or "").strip()
+        if "MAX_TOKENS" in _finish_reason(resp):
+            text += "\n" + TRUNCATED
+        return text
+
+
+def stream_gemini(client, model, prompt):
+    """Jawab tukdon mein (app ke liye: lafz lafz screen par). Pehla tukda aane tak errors yahin pakde jaate hain,
+    taake ModelChain agla model try kar sake; us ke baad generator baqi tukde deta hai."""
+    full = SYSTEM_PROMPT + "\n\n" + prompt
+    while True:
+        try:
+            it = iter(client.models.generate_content_stream(model=model, contents=full, config=_config()))
+            first = next(it)
+            break
+        except StopIteration:
+            return iter(())
+        except Exception as e:
+            if _classify(e, model) == "retry":
+                continue
+
+    def gen():
+        last = first
+        yield first.text or ""
+        for part in it:
+            last = part
+            yield part.text or ""
+        if "MAX_TOKENS" in _finish_reason(last):
+            yield "\n" + TRUNCATED
+    return gen()
 
 
 class ModelChain:
@@ -244,87 +292,107 @@ class ModelChain:
                 return m
         return None
 
-    def generate(self, client, prompt, rounds=2):
+    def generate(self, client, prompt, stream=False, rounds=2, log=print):
         """Models ek ek karke. Minute-limit wala (Busy) sirf is sawal ke liye chhodo; din-limit wala hamesha ke liye.
-        Sab busy hon to sab se kam wait karke ek dafa aur poori line try."""
+        Sab busy hon to sab se kam wait karke ek dafa aur poori line try.
+        Wapas: (model, text)  ya stream=True par  (model, generator)."""
+        fn = stream_gemini if stream else call_gemini
         for rnd in range(rounds):
             waits = []
             for m in self.models:
                 if m in self.dead:
                     continue
                 try:
-                    return m, call_gemini(client, m, prompt)
+                    return m, fn(client, m, prompt)
                 except DailyQuota:
-                    print(f"    ({m}: aaj ki free limit khatam -- agla model)")
+                    log(f"{m}: aaj ki free limit khatam -- agla model")
                     self.dead.add(m)
                 except LookupError:
-                    print(f"    ({m}: is key par ye model nahi -- agla)")
+                    log(f"{m}: is key par ye model nahi -- agla")
                     self.dead.add(m)
                 except Busy as b:
-                    print(f"    ({m}: abhi busy / minute ki limit -- agla model)")
+                    log(f"{m}: abhi busy / minute ki limit -- agla model")
                     waits.append(b.args[1])
             if not waits:
                 break
             if rnd + 1 < rounds:
                 sec = min(min(waits), 60)
-                print(f"    (sab models busy -- {sec} sec ruk kar dobara)")
+                log(f"sab models busy -- {sec} sec ruk kar dobara")
                 time.sleep(sec)
         raise DailyQuota("sab")
 
 
 # ----------------------------------------------------------------------
-# ek sawal
+# ek sawal:  prepare() -> (Gemini) -> finish()      terminal aur app dono yahi use karte hain
 # ----------------------------------------------------------------------
+NO_MODEL = "[Abhi koi Gemini model dastiyab nahi (limits) -- thori der baad dobara poochho]"
+NO_NET = "[Internet se rabta nahi (Gemini tak nahi pohanch saka) -- connection check karke dobara poochho]"
+
+
 def cited_sources(answer, sources):
     tags = set(re.findall(r"\[(S\d+)\]", answer))
     return [s for s in sources if s["tag"] in tags]
 
 
-def answer_one(retriever, client, cache, chain, question, k=5):
+def prepare(retriever, cache, question, k=5):
+    """Retrieval + prompt + cache. Wapas: dict(entry, prompt, key, cached_text, cached_model).
+    entry["answer"] pehle se bhara ho (retriever ne 'nahi mila' kaha) to Gemini ki zaroorat nahi."""
     t0 = time.time()
     compare = is_comparison(retriever, question)
     resp = retriever.search(question, top_k=max(k, COMPARE_K) if compare else k)
     entry = {"question": question, "model": None, "retrieval_matched": resp["matched"],
-             "heading": resp.get("heading"), "comparison": compare}
+             "heading": resp.get("heading"), "comparison": compare, "_t0": t0}
     if not resp["matched"]:
         entry.update(answer=f"{NOT_STATED} ({resp['reason']})", not_stated=True, cached=False,
                      sources=[], citations=[], seconds=round(time.time() - t0, 2))
-        return entry
+        entry.pop("_t0")
+        return {"entry": entry, "prompt": None, "key": None, "cached_text": None, "cached_model": None}
     sources = build_sources(resp["results"])
+    entry["sources"] = sources
     prompt = build_prompt(question, sources, compare)
     ck = Cache.key("gemini", prompt)          # model ka naam key mein nahi: fallback model ka jawab bhi cache ho
     hit = cache.get(ck)
-    if isinstance(hit, dict) and hit.get("text", "").endswith(TRUNCATED):
-        hit = None                                # purana adhoora jawab -> dobara banao
-    elif isinstance(hit, str) and hit.endswith(TRUNCATED):
-        hit = None
-    if isinstance(hit, dict):
-        text, used, cached = hit["text"], hit.get("model"), True
-    elif hit is not None:                     # purana cache (sirf text)
-        text, used, cached = hit, None, True
+    text = hit.get("text") if isinstance(hit, dict) else hit
+    if text and text.endswith(TRUNCATED):     # purana adhoora jawab -> dobara banao
+        text = None
+    return {"entry": entry, "prompt": prompt, "key": ck, "cached_text": text,
+            "cached_model": hit.get("model") if isinstance(hit, dict) and text else None}
+
+
+def finish(prep, cache, text, used, cached, error="no_model"):
+    """Gemini ka jawab (ya cache) -> entry mukammal; naya aur poora jawab cache mein."""
+    entry = prep["entry"]
+    if text is None:
+        entry.update(answer=NO_NET if error == "network" else NO_MODEL, not_stated=False, cached=False,
+                     citations=[], error=error)
     else:
-        try:
-            used, text = chain.generate(client, prompt)
-        except DailyQuota:
-            entry.update(answer="[Abhi koi Gemini model dastiyab nahi (limits) -- thori der baad dobara poochho]",
-                         not_stated=False, cached=False, sources=sources, citations=[],
-                         seconds=round(time.time() - t0, 2), error="daily_quota")
-            return entry
-        cached = False
-        if not text.endswith(TRUNCATED):          # adhoora jawab cache mat karo, agli dafa dobara banega
-            cache.put(ck, {"text": text, "model": used})
-    entry["model"] = used
-    cites = cited_sources(text, sources)
-    entry.update(
-        answer=text,
-        not_stated=text.strip().startswith(NOT_STATED[:20]),
-        cached=cached,
-        citations=[{"tag": s["tag"], "company": s["company"], "year": s["year"],
-                    "page": page_str(s["pages"]), "section": s["section"]} for s in cites],
-        sources=sources,
-        seconds=round(time.time() - t0, 2),
-    )
+        text = text.strip()
+        if not cached and not text.endswith(TRUNCATED):
+            cache.put(prep["key"], {"text": text, "model": used})
+        cites = cited_sources(text, entry["sources"])
+        entry.update(
+            answer=text, model=used, cached=cached,
+            not_stated=text.startswith(NOT_STATED[:20]),
+            citations=[{"tag": s["tag"], "company": s["company"], "year": s["year"],
+                        "page": page_str(s["pages"]), "section": s["section"]} for s in cites],
+        )
+    entry["seconds"] = round(time.time() - entry.pop("_t0"), 2)
     return entry
+
+
+def answer_one(retriever, client, cache, chain, question, k=5):
+    prep = prepare(retriever, cache, question, k)
+    if prep["prompt"] is None:
+        return prep["entry"]
+    if prep["cached_text"] is not None:
+        return finish(prep, cache, prep["cached_text"], prep["cached_model"], True)
+    try:
+        used, text = chain.generate(client, prep["prompt"], log=lambda m: print(f"    ({m})"))
+    except DailyQuota:
+        return finish(prep, cache, None, None, False)
+    except NetworkDown:
+        return finish(prep, cache, None, None, False, error="network")
+    return finish(prep, cache, text, used, False)
 
 
 def show(entry, n):
@@ -336,6 +404,8 @@ def show(entry, n):
     if entry.get("comparison"):
         print(f"(Comparison sawal -- {len(entry['sources'])} sources)")
     print("\n" + entry["answer"] + "\n")
+    if entry.get("error"):
+        return
     if entry["citations"]:
         print("Sources:")
         for c in entry["citations"]:
