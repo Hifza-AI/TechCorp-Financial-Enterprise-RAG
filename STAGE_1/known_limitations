@@ -312,3 +312,5 @@ The check flags Kennametal Item 1A and Franklin Electric Item 3. These are known
 
 
 R21 — Section-title questions returned cross-reference chunks instead of the section’s first page (Amazon 2022 p26, found by supervisor). Fixed in v2.4 ‘heading’ feature.
+
+- **R22 —** Some operating-expense tables lose their numbers during parsing (header "Amount | Amount" kept, values dropped), e.g. Palo Alto Networks FY2025 R&D table, p52. The answer layer correctly reports the figure as not stated.
