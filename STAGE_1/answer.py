@@ -74,6 +74,8 @@ Rules:
    (for example "CWT") without spelling it out, keep the abbreviation; never guess what it stands for.
 9. Keep each number's exact meaning from its source. A total is not a change and a change is not a total:
    "profit was $8,884 million" must never become "profit decreased by $8,884 million".
+10. Write in the Latin alphabet only. Answer in English; if the question is in Roman Urdu, you may answer in
+    Roman Urdu (Urdu written with English letters). Never use Devanagari, Arabic or any other script.
 """
 
 
@@ -473,6 +475,7 @@ def clean_answer(text):
     """Models ke alag citation / unicode andaaz ek jaise: 【S3】 -> [S3], [S1, S2] -> [S1][S2], khaas dash/space."""
     text = text.translate(_UNI)
     text = re.sub(r"[【〔［]\s*(S\d+)\s*[】〕］]", r"[\1]", text)
+    text = re.sub(r"\(\s*(S\d+)\s*\)", r"[\1]", text)                    # (S3) -> [S3]
     text = re.sub(r"\[(S\d+(?:\s*[,;]\s*S\d+)+)\]",
                   lambda m: "".join(f"[{t}]" for t in re.findall(r"S\d+", m.group(1))), text)
     return text
