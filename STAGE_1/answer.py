@@ -465,6 +465,19 @@ NO_MODEL = "[Abhi koi Gemini model dastiyab nahi (limits) -- thori der baad doba
 NO_NET = "[Internet se rabta nahi (Gemini tak nahi pohanch saka) -- connection check karke dobara poochho]"
 
 
+_UNI = str.maketrans({"\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-", "\u2014": "-",
+                      "\u00a0": " ", "\u202f": " ", "\u2009": " ", "\u2007": " "})
+
+
+def clean_answer(text):
+    """Models ke alag citation / unicode andaaz ek jaise: 【S3】 -> [S3], [S1, S2] -> [S1][S2], khaas dash/space."""
+    text = text.translate(_UNI)
+    text = re.sub(r"[【〔［]\s*(S\d+)\s*[】〕］]", r"[\1]", text)
+    text = re.sub(r"\[(S\d+(?:\s*[,;]\s*S\d+)+)\]",
+                  lambda m: "".join(f"[{t}]" for t in re.findall(r"S\d+", m.group(1))), text)
+    return text
+
+
 def cited_sources(answer, sources):
     tags = set(re.findall(r"\[(S\d+)\]", answer))
     return [s for s in sources if s["tag"] in tags]
@@ -506,7 +519,7 @@ def finish(prep, cache, text, used, cached, error="no_model"):
         entry.update(answer=NO_NET if error == "network" else NO_MODEL, not_stated=False, cached=False,
                      citations=[], error=error)
     else:
-        text = text.strip()
+        text = clean_answer(text).strip()
         if not cached and not text.endswith(TRUNCATED):
             cache.put(prep["key"], {"text": text, "model": used})
             if used:
