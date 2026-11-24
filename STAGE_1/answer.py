@@ -12,8 +12,9 @@ Har jawab ke saath wo 5 chunks bhi save hote hain jo Gemini ko diye gaye (answer
 Is se ghalat jawab ka faisla ho sakta hai: sahi baat chunks mein thi hi nahi -> retrieval ki ghalti;
 chunks mein thi magar jawab ghalat -> Gemini ki ghalti.
 
-API key: repo ke root mein .env file ->  GEMINI_API_KEY=...   (ya environment variable).
-Model badalna ho:  --model gemini-2.5-flash   ya .env mein GEMINI_MODEL=...   (--list-models se list)
+API keys: repo ke root mein .env file ->  GEMINI_API_KEY=...   aur/ya  GROQ_API_KEY=...
+Models: pehle Gemini (GEMINI_MODEL, GEMINI_FALLBACK_MODELS), phir Groq (GROQ_MODELS). Poori tarteeb khud:
+LLM_MODELS=groq:openai/gpt-oss-120b,gemini-2.5-flash,...    Pehla model:  --model ...   List:  --list-models
 
 Cache: wahi sawal + wahi chunks + wahi model -> Gemini ko dobara nahi bhejte (answer_cache.json).
 Retriever "nahi mila" kahe (company index mein nahi, jaise Tesla) -> Gemini ko bheja hi nahi jata.
@@ -34,6 +35,11 @@ DEFAULT_MODEL = "gemini-2.5-flash"
 # Free tier ki daily limit HAR MODEL ki alag hoti hai. Ek model ki din ki limit khatam -> agla model try.
 # .env mein badal sakte ho:  GEMINI_FALLBACK_MODELS=gemini-2.5-flash-lite,gemini-2.0-flash
 FALLBACK_MODELS = ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-2.0-flash-lite"]
+# Groq (dusra provider, free, card nahi; bohat tez). Chain mein "groq:" se pehchane jaate hain.
+# .env:  GROQ_API_KEY=...   aur chaho to  GROQ_MODELS=openai/gpt-oss-120b,llama-3.3-70b-versatile
+GROQ_URL = "https://api.groq.com/openai/v1"
+GROQ_MODELS = ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "openai/gpt-oss-20b", "llama-3.1-8b-instant"]
+# Poori tarteeb khud tay karni ho:  LLM_MODELS=groq:openai/gpt-oss-120b,gemini-2.5-flash,...
 NOT_STATED = "Not stated in the provided filings."
 TRUNCATED = "[jawab lamba tha, yahan kat gaya]"
 STOP = {"exit", "quit", "q", "band", "bas"}
@@ -86,15 +92,19 @@ def load_env():
                 os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
-def make_client():
+class Clients:
+    """Har provider ka client / key. Jis ki key na ho wo None (us ke models chain mein nahi aate)."""
+
+    def __init__(self, gemini=None, groq_key=None):
+        self.gemini, self.groq_key = gemini, groq_key
+
+
+def _gemini_client(key):
     try:
         from google import genai
     except ImportError:
-        raise SystemExit("google-genai install nahi hai:  pip install google-genai")
-    key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if not key:
-        raise SystemExit("API key nahi mili. Repo ke root mein .env file banao:  GEMINI_API_KEY=...  "
-                         "(aur .gitignore mein .env likho)")
+        print("    (google-genai install nahi: python -m pip install google-genai -- Gemini models chhor diye)")
+        return None
     # Har request ki time-limit, aur library ke apne andar wale retries band: hum khud agla model try karte hain.
     # (Iske baghair ek atki hui request program ko hamesha ke liye rok deti thi.)
     try:
@@ -106,6 +116,39 @@ def make_client():
             return genai.Client(api_key=key, http_options=types.HttpOptions(timeout=REQUEST_TIMEOUT_MS))
         except (AttributeError, TypeError):
             return genai.Client(api_key=key)
+
+
+def make_client():
+    gkey = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    qkey = os.environ.get("GROQ_API_KEY")
+    if not gkey and not qkey:
+        raise SystemExit("Koi API key nahi mili. Repo ke root ki .env file mein  GEMINI_API_KEY=...  aur/ya  "
+                         "GROQ_API_KEY=...  likho (aur .gitignore mein .env).")
+    return Clients(gemini=_gemini_client(gkey) if gkey else None, groq_key=qkey or None)
+
+
+def _env_list(name):
+    v = os.environ.get(name)
+    return [x.strip() for x in v.split(",") if x.strip()] if v else None
+
+
+def build_chain(clients, first=None, env_name="LLM_MODELS"):
+    """Models ki tarteeb: LLM_MODELS (poori list) ya: Gemini (GEMINI_MODEL + GEMINI_FALLBACK_MODELS) phir Groq."""
+    models = _env_list(env_name)
+    if models is None:
+        models = []
+        if clients.gemini is not None:
+            models += [first or os.environ.get("GEMINI_MODEL") or DEFAULT_MODEL]
+            models += _env_list("GEMINI_FALLBACK_MODELS") or FALLBACK_MODELS
+        if clients.groq_key:
+            models += ["groq:" + m for m in (_env_list("GROQ_MODELS") or GROQ_MODELS)]
+    elif first:
+        models = [first] + models
+    models = [m for m in models if (m.startswith("groq:") and clients.groq_key)
+              or (not m.startswith("groq:") and clients.gemini is not None)]
+    if not models:
+        raise SystemExit("Chain mein koi model nahi (keys check karo).")
+    return ModelChain(models)
 
 
 # ----------------------------------------------------------------------
@@ -236,11 +279,11 @@ def _finish_reason(resp):
         return ""
 
 
-def call_gemini(client, model, prompt):
+def call_gemini(client, model, prompt, system=SYSTEM_PROMPT):
     """Poora jawab ek saath (terminal / evaluation ke liye)."""
-    # Hidayat (SYSTEM_PROMPT) sawal ke saath hi bheji jaati hai, alag "system_instruction" mein nahi:
+    # Hidayat (system) sawal ke saath hi bheji jaati hai, alag "system_instruction" mein nahi:
     # kuch API versions (v1) mein system_instruction band hai -> 400 INVALID_ARGUMENT.
-    full = SYSTEM_PROMPT + "\n\n" + prompt
+    full = (system + "\n\n" + prompt) if system else prompt
     while True:
         try:
             resp = client.models.generate_content(model=model, contents=full, config=_config())
@@ -253,10 +296,10 @@ def call_gemini(client, model, prompt):
         return text
 
 
-def stream_gemini(client, model, prompt):
+def stream_gemini(client, model, prompt, system=SYSTEM_PROMPT):
     """Jawab tukdon mein (app ke liye: lafz lafz screen par). Pehla tukda aane tak errors yahin pakde jaate hain,
     taake ModelChain agla model try kar sake; us ke baad generator baqi tukde deta hai."""
-    full = SYSTEM_PROMPT + "\n\n" + prompt
+    full = (system + "\n\n" + prompt) if system else prompt
     while True:
         try:
             it = iter(client.models.generate_content_stream(model=model, contents=full, config=_config()))
@@ -279,6 +322,88 @@ def stream_gemini(client, model, prompt):
     return gen()
 
 
+# ---------------------------- Groq (OpenAI-jaisa API; sirf Python ki apni urllib, koi naya package nahi) ----
+def _groq_request(key, model, prompt, system, stream):
+    import urllib.request
+    msgs = ([{"role": "system", "content": system}] if system else []) + [{"role": "user", "content": prompt}]
+    body = {"model": model, "messages": msgs, "temperature": 0.1, "max_completion_tokens": 2048, "stream": stream}
+    if model.startswith("openai/gpt-oss"):
+        body["reasoning_effort"] = "low"     # sources se jawab nikaalne ke liye lamba sochna zaroori nahi
+    return urllib.request.Request(
+        GROQ_URL + "/chat/completions", data=json.dumps(body).encode("utf-8"), method="POST",
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
+                 "User-Agent": "techcorp-rag/1.0"})
+
+
+def _groq_open(key, model, prompt, system, stream):
+    """Request bhejo; error ho to hamari qisam (DailyQuota / Busy / LookupError / NetworkDown) raise."""
+    import socket
+    import urllib.error
+    import urllib.request
+    try:
+        return urllib.request.urlopen(_groq_request(key, model, prompt, system, stream),
+                                      timeout=REQUEST_TIMEOUT_MS / 1000)
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")
+        code, low = e.code, body.lower()
+        if code == 429:
+            if "per day" in low or "(tpd)" in low or "(rpd)" in low:
+                raise DailyQuota("groq:" + model)
+            ra = e.headers.get("retry-after")
+            raise Busy("groq:" + model, int(float(ra)) + 1 if ra and ra.replace(".", "").isdigit() else 10)
+        if code == 413 or "request too large" in low:        # prompt is model ki minute-limit se bara
+            raise Busy("groq:" + model, 60)
+        if code == 404 or "model_not_found" in low or "decommissioned" in low or "does not exist" in low:
+            raise LookupError("groq:" + model)
+        if code == 401:
+            raise SystemExit("GROQ_API_KEY ghalat hai (401). .env check karo.")
+        if code >= 500:
+            raise Busy("groq:" + model, 10)
+        raise RuntimeError(f"Groq {code}: {body[:200]}")
+    except (socket.timeout, TimeoutError):
+        raise Busy("groq:" + model, 10)
+    except urllib.error.URLError as e:
+        reason = str(e.reason)
+        if "timed out" in reason:
+            raise Busy("groq:" + model, 10)
+        raise NetworkDown(reason[:120])
+
+
+def call_groq(key, model, prompt, system=SYSTEM_PROMPT):
+    with _groq_open(key, model, prompt, system, stream=False) as r:
+        data = json.loads(r.read().decode("utf-8"))
+    ch = (data.get("choices") or [{}])[0]
+    text = ((ch.get("message") or {}).get("content") or "").strip()
+    if ch.get("finish_reason") == "length":
+        text += "\n" + TRUNCATED
+    return text
+
+
+def stream_groq(key, model, prompt, system=SYSTEM_PROMPT):
+    r = _groq_open(key, model, prompt, system, stream=True)
+
+    def gen():
+        reason = None
+        try:
+            for raw in r:
+                line = raw.decode("utf-8", "replace").strip()
+                if not line.startswith("data:"):
+                    continue
+                payload = line[5:].strip()
+                if payload == "[DONE]":
+                    break
+                ch = (json.loads(payload).get("choices") or [{}])[0]
+                reason = ch.get("finish_reason") or reason
+                piece = (ch.get("delta") or {}).get("content")
+                if piece:
+                    yield piece
+        finally:
+            r.close()
+        if reason == "length":
+            yield "\n" + TRUNCATED
+    return gen()
+
+
 class ModelChain:
     """Pehla model; us ki din ki limit khatam ya model mojood nahi -> agla. Jo khatam ho chuke unhein yaad rakhta hai."""
 
@@ -292,18 +417,21 @@ class ModelChain:
                 return m
         return None
 
-    def generate(self, client, prompt, stream=False, rounds=2, log=print):
+    def generate(self, client, prompt, stream=False, rounds=2, log=print, system=SYSTEM_PROMPT):
         """Models ek ek karke. Minute-limit wala (Busy) sirf is sawal ke liye chhodo; din-limit wala hamesha ke liye.
         Sab busy hon to sab se kam wait karke ek dafa aur poori line try.
         Wapas: (model, text)  ya stream=True par  (model, generator)."""
-        fn = stream_gemini if stream else call_gemini
+        def fn(m):
+            if m.startswith("groq:"):
+                return (stream_groq if stream else call_groq)(client.groq_key, m[5:], prompt, system)
+            return (stream_gemini if stream else call_gemini)(client.gemini, m, prompt, system)
         for rnd in range(rounds):
             waits = []
             for m in self.models:
                 if m in self.dead:
                     continue
                 try:
-                    return m, fn(client, m, prompt)
+                    return m, fn(m)
                 except DailyQuota:
                     log(f"{m}: aaj ki free limit khatam -- agla model")
                     self.dead.add(m)
@@ -439,6 +567,24 @@ def show_source(entry, i):
     print("-" * 74)
 
 
+def list_models(client):
+    if client.gemini is not None:
+        print("Gemini:")
+        for m in client.gemini.models.list():
+            acts = getattr(m, "supported_actions", None) or []
+            if not acts or "generateContent" in acts:
+                print("  " + m.name.replace("models/", ""))
+    if client.groq_key:
+        import urllib.request
+        req = urllib.request.Request(GROQ_URL + "/models", headers={
+            "Authorization": f"Bearer {client.groq_key}", "User-Agent": "techcorp-rag/1.0"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        print("Groq (chain mein 'groq:' laga kar):")
+        for m in sorted(x["id"] for x in data.get("data", [])):
+            print("  groq:" + m)
+
+
 # ----------------------------------------------------------------------
 def main():
     try:
@@ -448,7 +594,7 @@ def main():
     ap = argparse.ArgumentParser(description="RAG: retriever + Gemini jawab, citations ke saath")
     ap.add_argument("question", nargs="?", help="ek sawal; na do to ek ek karke poochho")
     ap.add_argument("-k", type=int, default=5, help="Gemini ko kitne chunks (default 5)")
-    ap.add_argument("--model", default=None, help=f"Gemini model (default {DEFAULT_MODEL})")
+    ap.add_argument("--model", default=None, help="pehla model (jaise gemini-2.5-flash ya groq:openai/gpt-oss-120b)")
     ap.add_argument("--store", default="STAGE_1/vector_store")
     ap.add_argument("--cache", default="STAGE_1/answer_cache.json")
     ap.add_argument("--out", default=None, help="default: answers_<tareekh>_<waqt>.json")
@@ -458,15 +604,9 @@ def main():
     load_env()
     client = make_client()
     if a.list_models:
-        for m in client.models.list():
-            acts = getattr(m, "supported_actions", None) or []
-            if not acts or "generateContent" in acts:
-                print(m.name)
+        list_models(client)
         return
-    model = a.model or os.environ.get("GEMINI_MODEL") or DEFAULT_MODEL
-    fb = os.environ.get("GEMINI_FALLBACK_MODELS")
-    fallbacks = [x.strip() for x in fb.split(",")] if fb else FALLBACK_MODELS
-    chain = ModelChain([model] + fallbacks)
+    chain = build_chain(client, a.model)
     out = a.out or time.strftime("answers_%Y%m%d_%H%M.json")
 
     from retriever import Retriever
@@ -485,7 +625,7 @@ def main():
         run(a.question)
         return
 
-    print(f"\nTayyar. Model: {model} (limit khatam ho to: {', '.join(chain.models[1:])}).  Sawal likho;  #2 = source [S2] poora;  exit = band")
+    print(f"\nTayyar. Model: {chain.models[0]} (limit khatam ho to: {', '.join(chain.models[1:])}).  Sawal likho;  #2 = source [S2] poora;  exit = band")
     last = None
     while True:
         try:
