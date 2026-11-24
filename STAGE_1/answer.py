@@ -341,6 +341,7 @@ def _groq_request(key, model, prompt, system, stream):
 
 def _groq_open(key, model, prompt, system, stream):
     """Request bhejo; error ho to hamari qisam (DailyQuota / Busy / LookupError / NetworkDown) raise."""
+    import http.client
     import socket
     import urllib.error
     import urllib.request
@@ -371,11 +372,17 @@ def _groq_open(key, model, prompt, system, stream):
         if "timed out" in reason:
             raise Busy("groq:" + model, 10)
         raise NetworkDown(reason[:120])
+    except (http.client.HTTPException, ConnectionError):  # server ne beech mein connection kaat diya: chhoti gharbar
+        raise Busy("groq:" + model, 5)
 
 
 def call_groq(key, model, prompt, system=SYSTEM_PROMPT):
-    with _groq_open(key, model, prompt, system, stream=False) as r:
-        data = json.loads(r.read().decode("utf-8"))
+    import http.client
+    try:
+        with _groq_open(key, model, prompt, system, stream=False) as r:
+            data = json.loads(r.read().decode("utf-8"))
+    except (http.client.HTTPException, ConnectionError, json.JSONDecodeError):
+        raise Busy("groq:" + model, 5)
     ch = (data.get("choices") or [{}])[0]
     text = re.sub(r"<think>.*?</think>", "", (ch.get("message") or {}).get("content") or "", flags=re.S).strip()
     if ch.get("finish_reason") == "length":
