@@ -73,6 +73,32 @@ def gold_in_answer(row, text):
     return any(_gold_pattern(x.strip()).search(soft) for x in (row.get("answer") or "").split("|") if x.strip())
 
 
+_NUM = re.compile(r"\d[\d,]*(?:\.\d+)?")
+
+
+def _nums(text):
+    return {n.replace(",", "").rstrip(".") for n in _NUM.findall(text or "")}
+
+
+def _key_nums(text):
+    """Asli numbers: 3+ hindse ya decimal wale; saal (1900-2099) aur tareekh jaise chhote numbers nahi.
+    Agar alternative mein sirf saal hi ho (jaise "1925"), to wahi."""
+    ns = _nums(text)
+    key = {n for n in ns if ("." in n or len(n.replace(".", "")) >= 3) and not re.fullmatch(r"(?:19|20)\d\d", n)}
+    return key or {n for n in ns if re.fullmatch(r"(?:19|20)\d\d", n)}
+
+
+def number_in_answer(row, text):
+    """Number wale sawal: gold ke kisi ek alternative ke SAARE numbers jawab mein hain? (jumla nahi, sirf numbers).
+    Sawal mein pehle se likhe numbers (saal) gine nahi jaate. None = is sawal par ye check lagu nahi."""
+    if (row.get("type") or "").strip().lower() != "number":
+        return None
+    have, asked = _nums(A.clean_answer(text)), _nums(row.get("question"))
+    alts = [x for x in (row.get("answer") or "").split("|") if x.strip()]
+    wanted = [n for n in (_key_nums(a) - asked for a in alts) if n]
+    return any(n <= have for n in wanted) if wanted else None
+
+
 def as_results(sources):
     return [{"company": s["company_key"], "year": s["year"], "text": s["text"]} for s in sources]
 
@@ -146,7 +172,16 @@ def report(done, rows):
             pct = f"{100 * counts[c] / answered:5.1f}%" if answered and c != "no_model" else "      "
             print(f"  {c:<11} {counts[c]:>4}   {pct}")
     if answered:
-        print(f"\n  Answer accuracy: {counts['correct']}/{answered} = {100 * counts['correct'] / answered:.1f}%")
+        print(f"\n  Exact phrase match: {counts['correct']}/{answered} = {100 * counts['correct'] / answered:.1f}%"
+              "   (sakht: gold jumla hoobahoo; bayani jawabon ke liye kam andaza)")
+    rowmap = {r["id"]: r for r in rows if isinstance(r, dict)}
+    numq = [d for d in done.values() if d["category"] not in ("no_model", "refused")
+            and (number_in_answer(rowmap[d["id"]], d["answer"]) if d["id"] in rowmap else d.get("number_match")) is not None]
+    if numq:
+        ok = [d for d in numq if (number_in_answer(rowmap[d["id"]], d["answer"]) if d["id"] in rowmap
+                                  else d.get("number_match"))]
+        print(f"  Number sawal (sahi number jawab mein): {len(ok)}/{len(numq)} = {100 * len(ok) / len(numq):.1f}%"
+              + (f"   ghalat: {', '.join(sorted({d['id'] for d in numq} - {d['id'] for d in ok}))}" if len(ok) < len(numq) else ""))
     for c in ["generation", "retrieval", "not_found", "refused"]:
         ids = [d["id"] for d in done.values() if d["category"] == c]
         if ids:
@@ -247,6 +282,7 @@ def main():
             "id": row["id"], "question": row["question"], "gold": row.get("answer"), "gold_page": row.get("page"),
             "company": row.get("company"), "year": row.get("year"), "type": row.get("type"),
             "category": cat, "gold_ranks": ranks, "answer": entry["answer"], "model": entry.get("model"),
+            "number_match": number_in_answer(row, entry["answer"]) if entry.get("retrieval_matched") else None,
             "cached": entry.get("cached"), "seconds": entry.get("seconds"),
             "sources": [{k: s[k] for k in ("tag", "company", "year", "pages", "section", "type", "text")}
                         for s in entry.get("sources", [])],
