@@ -36,7 +36,7 @@ import answer as A                                                             #
 from retriever import Retriever, load_gold, _gold_pattern, _soft, gold_check  # noqa: E402
 
 DEEP_K = 30
-JUDGE_VERSION = 2          # v2: judge ko har source ka section / page bhi dikhta hai (jaise jawab dene wale ko)
+JUDGE_VERSION = 3          # v2: judge ko section / page bhi; v3: naam / abbreviation ke poore form ki khaas jaanch
 VERDICTS = ["correct", "partial", "wrong"]
 
 JUDGE_PROMPT = """You are grading an answer produced by a retrieval-augmented system over SEC 10-K filings.
@@ -56,9 +56,12 @@ Grade two things:
 1. verdict: "correct" if the system answer conveys the reference fact (wording may differ, any language);
    "partial" if it conveys only part of it or mixes it with a wrong statement; "wrong" if it misses it,
    contradicts it, or says the information is not available.
-2. unsupported: every statement in the system answer that is NOT supported by the SOURCES (invented facts,
-   invented expansions of abbreviations, numbers whose meaning was changed). Quote each one briefly. Empty
-   list if everything is supported.
+2. unsupported: every statement in the system answer that is NOT supported by the SOURCES. Check carefully:
+   - every name of a company, segment, product or person, and every spelled-out form of an abbreviation
+     (if the sources only say "CWT", an answer saying "WeatherTech (CWT)" is unsupported);
+   - every number and what it measures (a total stated as a change is unsupported);
+   - computed values (differences, percentages) are supported only if the arithmetic from cited numbers is right.
+   Quote each unsupported piece briefly. Empty list if everything is supported.
 
 Reply with JSON only, no other text:
 {{"verdict": "correct|partial|wrong", "unsupported": ["..."], "reason": "one sentence"}}"""
