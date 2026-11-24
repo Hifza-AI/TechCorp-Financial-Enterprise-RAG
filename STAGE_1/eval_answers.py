@@ -16,9 +16,15 @@ mein sirf N naye sawal.
 
     python STAGE_1/eval_answers.py --limit 25        # 25 naye sawal
     python STAGE_1/eval_answers.py --report          # sirf ab tak ka hisaab, koi API call nahi
+
+LLM judge (--judge): exact-match alfaaz dekhta hai, matlab nahi (25 mein se 5 faisle ghalat thay). Judge ko sawal,
+sahi jawab, sources aur hamara jawab diya jata hai; wo batata hai: jawab sahi / adhoora / ghalat, aur jawab ki
+kaun si baat sources mein NAHI hai (hallucination). Jin jawabon ka judge nahi hua, unka pehle hota hai.
+    python STAGE_1/eval_answers.py --judge --limit 25
 """
 import argparse
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -30,6 +36,31 @@ import answer as A                                                             #
 from retriever import Retriever, load_gold, _gold_pattern, _soft, gold_check  # noqa: E402
 
 DEEP_K = 30
+JUDGE_VERSION = 1
+VERDICTS = ["correct", "partial", "wrong"]
+
+JUDGE_PROMPT = """You are grading an answer produced by a retrieval-augmented system over SEC 10-K filings.
+
+QUESTION: {question}
+
+REFERENCE ANSWER (the key fact; alternatives separated by "|"): {gold}
+
+SOURCES given to the system:
+{sources}
+
+SYSTEM ANSWER:
+{answer}
+
+Grade two things:
+1. verdict: "correct" if the system answer conveys the reference fact (wording may differ, any language);
+   "partial" if it conveys only part of it or mixes it with a wrong statement; "wrong" if it misses it,
+   contradicts it, or says the information is not available.
+2. unsupported: every statement in the system answer that is NOT supported by the SOURCES (invented facts,
+   invented expansions of abbreviations, numbers whose meaning was changed). Quote each one briefly. Empty
+   list if everything is supported.
+
+Reply with JSON only, no other text:
+{{"verdict": "correct|partial|wrong", "unsupported": ["..."], "reason": "one sentence"}}"""
 CATS = ["correct", "generation", "retrieval", "not_found", "refused", "no_model"]
 
 
@@ -60,6 +91,43 @@ def judge(retriever, row, entry):
     return "not_found", None
 
 
+def make_judge_chain(client):
+    """Judge jawab dene wale se ALAG company ka model ho to behtar (model apne jawab ko zyada nambar deta hai).
+    JUDGE_MODELS diya ho to wahi; warna Groq key ho to pehle Groq, phir Gemini."""
+    if A._env_list("JUDGE_MODELS"):
+        return A.build_chain(client, env_name="JUDGE_MODELS")
+    chain = A.build_chain(client)
+    chain.models = [m for m in chain.models if m.startswith("groq:")] + \
+                   [m for m in chain.models if not m.startswith("groq:")]
+    return chain
+
+
+def judge_llm(chain, client, cache, d):
+    """Ek jawab par LLM ka faisla -> dict(verdict, unsupported, reason, model) ya None (limit / internet)."""
+    srcs = "\n\n".join(f"[{s['tag']}] {s['company']} FY{s['year']}\n{s['text']}" for s in d["sources"]) or "(none)"
+    prompt = JUDGE_PROMPT.format(question=d["question"], gold=d["gold"], sources=srcs, answer=d["answer"])
+    key = A.Cache.key(f"judge-v{JUDGE_VERSION}", prompt)
+    hit = cache.get(key)
+    if isinstance(hit, dict) and "verdict" in hit:
+        return hit
+    try:
+        model, text = chain.generate(client, prompt, log=lambda m: print(f"    ({m})"), system="")
+    except (A.DailyQuota, A.NetworkDown):
+        return None
+    m = re.search(r"\{.*\}", text, re.S)
+    try:
+        out = json.loads(m.group(0)) if m else {}
+    except json.JSONDecodeError:
+        out = {}
+    verdict = str(out.get("verdict", "")).strip().lower()
+    res = {"verdict": verdict if verdict in VERDICTS else "unparsed",
+           "unsupported": [str(x) for x in (out.get("unsupported") or []) if str(x).strip()],
+           "reason": str(out.get("reason", ""))[:300], "model": model, "version": JUDGE_VERSION}
+    if res["verdict"] != "unparsed":
+        cache.put(key, res)
+    return res
+
+
 def report(done, rows):
     n = len(done)
     counts = {c: sum(1 for d in done.values() if d["category"] == c) for c in CATS}
@@ -77,6 +145,24 @@ def report(done, rows):
         ids = [d["id"] for d in done.values() if d["category"] == c]
         if ids:
             print(f"  {c}: {', '.join(ids)}")
+    judged = [d for d in done.values() if (d.get("judge") or {}).get("verdict") in VERDICTS]
+    if judged:
+        J = len(judged)
+        v = {x: [d["id"] for d in judged if d["judge"]["verdict"] == x] for x in VERDICTS}
+        hall = [d["id"] for d in judged if d["judge"]["unsupported"]]
+        print(f"\n  LLM JUDGE ({J} jawab):")
+        print(f"    correct {len(v['correct']):>4}   {100 * len(v['correct']) / J:5.1f}%")
+        print(f"    partial {len(v['partial']):>4}   {100 * len(v['partial']) / J:5.1f}%")
+        print(f"    wrong   {len(v['wrong']):>4}   {100 * len(v['wrong']) / J:5.1f}%")
+        print(f"    Faithfulness (koi unsupported baat nahi): {J - len(hall)}/{J} = {100 * (J - len(hall)) / J:.1f}%")
+        for x in ("partial", "wrong"):
+            if v[x]:
+                print(f"    {x}: {', '.join(v[x])}")
+        if hall:
+            print(f"    unsupported baatein: {', '.join(hall)}")
+        flips = [d["id"] for d in judged if (d["category"] == "correct") != (d["judge"]["verdict"] == "correct")]
+        if flips:
+            print(f"    exact-match aur judge mein ikhtilaf: {', '.join(flips)}  (inhein haath se dekh lo)")
     print()
 
 
@@ -93,6 +179,7 @@ def main():
     ap.add_argument("--limit", type=int, default=25, help="is run mein kitne NAYE sawal (default 25)")
     ap.add_argument("--pause", type=float, default=4.0, help="har sawal ke baad kitne sec ruko (minute ki limit)")
     ap.add_argument("--report", action="store_true", help="sirf hisaab dikhao, kuch mat chalao")
+    ap.add_argument("--judge", action="store_true", help="LLM judge bhi (pehle un jawabon ka jin ka judge nahi hua)")
     a = ap.parse_args()
 
     gold = load_gold(a.gold)
@@ -107,20 +194,44 @@ def main():
         return
 
     todo = [r for r in rows if r["id"] not in done or done[r["id"]]["category"] == "no_model"][:a.limit]
-    if not todo:
+    unjudged = [d for d in done.values() if d["category"] not in ("no_model", "refused")
+                and (d.get("judge") or {}).get("verdict") not in VERDICTS] if a.judge else []
+    if not todo and not unjudged:
         report(done, rows)
-        print("Sab sawal ho chuke.")
+        print("Sab sawal ho chuke." + (" Sab ka judge bhi ho chuka." if a.judge else ""))
         return
 
     A.load_env()
     client = A.make_client()
-    import os
-    model = os.environ.get("GEMINI_MODEL") or A.DEFAULT_MODEL
-    fb = os.environ.get("GEMINI_FALLBACK_MODELS")
-    chain = A.ModelChain([model] + ([x.strip() for x in fb.split(",")] if fb else A.FALLBACK_MODELS))
+    chain = A.build_chain(client)
+    judge_chain = make_judge_chain(client) if a.judge else None
     retriever = Retriever(a.store)
     cache = A.Cache(a.cache)
     out.parent.mkdir(parents=True, exist_ok=True)
+
+    def save():
+        out.write_text(json.dumps(sorted(done.values(), key=lambda d: int(d["id"][1:])), ensure_ascii=False,
+                                  indent=1), encoding="utf-8")
+
+    budget = a.limit
+    if unjudged:                                         # pehle purane jawabon ka judge
+        print(f"\nJudge: {min(len(unjudged), budget)} purane jawab\n")
+        for d in sorted(unjudged, key=lambda d: int(d["id"][1:]))[:budget]:
+            res = judge_llm(judge_chain, client, cache, d)
+            if res is None:
+                print("\nGemini limit / internet -- judge yahin ruka. Baad mein dobara chalao.")
+                save()
+                report(done, rows)
+                return
+            d["judge"] = res
+            budget -= 1
+            print(f"  {d['id']:<5} judge: {res['verdict']:<8} {'(unsupported: ' + str(len(res['unsupported'])) + ')' if res['unsupported'] else ''}")
+            save()
+            time.sleep(a.pause)
+        todo = todo[:max(budget, 0)]
+        if not todo:
+            report(done, rows)
+            return
 
     print(f"\n{len(todo)} sawal chalenge (pehle se ho chuke: {sum(1 for d in done.values() if d['category'] != 'no_model')})\n")
     for i, row in enumerate(todo, 1):
@@ -134,10 +245,15 @@ def main():
             "sources": [{k: s[k] for k in ("tag", "company", "year", "pages", "section", "type", "text")}
                         for s in entry.get("sources", [])],
         }
-        out.write_text(json.dumps(sorted(done.values(), key=lambda d: int(d["id"][1:])), ensure_ascii=False,
-                                  indent=1), encoding="utf-8")
+        jtxt = ""
+        if a.judge and cat not in ("no_model", "refused"):
+            res = judge_llm(judge_chain, client, cache, done[row["id"]])
+            if res is not None:
+                done[row["id"]]["judge"] = res
+                jtxt = f"  judge: {res['verdict']}" + (f" (unsupported: {len(res['unsupported'])})" if res["unsupported"] else "")
+        save()
         mark = {"correct": "✓", "no_model": "…"}.get(cat, "✗")
-        print(f"[{i:>3}/{len(todo)}] {row['id']:<5} {mark} {cat:<11} {row['question'][:60]}")
+        print(f"[{i:>3}/{len(todo)}] {row['id']:<5} {mark} {cat:<11} {row['question'][:55]}{jtxt}")
         if cat == "no_model":
             if entry.get("error") == "network":
                 print("\nInternet nahi chal raha. Connection theek karke yahi command dobara chalao -- yahin se shuru hoga.")
