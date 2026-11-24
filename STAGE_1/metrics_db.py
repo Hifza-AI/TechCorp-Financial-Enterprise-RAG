@@ -15,7 +15,8 @@ Har filing ka "apna" fiscal year = us ki financial statements ka sab se naya col
 mein dobara aata hai -> dono milao (cross-year check). Balance sheet: Total assets = Total liabilities and equity.
 
 status:  verified    kam az kam ek check pass, koi fail nahi
-         conflict    koi check fail (number ya parsing par shak -- jawab mein use karo magar batao)
+         conflict    koi check fail: ya to company ne baad mein number badla (restatement -- jaise naya accounting
+                     rule ASC 606, ya business alag karna), ya parsing ki ghalti. SEC XBRL se tay hota hai.
          unchecked   koi check mumkin nahi (agli filing hamare paas nahi, aur balance check is metric par nahi)
 """
 import argparse
@@ -113,6 +114,17 @@ def close(a, b):
         return False
     a, b = abs(a), abs(b)
     return a == b or abs(a - b) <= max(1.0 if max(a, b) >= 1000 else 0.0, TOL * max(a, b))
+
+
+def same_value(a, b):
+    """Same number? -> (ok, note). Company kabhi report ka unit badal deti hai (Workday: thousands -> millions),
+    is liye 1000 ka farq bhi 'same' (note ke saath)."""
+    if close(a, b):
+        return True, ""
+    for k in (1000.0, 1000000.0):
+        if a is not None and b is not None and (close(a, b * k) or close(a * k, b)):
+            return True, "unit badla (x1000)"
+    return False, ""
 
 
 def match_rank(rn, names, metric):
@@ -215,11 +227,12 @@ def build(db_path):
         nxt = later.get(key)
         if nxt:
             n = nxt[0]
-            ok = close(row["value"], n["value"])
+            ok, note = same_value(row["value"], n["value"])
             results.append(ok)
             checks.append((comp, fy, metric, "cross_year", int(ok),
                            f"{row['value_text']} (filing {row['filing_year']}) vs {n['value_text']} "
-                           f"(filing {n['filing_year']}, p{n['page']})"))
+                           f"(filing {n['filing_year']}, p{n['page']})" + (f" -- {note}" if note else
+                           "" if ok else " -- restatement ya parsing; XBRL se tay hoga")))
         status[key] = results
 
     # balance sheet: total assets = total liabilities and equity (usi filing, usi column)
