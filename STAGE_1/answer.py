@@ -475,7 +475,8 @@ NO_NET = "[Internet se rabta nahi (Gemini tak nahi pohanch saka) -- connection c
 
 
 _UNI = str.maketrans({"\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-", "\u2014": "-",
-                      "\u00a0": " ", "\u202f": " ", "\u2009": " ", "\u2007": " "})
+                      "\u00a0": " ", "\u202f": " ", "\u2009": " ", "\u2007": " ",
+                      "\u200b": "", "\u200c": "", "\u200d": "", "\ufeff": ""})
 
 
 def clean_answer(text):
