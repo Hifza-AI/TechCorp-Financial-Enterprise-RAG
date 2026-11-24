@@ -38,7 +38,7 @@ FALLBACK_MODELS = ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-2.0-flas
 # Groq (dusra provider, free, card nahi; bohat tez). Chain mein "groq:" se pehchane jaate hain.
 # .env:  GROQ_API_KEY=...   aur chaho to  GROQ_MODELS=openai/gpt-oss-120b,llama-3.3-70b-versatile
 GROQ_URL = "https://api.groq.com/openai/v1"
-GROQ_MODELS = ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "openai/gpt-oss-20b", "llama-3.1-8b-instant"]
+GROQ_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
 # Poori tarteeb khud tay karni ho:  LLM_MODELS=groq:openai/gpt-oss-120b,gemini-2.5-flash,...
 NOT_STATED = "Not stated in the provided filings."
 TRUNCATED = "[jawab lamba tha, yahan kat gaya]"
@@ -329,6 +329,8 @@ def _groq_request(key, model, prompt, system, stream):
     body = {"model": model, "messages": msgs, "temperature": 0.1, "max_completion_tokens": 2048, "stream": stream}
     if model.startswith("openai/gpt-oss"):
         body["reasoning_effort"] = "low"     # sources se jawab nikaalne ke liye lamba sochna zaroori nahi
+    elif "qwen" in model:
+        body["reasoning_format"] = "hidden"  # <think> wala sochna jawab mein na aaye
     return urllib.request.Request(
         GROQ_URL + "/chat/completions", data=json.dumps(body).encode("utf-8"), method="POST",
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
@@ -373,7 +375,7 @@ def call_groq(key, model, prompt, system=SYSTEM_PROMPT):
     with _groq_open(key, model, prompt, system, stream=False) as r:
         data = json.loads(r.read().decode("utf-8"))
     ch = (data.get("choices") or [{}])[0]
-    text = ((ch.get("message") or {}).get("content") or "").strip()
+    text = re.sub(r"<think>.*?</think>", "", (ch.get("message") or {}).get("content") or "", flags=re.S).strip()
     if ch.get("finish_reason") == "length":
         text += "\n" + TRUNCATED
     return text
@@ -383,7 +385,7 @@ def stream_groq(key, model, prompt, system=SYSTEM_PROMPT):
     r = _groq_open(key, model, prompt, system, stream=True)
 
     def gen():
-        reason = None
+        reason, thinking = None, False
         try:
             for raw in r:
                 line = raw.decode("utf-8", "replace").strip()
@@ -395,6 +397,12 @@ def stream_groq(key, model, prompt, system=SYSTEM_PROMPT):
                 ch = (json.loads(payload).get("choices") or [{}])[0]
                 reason = ch.get("finish_reason") or reason
                 piece = (ch.get("delta") or {}).get("content")
+                if piece and "<think>" in piece:
+                    thinking, piece = True, piece.split("<think>")[0]
+                if thinking and piece and "</think>" in piece:
+                    thinking, piece = False, piece.split("</think>", 1)[1]
+                elif thinking:
+                    piece = ""
                 if piece:
                     yield piece
         finally:
@@ -462,7 +470,7 @@ def cited_sources(answer, sources):
     return [s for s in sources if s["tag"] in tags]
 
 
-def prepare(retriever, cache, question, k=5):
+def prepare(retriever, cache, question, k=5, only_model=None):
     """Retrieval + prompt + cache. Wapas: dict(entry, prompt, key, cached_text, cached_model).
     entry["answer"] pehle se bhara ho (retriever ne 'nahi mila' kaha) to Gemini ki zaroorat nahi."""
     t0 = time.time()
@@ -478,12 +486,16 @@ def prepare(retriever, cache, question, k=5):
     sources = build_sources(resp["results"])
     entry["sources"] = sources
     prompt = build_prompt(question, sources, compare)
-    ck = Cache.key("gemini", prompt)          # model ka naam key mein nahi: fallback model ka jawab bhi cache ho
-    hit = cache.get(ck)
+    # Cache: "kisi bhi model" ka jawab (app / fallback ke liye) aur "is model" ka jawab (model comparison ke liye).
+    ck = Cache.key("gemini", prompt)
+    if only_model:                            # ek hi model fix -> sirf usi ka cache, warna comparison ghalat
+        hit = cache.get(Cache.key("ans|" + only_model, prompt))
+    else:
+        hit = cache.get(ck)
     text = hit.get("text") if isinstance(hit, dict) else hit
     if text and text.endswith(TRUNCATED):     # purana adhoora jawab -> dobara banao
         text = None
-    return {"entry": entry, "prompt": prompt, "key": ck, "cached_text": text,
+    return {"entry": entry, "prompt": prompt, "key": ck, "prompt_raw": prompt, "cached_text": text,
             "cached_model": hit.get("model") if isinstance(hit, dict) and text else None}
 
 
@@ -497,6 +509,8 @@ def finish(prep, cache, text, used, cached, error="no_model"):
         text = text.strip()
         if not cached and not text.endswith(TRUNCATED):
             cache.put(prep["key"], {"text": text, "model": used})
+            if used:
+                cache.put(Cache.key("ans|" + used, prep["prompt_raw"]), {"text": text, "model": used})
         cites = cited_sources(text, entry["sources"])
         entry.update(
             answer=text, model=used, cached=cached,
@@ -509,7 +523,7 @@ def finish(prep, cache, text, used, cached, error="no_model"):
 
 
 def answer_one(retriever, client, cache, chain, question, k=5):
-    prep = prepare(retriever, cache, question, k)
+    prep = prepare(retriever, cache, question, k, only_model=chain.models[0] if len(chain.models) == 1 else None)
     if prep["prompt"] is None:
         return prep["entry"]
     if prep["cached_text"] is not None:
