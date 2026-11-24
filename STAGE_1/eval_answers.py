@@ -36,7 +36,7 @@ import answer as A                                                             #
 from retriever import Retriever, load_gold, _gold_pattern, _soft, gold_check  # noqa: E402
 
 DEEP_K = 30
-JUDGE_VERSION = 1
+JUDGE_VERSION = 2          # v2: judge ko har source ka section / page bhi dikhta hai (jaise jawab dene wale ko)
 VERDICTS = ["correct", "partial", "wrong"]
 
 JUDGE_PROMPT = """You are grading an answer produced by a retrieval-augmented system over SEC 10-K filings.
@@ -45,7 +45,8 @@ QUESTION: {question}
 
 REFERENCE ANSWER (the key fact; alternatives separated by "|"): {gold}
 
-SOURCES given to the system:
+SOURCES given to the system (the header line of each source, including its section heading, is part of the
+source and counts as support):
 {sources}
 
 SYSTEM ANSWER:
@@ -65,7 +66,7 @@ CATS = ["correct", "generation", "retrieval", "not_found", "refused", "no_model"
 
 
 def gold_in_answer(row, text):
-    soft = _soft(text)
+    soft = _soft(A.clean_answer(text).replace("**", "").replace("__", ""))
     return any(_gold_pattern(x.strip()).search(soft) for x in (row.get("answer") or "").split("|") if x.strip())
 
 
@@ -104,7 +105,9 @@ def make_judge_chain(client):
 
 def judge_llm(chain, client, cache, d):
     """Ek jawab par LLM ka faisla -> dict(verdict, unsupported, reason, model) ya None (limit / internet)."""
-    srcs = "\n\n".join(f"[{s['tag']}] {s['company']} FY{s['year']}\n{s['text']}" for s in d["sources"]) or "(none)"
+    srcs = "\n\n".join(
+        f"[{s['tag']}] {s['company']} FY{s['year']} | PDF page {A.page_str(s.get('pages'))} | "
+        f"section: {s.get('section', '')}\n{s['text']}" for s in d["sources"]) or "(none)"
     prompt = JUDGE_PROMPT.format(question=d["question"], gold=d["gold"], sources=srcs, answer=d["answer"])
     key = A.Cache.key(f"judge-v{JUDGE_VERSION}", prompt)
     hit = cache.get(key)
