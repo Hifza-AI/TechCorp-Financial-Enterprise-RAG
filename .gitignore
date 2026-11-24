@@ -25,3 +25,4 @@ STAGE_1/eval*/
 STAGE_1/answer_cache.json
 answers_*.json
 STAGE_1/answer_cache_gemini.json
+STAGE_1/facts.db
