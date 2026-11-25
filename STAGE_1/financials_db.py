@@ -31,7 +31,7 @@ import sqlite3
 import time
 from pathlib import Path
 
-from validate_xbrl import CONCEPTS, INSTANT, d, matches
+from validate_xbrl import CONCEPTS, INSTANT, accession_map, d, matches, pick_accn, xbrl_values
 
 METRIC_LABELS = {
     "revenue": "Revenue", "gross_profit": "Gross profit", "operating_income": "Operating income",
@@ -154,6 +154,8 @@ def build(db):
     any_accn = {}
     fb_end = {}            # fallback rows: number ka period end (agli filing mein ye "current" period nahi hota)
     fallback_n = 0
+    standard_differs = 0
+    acc = accession_map(con)
     for (comp, fy, metric, our_text, our_unit, result, xv, xc, accn, status,
          fname, page, label, our_val) in con.execute(
             "SELECT v.company, v.fiscal_year, v.metric, v.our_text, v.our_unit, v.result, v.xbrl_value, "
@@ -163,12 +165,21 @@ def build(db):
         url = sec_url(cik.get(comp), accn)
         if result in ("match", "mismatch") and accn:
             own_accn[key] = any_accn[key] = accn
-        if result == "match":
-            rows[key] = (xv, "sec_verified", "pdf+sec", fname, page, label, our_text, our_unit, xc, url, None)
-            continue
-        if result == "mismatch":
-            rows[key] = (xv, "sec_only", "sec", fname, None, None, our_text, our_unit, xc, url,
-                         "PDF parser ka number SEC se nahi mila -- SEC ka number liya")
+            # Ek metric = ek tareef: hamesha pehla (standard) concept -- jaise net income = NetIncomeLoss (company
+            # ke shareholders ka), revenue = Revenues (total). PDF ne doosri line pakri ho (net sales, ya
+            # noncontrolling ke saath net income) to bhi number standard wala; PDF page tabhi jab woh isi se mile.
+            a = pick_accn(acc.get(comp, []), fy)
+            vals = xbrl_values(con, comp, a[0], a[3], metric) if a and a[0] == accn else []
+            pc, pv = vals[0] if vals else (xc, xv)
+            if matches(our_val, pv, metric):
+                rows[key] = (pv, "sec_verified", "pdf+sec", fname, page, label, our_text, our_unit, pc, url, None)
+            elif result == "match":
+                standard_differs += 1
+                rows[key] = (pv, "sec_only", "sec", fname, None, None, our_text, our_unit, pc, url,
+                             f"PDF ki row doosri line item thi ({xc}); standard {pc} liya")
+            else:
+                rows[key] = (pv, "sec_only", "sec", fname, None, None, our_text, our_unit, pc, url,
+                             "PDF parser ka number SEC se nahi mila -- SEC ka number liya")
             continue
         # no_xbrl: pehle SEC ki doosri filings mein dhoondo
         fb = sec_fallback(con, comp, fy, metric)
@@ -249,7 +260,8 @@ def build(db):
     con.commit()
     con.close()
     print(f"Serving layer ban gayi ({time.time() - t0:.0f} sec): {len(rows):,} rows "
-          f"(SEC fallback {fallback_n}, pdf_suspect {suspect}, pichle saal ka comparative {priors})")
+          f"(SEC fallback {fallback_n}, pdf_suspect {suspect}, pichle saal ka comparative {priors}, "
+          f"PDF ki row standard concept se alag {standard_differs})")
     report(db)
 
 
@@ -308,16 +320,23 @@ METRIC_PATTERNS = [
     ("eps_diluted", r"\b(?:diluted )?(?:eps|earnings per (?:diluted )?share)\b"),
     ("gross_profit", r"\bgross (?:profit|margin)\b"),
     ("operating_income", r"\b(?:operating (?:income|profit|loss)|income from operations)\b"),
-    ("net_income", r"\bnet (?:income|earnings|profit|loss)\b"),
+    # "profit" akela = net income ("gross profit" / "operating profit" nahi)
+    ("net_income", r"\b(?:net (?:income|earnings|profit|loss)|(?<!gross )(?<!operating )profits?)\b"),
     ("rnd", r"\b(?:r ?& ?d|r and d|research and development)\b"),
-    ("total_assets", r"\btotal assets\b"),
-    ("total_liabilities", r"\btotal liabilities\b"),
-    ("equity", r"\b(?:shareholders'?|stockholders'?|total) equity\b"),
-    ("cash", r"\b(?:cash and cash equivalents|cash on hand|cash balance)\b"),
-    ("operating_cash_flow", r"\b(?:operating cash flows?|cash flows? from operati\w*|cash (?:provided|generated) by "
-                            r"operati\w*|net cash from operati\w*)\b"),
-    ("capex", r"\b(?:capital expenditures?|capex|purchases? of property)\b"),
-    ("revenue", r"\b(?:revenues?|net sales|total sales|sales|turnover)\b"),
+    # "assets" / "liabilities" akele = total (current / intangible / lease wagaira nahi)
+    ("total_assets", r"\b(?:total assets|(?<!current )(?<!intangible )(?<!net )(?<!other )(?<!tax )assets)\b"),
+    ("total_liabilities", r"\b(?:total liabilities|(?<!current )(?<!contingent )(?<!lease )(?<!other )(?<!tax )"
+                          r"liabilities)\b"),
+    ("equity", r"\b(?:shareholders'?|stockholders'?|total|shareowners'?) equity\b"),
+    ("operating_cash_flow", r"\b(?:operating cash flows?|cash flows? (?:from|provided by) operati\w*|"
+                            r"cash (?:provided|generated|from|flow from) (?:by |from )?operati\w*|"
+                            r"net cash from operati\w*)\b"),
+    # "cash" akela = cash and cash equivalents (cash flow / free cash / cash dividends nahi)
+    ("cash", r"\b(?:cash and cash equivalents|cash on hand|cash balance|"
+             r"(?<!free )(?<!net )cash(?! (?:flows?|from|provided|generated|used|dividends?|paid|taxes|"
+             r"conversion|returned|and equivalents)))\b|\bcash and equivalents\b"),
+    ("capex", r"\b(?:capital expenditures?|capex|capital spending|capital investments?|purchases? of property)\b"),
+    ("revenue", r"\b(?:revenues?|net sales|total sales|sales|(?<!inventory )(?<!asset )turnover)\b"),
 ]
 # Bayani sawal (policy / kyun / kaise) -> structured number ki zaroorat nahi
 DESCRIPTIVE = re.compile(r"\b(?:recogni[sz]\w*|polic\w*|why|strategy|risks?|describe|explain|segment\w*|"
@@ -335,8 +354,28 @@ STATUS_TEXT = {
 
 
 def detect_metrics(question):
-    q = " " + norm(question) + " "
+    q = " " + norm(question.replace("'", "")) + " "
     return [m for m, rx in METRIC_PATTERNS if re.search(rx, q)][:3]
+
+
+# Saalon ki range: "2019-2022", "2019 through 2022", "from 2019 until 2022", ya "har saal / each year ... 2019 to 2022"
+# -> beech ke saal bhi.  "change from 2019 to 2022" / "2019 vs 2022" -> sirf dono kinare.
+RANGE = re.compile(r"((?:19|20)\d{2})\s*(?:-|–|—|through|thru|until|till)\s*(?:fy\s*)?((?:19|20)\d{2})", re.I)
+SPAN = re.compile(r"((?:19|20)\d{2})\s*(?:to|and)\s*(?:fy\s*)?((?:19|20)\d{2})", re.I)
+EVERY = re.compile(r"\b(?:each|every|per) year\b|\bannual(?:ly)?\b|\byearly\b|\byear by year\b|\bhar saal\b|"
+                   r"\bsaal ba saal\b|\blist\b|\bbreakdown\b", re.I)
+
+
+def question_years(question, years):
+    years = set(years or ())
+    for rx, ok in ((RANGE, True), (SPAN, bool(EVERY.search(question)))):
+        if not ok:
+            continue
+        for a, b in rx.findall(question):
+            a, b = int(a), int(b)
+            if a < b and b - a <= 15:
+                years |= set(range(a, b + 1))
+    return years
 
 
 class FinancialData:
@@ -361,6 +400,7 @@ class FinancialData:
         """-> source dict (build_sources jaisa) ya None."""
         if not self.available or not companies or DESCRIPTIVE.search(question):
             return None
+        years = question_years(question, years)
         metrics = detect_metrics(question)
         if not metrics:
             return None
