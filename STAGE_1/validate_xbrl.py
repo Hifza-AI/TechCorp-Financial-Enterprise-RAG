@@ -61,6 +61,8 @@ CREATE TABLE validation(
     result TEXT, xbrl_value REAL, xbrl_concept TEXT, xbrl_accn TEXT, scale_unit TEXT, unit_ok INTEGER,
     curated_status TEXT, restatement TEXT, note TEXT, PRIMARY KEY(company, fiscal_year, metric));
 DROP TABLE IF EXISTS validation_missed;
+DROP TABLE IF EXISTS fy_offset;
+CREATE TABLE fy_offset(company TEXT PRIMARY KEY, off INTEGER, matches_off0 INTEGER, matches_off1 INTEGER);
 CREATE TABLE validation_missed(company TEXT, fiscal_year INTEGER, metric TEXT, xbrl_value REAL, xbrl_concept TEXT);
 """
 
@@ -102,14 +104,43 @@ def accession_map(con):
     return out
 
 
-def pick_accn(accns, fy):
-    """Fiscal year -> us ka 10-K. Pehle: period ka saal = fy. Phir (Jan/Feb mein khatam saal, jaise Home Depot,
-    Walmart, Workday): saal = fy + 1. Asal 10-K behtar 10-K/A se, pehle file hua behtar."""
-    for want in ((lambda e: e.year == fy), (lambda e: e.year == fy + 1 and e.month <= 2)):
-        c = [a for a in accns if want(a[3])]
-        if c:
-            return sorted(c, key=lambda a: (a[1] != "10-K", a[2] or ""))[0]
-    return None
+def pick_accn(accns, fy, off=0):
+    """Fiscal year -> us ka 10-K: period ka saal = fy + off (off har company ka ek hi -- company_offsets).
+    Asal 10-K behtar 10-K/A se, pehle file hua behtar. Is saal ki filing SEC data mein na ho -> None.
+    (Pehle yahan "na mile to agle saal ki Jan/Feb wali" ka rule tha -- Dell FY2019 ki filing na milne par wo
+    chupke se FY2020 ki filing utha leta tha. Insaani spot-check ne pakra.)"""
+    c = [a for a in accns if a[3].year == fy + off]
+    return sorted(c, key=lambda a: (a[1] != "10-K", a[2] or ""))[0] if c else None
+
+
+def company_offsets(con, acc):
+    """Har company ka EK qaida: hamara fiscal year = SEC period ka saal (off 0) ya saal - 1 (off 1, jaise koi
+    company "fiscal 2017" kahe aur saal Jan 2018 mein khatam ho). Jo qaida PDF numbers se zyada milta hai wahi.
+    -> {company: (off, matches_off0, matches_off1)}"""
+    out = {}
+    rows = defaultdict(list)
+    for comp, fy, metric, val in con.execute("SELECT company, fiscal_year, metric, value FROM metrics "
+                                             "WHERE metric IN ('total_assets','revenue','net_income')"):
+        rows[comp].append((fy, metric, val))
+    for comp, rs in rows.items():
+        n = []
+        for off in (0, 1):
+            k = 0
+            for fy, metric, val in rs:
+                a = pick_accn(acc.get(comp, []), fy, off)
+                if a and any(matches(val, v, metric) for _, v in xbrl_values(con, comp, a[0], a[3], metric)):
+                    k += 1
+            n.append(k)
+        out[comp] = (1 if n[1] > n[0] else 0, n[0], n[1])
+    return out
+
+
+def load_offsets(con):
+    """validate run ke baad: {company: off}. Table na ho to sab 0."""
+    try:
+        return dict(con.execute("SELECT company, off FROM fy_offset"))
+    except sqlite3.Error:
+        return {}
 
 
 def xbrl_values(con, comp, accn, end, metric):
@@ -147,6 +178,9 @@ def run(db):
         raise SystemExit(f"Table nahi mili: {need}. Pehle metrics_db.py build / xbrl_db.py load.")
     con.executescript(SCHEMA)
     acc = accession_map(con)
+    offs = company_offsets(con, acc)
+    con.executemany("INSERT INTO fy_offset VALUES (?,?,?,?)", [(c, *v) for c, v in offs.items()])
+    off_of = {c: v[0] for c, v in offs.items()}
     have = {r[0] for r in con.execute("SELECT DISTINCT company FROM xbrl_facts")}
     nxt = {(c, fy, m): (v, t) for c, fy, m, v, t in con.execute(
         "SELECT company, fiscal_year, metric, NULL, detail FROM checks WHERE check_name='cross_year' AND ok=0")}
@@ -158,7 +192,7 @@ def run(db):
         rec = dict(company=comp, fiscal_year=fy, metric=metric, our_value=val, our_text=vt, our_unit=unit,
                    unit_guess=ug, result="no_xbrl", xbrl_value=None, xbrl_concept=None, xbrl_accn=None,
                    scale_unit=None, unit_ok=None, curated_status=status, restatement=None, note=None)
-        a = pick_accn(acc.get(comp, []), fy) if comp in have else None
+        a = pick_accn(acc.get(comp, []), fy, off_of.get(comp, 0)) if comp in have else None
         if not a:
             rec["note"] = "XBRL mein is saal ka 10-K nahi" if comp in have else "company XBRL mein nahi"
             out.append(rec)
@@ -181,7 +215,7 @@ def run(db):
                                       for cc, vv in vals[:3]))
         # cross-year conflict: agli filing ka number SEC ke restated number se milta hai?
         if (comp, fy, metric) in nxt:
-            a2 = pick_accn(acc.get(comp, []), fy + 1)
+            a2 = pick_accn(acc.get(comp, []), fy + 1, off_of.get(comp, 0))
             later_val = None
             m = re.search(r"vs ([\(\)\d,.\-]+) \(filing", nxt[(comp, fy, metric)][1] or "")
             if m:
@@ -208,7 +242,7 @@ def run(db):
     missed = []
     for comp, years in fys.items():
         for fy in years:
-            a = pick_accn(acc.get(comp, []), fy)
+            a = pick_accn(acc.get(comp, []), fy, off_of.get(comp, 0))
             if not a:
                 continue
             for metric in CONCEPTS:
@@ -222,6 +256,11 @@ def run(db):
     con.close()
     print(f"Validation ({time.time() - t0:.0f} sec): {len(out):,} curated rows, {len(missed):,} SEC values jo "
           f"curated mein nahi")
+    odd = {c: v for c, v in offs.items() if v[0] == 1}
+    print(f"Fiscal year qaida: {len(offs) - len(odd)} companies off 0" +
+          (f", off 1: " + ", ".join(f"{c} ({v[1]} vs {v[2]})" for c, v in odd.items()) if odd else ""))
+    no_file = sum(1 for r in out if r["note"] == "XBRL mein is saal ka 10-K nahi")
+    print(f"Jin saalon ki apni 10-K SEC data mein nahi (ab agle saal ki filing NAHI uthate): {no_file} rows")
     report(db)
 
 
