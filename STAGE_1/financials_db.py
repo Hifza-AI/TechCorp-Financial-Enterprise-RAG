@@ -63,6 +63,8 @@ CREATE TABLE financials(
     file_name TEXT, page TEXT, row_label TEXT,       -- PDF citation (jab PDF ka number sahi hai)
     pdf_value_text TEXT, pdf_unit TEXT,
     xbrl_concept TEXT, sec_url TEXT, note TEXT,
+    accn TEXT,               -- SEC filing (accession) jis se number liya
+    prior_value REAL,        -- pichle saal ka number ISI filing mein (restated ho to naya) -> % badlao isi se
     PRIMARY KEY(company, fiscal_year, metric));
 CREATE INDEX ix_fin ON financials(company, metric);
 """
@@ -108,6 +110,31 @@ def sec_fallback(con, comp, fy, metric):
     return None
 
 
+def prior_in_filing(con, comp, accn, concept, metric):
+    """Isi filing (accn) mein pichle saal ka number: wahi concept, period ~1 saal pehle khatam. Company ne
+    accounting badli ho (jaise ASC 606) to ye restated number hota hai -- saal-ba-saal badlao isi se sahi hai."""
+    unit = "USD/shares" if metric == "eps_diluted" else "USD"
+    by_end = {}
+    for value, start, e in con.execute("SELECT value, start, end FROM xbrl_facts WHERE company=? AND concept=? "
+                                       "AND accn=? AND unit=?", (comp, concept, accn, unit)):
+        e = d(e)
+        if not e:
+            continue
+        if metric in INSTANT:
+            if start:
+                continue
+        else:
+            st = d(start)
+            if not st or not (300 <= (e - st).days <= 380):
+                continue
+        by_end.setdefault(e, value)
+    ends = sorted(by_end, reverse=True)
+    for e in ends[1:]:
+        if 330 <= (ends[0] - e).days <= 400:
+            return by_end[e]
+    return None
+
+
 def build(db):
     t0 = time.time()
     con = sqlite3.connect(db)
@@ -122,6 +149,8 @@ def build(db):
         "SELECT company, fiscal_year, MIN(file_name) FROM metrics GROUP BY company, fiscal_year")}
 
     rows = {}
+    own_accn = {}          # key -> accn, jab number apni hi filing ka ho (prior_value ke liye)
+    any_accn = {}
     fallback_n = 0
     for (comp, fy, metric, our_text, our_unit, result, xv, xc, accn, status,
          fname, page, label, our_val) in con.execute(
@@ -130,6 +159,8 @@ def build(db):
             "FROM validation v JOIN metrics m USING(company, fiscal_year, metric)"):
         key = (comp, fy, metric)
         url = sec_url(cik.get(comp), accn)
+        if result in ("match", "mismatch") and accn:
+            own_accn[key] = any_accn[key] = accn
         if result == "match":
             rows[key] = (xv, "sec_verified", "pdf+sec", fname, page, label, our_text, our_unit, xc, url, None)
             continue
@@ -142,6 +173,7 @@ def build(db):
         if fb:
             fallback_n += 1
             c, v, a = fb
+            any_accn[key] = a
             if matches(our_val, v, metric):
                 rows[key] = (v, "sec_verified", "pdf+sec", fname, page, label, our_text, our_unit, c,
                              sec_url(cik.get(comp), a), "SEC number agli filing se")
@@ -165,6 +197,8 @@ def build(db):
         "GROUP BY company, fiscal_year")}
     for comp, fy, metric, xv, xc in con.execute(
             "SELECT company, fiscal_year, metric, xbrl_value, xbrl_concept FROM validation_missed"):
+        if (comp, fy, metric) not in rows and accn_of.get((comp, fy)):
+            own_accn[(comp, fy, metric)] = any_accn[(comp, fy, metric)] = accn_of[(comp, fy)]
         rows.setdefault((comp, fy, metric), (xv, "sec_only", "sec", files.get((comp, fy)), None, None, None, None,
                                              xc, sec_url(cik.get(comp), accn_of.get((comp, fy))),
                                              "PDF curated layer mein row nahi thi"))
@@ -177,6 +211,7 @@ def build(db):
             if fb:
                 fallback_n += 1
                 c, v, a = fb
+                any_accn[(comp, fy, metric)] = a
                 rows[(comp, fy, metric)] = (v, "sec_only", "sec", files[(comp, fy)], None, None, None, None, c,
                                             sec_url(cik.get(comp), a), "PDF mein row nahi thi; SEC number agli filing se")
 
@@ -198,12 +233,18 @@ def build(db):
             rows[key] = (r[0], "pdf_suspect") + r[2:10] + (
                 f"SEC ke baqi saalon ({fmt(med, metric)} ke aas paas) se bohat door -- answer mein use nahi",)
 
-    con.executemany("INSERT INTO financials VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                    [k + v for k, v in rows.items()])
+    # pichle saal ka number usi filing ke comparative column se (restatement ke baad wala, "same basis")
+    priors = 0
+    out = []
+    for k, v in rows.items():
+        pv = prior_in_filing(con, k[0], own_accn[k], v[8], k[2]) if k in own_accn and v[8] and v[2] != "pdf" else None
+        priors += pv is not None
+        out.append(k + v + (any_accn.get(k), pv))
+    con.executemany("INSERT INTO financials VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", out)
     con.commit()
     con.close()
     print(f"Serving layer ban gayi ({time.time() - t0:.0f} sec): {len(rows):,} rows "
-          f"(SEC fallback {fallback_n}, pdf_suspect {suspect})")
+          f"(SEC fallback {fallback_n}, pdf_suspect {suspect}, pichle saal ka comparative {priors})")
     report(db)
 
 
@@ -339,29 +380,55 @@ class FinancialData:
                     continue
                 lines.append(f"{comp} -- {METRIC_LABELS[m]}" + (" (USD per share)" if m == "eps_diluted" else ""))
                 for r in pick:
-                    prev = by_year.get(r["fiscal_year"] - 1)
+                    y = r["fiscal_year"]
+                    prev = by_year.get(y - 1)
+                    base = r.get("prior_value")
                     chg = ""
-                    if prev and prev["value"] and m != "eps_diluted":
-                        pct = 100 * (r["value"] - prev["value"]) / abs(prev["value"])
-                        chg = f"; change vs FY{r['fiscal_year'] - 1}: {pct:+.1f}%"
-                    elif prev and m == "eps_diluted":
-                        chg = f"; FY{r['fiscal_year'] - 1}: {fmt(prev['value'], m)}"
+                    if base is None and prev:
+                        base = prev["value"]
+                    if base:
+                        if m == "eps_diluted":
+                            chg = f"; vs FY{y - 1} ({fmt(base, m)}): {r['value'] - base:+.2f} per share"
+                        else:
+                            pct = 100 * (r["value"] - base) / abs(base)
+                            chg = (f"; change vs FY{y - 1}: {fmt(r['value'] - base, m)} ({pct:+.1f}%)"
+                                   + (" on the same basis as the FY%d 10-K" % y if r.get("prior_value") else ""))
+                        if (r.get("prior_value") is not None and prev and prev["value"]
+                                and abs(prev["value"] - r["prior_value"]) > 0.005 * abs(prev["value"])):
+                            chg += (f". NOTE: FY{y - 1} was restated in the FY{y} 10-K to "
+                                    f"{fmt(r['prior_value'], m)} (originally reported {fmt(prev['value'], m)})")
                     cite = f"; filing table on PDF page {r['page']}" if r["page"] else ""
                     exact = "" if m == "eps_diluted" else f" (= {r['value']:,.0f} USD)"
                     lines.append(f"  FY{r['fiscal_year']}: {r['display']}{exact} -- {STATUS_TEXT[r['status']]}"
                                  f"{cite}{chg}")
                     rows_used.append(r)
                     first = first or r
+        if len(comps) >= 2:                      # companies ka farq bhi Python mein
+            for m in metrics:
+                got = {}
+                for r in rows_used:
+                    if r["metric"] == m:
+                        got.setdefault(r["fiscal_year"], {})[r["company"]] = r["value"]
+                common = [y for y, cv in sorted(got.items()) if len(cv) >= 2]
+                for y in (common if years else common[-1:]):
+                    (ca, va), (cb, vb) = sorted(got[y].items(), key=lambda t: -t[1])[:2]
+                    if vb:
+                        diff = (f"{va - vb:+.2f} per share" if m == "eps_diluted"
+                                else f"{fmt(va - vb, m)} ({100 * (va - vb) / abs(vb):+.1f}%)")
+                        lines.append(f"Difference FY{y} {METRIC_LABELS[m]}: {ca} is higher than {cb} by {diff}")
         if not rows_used:
             return None
         years_used = sorted({r["fiscal_year"] for r in rows_used})
         pages = sorted({int(p) for r in rows_used for p in re.findall(r"\d+", str(r["page"] or ""))[:1]})
-        text = ("Structured financial data from the project database. Values are in US dollars as originally "
-                "reported in each year's 10-K, checked against the SEC's XBRL data. Percent changes are already "
-                "computed; do not calculate new ones.\n" + "\n".join(lines))
+        text = ("Structured financial data from the project database: values in US dollars as originally reported "
+                "in each year's 10-K, checked against the SEC's XBRL data. Prefer these figures over numbers in the "
+                "passages. If a passage shows a different value for the same year, it is usually a restatement in a "
+                "later filing: say so instead of mixing the two. All changes and differences are already computed "
+                "below; use them and do not do your own arithmetic or write formulas.\n" + "\n".join(lines))
         return {
             "tag": tag, "company": ", ".join(comps), "company_key": first["company"],
-            "year": years_used[-1], "section": "Financial data (SEC XBRL verified)", "pages": pages,
+            "year": years_used[-1], "section": "Financial data (SEC XBRL verified)", "pages": [],
+            "pdf_pages": pages,
             "type": "structured", "text": text,
             "rows": [{k: r[k] for k in ("company", "fiscal_year", "metric", "value", "status", "page", "file_name",
                                         "sec_url")} for r in rows_used],
