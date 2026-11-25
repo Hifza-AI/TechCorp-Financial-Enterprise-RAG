@@ -4988,27 +4988,14 @@
             "page": "10"
         },
         "gold_ranks": [
-            2
+            1
         ],
         "matched": true,
         "reason": null,
         "results": [
             {
-                "score": 0.6441713571548462,
-                "rrf_score": 0.031754032258064516,
-                "company": "Microsoft",
-                "company_display": "Microsoft",
-                "year": 2022,
-                "section_path": "ITEM 1. BUSINESS > Our Culture",
-                "page_numbers": [
-                    8
-                ],
-                "chunk_type": "text",
-                "text": "ntified four attributes that allow growth mindset to flourish: Making a difference in the lives of each other, our customers, and the world around us. Our employee listening systems enable us to gather feedback directly from our workforce to inform our programs and employee needs globally. Seventy percent of employees globally participated in our fiscal year 2022 Employee Signals survey, which covers a variety of topics such as thriving, inclusion, team culture, wellbeing, and learning and development. Throughout the fiscal year, we collect over 75,000 Daily Pulse employee survey responses. During fiscal year 2022, our Daily Pulse surveys gave us invaluable insights into ways we could support employees through the COVID-19 pandemic, addressing racial injustice, the war in Ukraine, and their general wellbeing. In addition to Employee Signals and Daily Pulse surveys, we gain insights through onboarding, internal mobility, leadership, performance and development, exit surveys, internal Yammer channels, employee Q&A sessions, and AskHR Service support.\nObsessing over what matters to our customers. Becoming more diverse and inclusive in everything we do. Operating as one company, One Microsoft, instead of multiple siloed businesses."
-            },
-            {
-                "score": 0.6422747373580933,
-                "rrf_score": 0.029631255487269532,
+                "score": 0.6837257742881775,
+                "rrf_score": 0.03252247488101534,
                 "company": "Microsoft",
                 "company_display": "Microsoft",
                 "year": 2023,
@@ -5021,45 +5008,57 @@
                 "gold_snippet": "Microsoft's **culture is grounded in growth mindset**. This means everyone is on a continuous journey to learn and grow, operating as one company instead of multip ..."
             },
             {
-                "score": 0.6183121800422668,
-                "rrf_score": 0.028693528693528692,
+                "score": 0.5780893564224243,
+                "rrf_score": 0.030798389007344232,
                 "company": "Microsoft",
                 "company_display": "Microsoft",
-                "year": 2021,
+                "year": 2023,
+                "section_path": "ITEM 1. BUSINESS > Our Culture | ITEM 1. BUSINESS > Total Rewards and Pay Equity",
+                "page_numbers": [
+                    10
+                ],
+                "chunk_type": "text",
+                "text": "Our EEO-1 report (equal employment opportunity). Disability representation. Pay equity (see details below). We develop dynamic, sustainable, market-driven, and strategic programs with the goal of providing a highly differentiated portfolio to attract, reward, and retain top talent and enable our employees to thrive. These programs reinforce our culture and values such as collaboration and growth mindset. Managers evaluate and recommend rewards based on, for example, how well we leverage the work of others and contribute to the success of our colleagues. We monitor pay equity and career progress across multiple dimensions. Our total compensation opportunity is highly differentiated and is market competitive. In order to manage our costs in a dynamic, competitive environment, in fiscal year 2023 we announced that base salaries of salaried employees would remain at fiscal year 2022 levels. Pay increases continue to be available for rewards-eligible hourly and equivalent employees. We will continue our practice of investing in stock for all rewards-eligible employees, salaried and hourly, and investing in bonuses for all eligible employees."
+            },
+            {
+                "score": 0.5709030628204346,
+                "rrf_score": 0.03076923076923077,
+                "company": "Microsoft",
+                "company_display": "Microsoft",
+                "year": 2023,
                 "section_path": "ITEM 1. BUSINESS > Learning and Development",
                 "page_numbers": [
-                    9,
-                    10
+                    11,
+                    12
                 ],
                 "chunk_type": "text",
-                "text": "Our growth mindset culture begins with valuing learning over knowing - seeking out new ideas, driving innovation, embracing challenges, learning from failure, and improving over time. To support this culture, we offer a wide range of learning and development opportunities. We believe learning can be more than formal instruction, and our learning philosophy focuses on providing the right learning, at the right time, in the right way. Opportunities include: Personalized, integrated, and relevant views of all learning opportunities on our internal learning portal, our external learning portal MS Learn, and LinkedIn Learning that is available to all employees worldwide. and programs like mentoring and sponsorship. - Customized manager learning to build people manager capabilities and similar learning solutions to build leadership skills for all employees including differentiated leadership development programs. - New employee orientation covering a range of topics including company values, culture, and Standards of Business Conduct, as well as ongoing onboarding program. Our employees embrace the growth mindset and take advantage of the formal learning opportunities as well as thousands of informal and on-the-job learning opportunities. In terms of formal on-line learning solutions, in fiscal year 2021 our employees completed over 5 million courses, averaging over 18 hours per employee. Given our focus on understanding core company beliefs and compliance topics, all employees complete required learning programs like Standards of Business Conduct, Privacy, Unconscious Bias, and preventing harassment courses. Our corporate learning portal has over 100,000 average monthly active users. All of our approximately 23,000 people managers must complete between 25-30 hours of required manager capability and excellence training and are assigned ongoing required training each year. In addition, all employees complete skills training based on the profession they are in each year."
+                "text": "We offer a range of learning opportunities, including personalized opportunities on our internal and external learning portals, in-classroom learning, required learning on compliance and company culture, on-the-job advancement opportunities, and manager coaching. We also provide customized manager learning, new employee orientation, and tools for operating in a flexible hybrid work environment. All Microsoft employees globally access our single Viva Learning tool for both required and personal choice learning. This includes courses focused on our core principles and compliance matters, such as Business Conduct, Privacy, Security Foundations, and Harassment Prevention. We also deliver skills training for employees based on their profession and role discipline. We have over 27,000 people managers, all of whom must complete between 20-33 hours of compulsory training on leadership and management and are assigned additional targeted training on an ongoing basis related to people management, compliance, and culture. OPERATING SEGMENTS We operate our business and report our financial performance using three segments: Productivity and Business Processes, Intelligent Cloud, and More Personal Computing. Our segments provide management with a comprehensive financial view of our key businesses. The segments enable the alignment of strategies and objectives across the development, sales, marketing, and services organizations, and they provide a framework for timely and rational allocation of resources within businesses. Additional information on our operating segments and geographic and product information is contained in Note 19 - Segment Information and Geographic Data of the Notes to Financial Statements (Part II, Item 8 of this Form 10-K). Our reportable segments are described below."
             },
             {
-                "score": 0.6487901210784912,
-                "rrf_score": 0.028474711270410194,
+                "score": 0.5734444260597229,
+                "rrf_score": 0.030330882352941176,
                 "company": "Microsoft",
                 "company_display": "Microsoft",
-                "year": 2024,
-                "section_path": "ITEM 1. BUSINESS > Investing in Digital Skills",
+                "year": 2023,
+                "section_path": "ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND > Industry Trends",
                 "page_numbers": [
-                    9,
-                    10
+                    41
                 ],
                 "chunk_type": "text",
-                "text": "Spark initiative in the United States. As of June 2024, we've helped more than 2.5 million people in 92% of the world's countries learn how to use AI. HUMAN CAPITAL RESOURCES Microsoft aims to recruit, develop, and retain world-changing talent from a diversity of backgrounds. To foster their and our success, we seek to create an environment where people can thrive and do their best work. We strive to maximize the potential of our human capital resources by creating a respectful, rewarding, and inclusive work environment that enables our global employees to create products and services that further our mission. Microsoft's culture is grounded in growth mindset. This means everyone is on a continuous journey to learn and grow, operating as one company instead of multiple siloed businesses. Our culture also embeds the security of customers and Microsoft as a priority for every employee and across all of our organizations. As of June 30, 2024, we employed approximately 228,000 people on a full-time basis, 126,000 in the U.S. and 102,000 internationally. Of the total employed people, 86,000 were in operations, including product support and consulting services, datacenter operations, and manufacturing and distribution; 81,000 were in product research and development; 45,000 were in sales and marketing; and 16,000 were in general and administration. Certain employees are subject to collective bargaining agreements. We design our programs to attract, reward, and retain top talent, enable our employees' continual growth, and reinforce our culture and values. Our total compensation opportunity is highly differentiated and market competitive. Our intended result is a global performance and development approach that fosters our culture, drives company performance, and competitive compensation that ensures equitable pay by role while supporting pay for performance. Diversity and inclusion are core to our business. As reported in our Global Diversity and Inclusion Reports, we monitor pay equity and career progress across multiple dimensions. We encourage every person at Microsoft to play an active role in creating an inclusive environment. We have invested significantly in employee wellbeing and offer a differentiated benefits package which includes many physical, emotional, and financial wellness programs. Our Occupational Health and Safety program helps to protect employees' safety while they are working. We also have introduced Hybrid Workplace Flexibility guidance to better support leaders, managers, and employees in hybrid work scenarios. We believe providing employees with access to continual learning enables them to drive impact for the company. We provide individuals and teams with access to first and third-party content resources across professions, disciplines, and roles, and offer skilling opportunities to support employees' growth while driving organizations' needs. Our employee listening systems enable us to gather feedback directly from our workforce to inform our pro ..."
+                "text": "Our industry is dynamic and highly competitive, with frequent changes in both technologies and business models. Each industry shift is an opportunity to conceive new products, new technologies, or new ideas that can further transform the industry and our business. At Microsoft, we push the boundaries of what is possible through a broad range of research and development activities that seek to identify and address the changing demands of customers and users, industry trends, and competitive forces."
             },
             {
-                "score": 0.6129242181777954,
-                "rrf_score": 0.028021349599695006,
+                "score": 0.5369904637336731,
+                "rrf_score": 0.02715098147128967,
                 "company": "Microsoft",
                 "company_display": "Microsoft",
-                "year": 2026,
-                "section_path": "ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND > RESULTS OF OPERATIONS",
+                "year": 2023,
+                "section_path": "ITEM 1A. RISK FACTORS > Other digital safety abuses",
                 "page_numbers": [
                     35
                 ],
                 "chunk_type": "text",
-                "text": "The following Management's Discussion and Analysis of Financial Condition and Results of Operations (\"MD&A\") is intended to help the reader understand the results of operations and financial condition of Microsoft Corporation. MD&A is provided as a supplement to, and should be read in conjunction with, our consolidated financial statements and the accompanying Notes to Financial Statements (Part II, Item 8 of this Form 10-K). This section generally discusses the results of our operations for the year ended June 30, 2026 compared to the year ended June 30, 2025. For a discussion of the year ended June 30, 2025 compared to the year ended June 30, 2024, please refer to Part II, Item 7, \"Management's Discussion and Analysis of Financial Condition and Results of Operations\" in our Annual Report on Form 10-K for the year ended June 30, 2025. OVERVIEW Microsoft is a technology company committed to making digital technology and artificial intelligence (\"AI\") available broadly and doing so responsibly, with a mission to empower every person and every organization on the planet to achieve more. We create platforms and applications, powered by AI, that deliver innovative solutions that meet the evolving needs of our customers. We generate revenue by offering a wide range of cloud-based solutions, content, and other services to people and businesses; licensing and supporting an array of software products; delivering relevant online advertising to a global audience; and designing and selling devices. Our most significant expenses are related to compensating employees; supporting and investing in our cloud-based services, including datacenter operations; designing, manufacturing, marketing, and selling our other products and services; and income taxes. Highlights from fiscal year 2026 compared with fiscal year 2025 included:\nMicrosoft Cloud revenue increased 27% to $214.4 billion. Commercial remaining performance obligation increased 84% to $678 billion. Microsoft 365 Commercial cloud revenue increased 17%. Microsoft 365 Consumer cloud revenue increased 28%. LinkedIn revenue increased 11%. Dynamics 365 revenue increased 18%. Azure and other cloud services revenue increased 41%. Windows OEM and Devices revenue decreased slightly. XBOX content and services revenue decreased 5%. Search advertising (formerly Search and news advertising) revenue excluding traffic acquisition costs increased 12%."
+                "text": "... business. If our source code leaks, we might lose future trade secret protection for that code. It may then become easier for third parties to compete with our products by copying functionality, which could adversely affect our revenue and operating results. Unauthorized disclosure of source code also could increase the security risks described elsewhere in these risk factors. Third parties may claim that we infringe their intellectual property. From time to time, others claim we infringe their intellectual property rights. To resolve these claims, we may enter into royalty and licensing agreements on terms that are less favorable than currently available, stop selling or redesign affected products or services, or pay damages to satisfy indemnification commitments with our customers. Adverse outcomes could also include monetary damages or injunctive relief that may limit or prevent importing, marketing, and selling our products or services that have infringing technologies. We have paid significant amounts to settle claims related to the use of technology and intellectual property rights and to procure intellectual property rights as part of our strategy to manage this risk, and may continue to do so. GENERAL RISKS If our reputation or our brands are damaged, our business and operating results may be harmed . Our reputation and brands are globally recognized and are important to our business. Our reputation and brands affect our ability to attract and retain consumer, business, and public-sector customers. There are numerous ways our reputation or brands could be damaged. These include product safety or quality issues, our environmental impact and sustainability, supply chain practices, or human rights record. We may experience backlash from customers, government entities, advocacy groups, employees, and other stakeholders that disagree with our product offering decisions or public policy positions. Damage to our reputation or our brands may occur from, among other things: The introduction of new features, products, services, or terms of service that customers, users, or partners do not like. The proliferation of social media may increase the likelihood, speed, and magnitude of negative brand events. If our brands or reputation are damaged, it could negatively impact our revenues or margins, or ability to attract the most highly qualified employees. Adverse economic or market conditions may harm our business. Worsening economic conditions, including inflation, recession, pandemic, or other changes in economic conditions, may cause lower IT spending and adversely affect our revenue. If demand for PCs, servers, and other computing devices declines, or consumer or business spending for those products declines, our revenue will be adversely affected. Our product distribution system relies on an extensive partner and retail network. OEMs building devices that run our software have also been a significant means of distribution. The impact of economic conditions on our partners, such as the bankruptcy of a major distributor, OEM, or retailer, could cause sales channel disruption. Challenging economic conditions also may impair the ability of our cu ..."
             }
         ],
         "heading": null
@@ -7747,40 +7746,17 @@
             "page": "5"
         },
         "gold_ranks": [
-            3
+            1,
+            2,
+            3,
+            5
         ],
         "matched": true,
         "reason": null,
         "results": [
             {
-                "score": 0.7234110832214355,
+                "score": 0.6574565172195435,
                 "rrf_score": 0.03252247488101534,
-                "company": "Starbucks",
-                "company_display": "Starbucks",
-                "year": 2019,
-                "section_path": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > General | Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Overview",
-                "page_numbers": [
-                    26
-                ],
-                "chunk_type": "text",
-                "text": "Our fiscal year ends on the Sunday closest to September 30. All references to store counts, including data for new store openings, are reported net of related store closures, unless otherwise noted. Starbucks results for fiscal 2019 reflect the impacts of continued streamlining efforts, initiated during the fourth quarter of fiscal 2017, to focus on accelerating growth in high-returning businesses and converting several market operations, including Thailand, France, and the Netherlands, to fully licensed models in fiscal 2019. Additionally, in fiscal 2019, we saw the full impact from the licensing of the majority of our CPG and Foodservice businesses to Nestlé in the fourth quarter of fiscal 2018. In the fourth quarter of fiscal 2019, we realigned our operating segment reporting structure to better reflect the cumulative effect of our streamlining efforts. Specifically, our previous China/Asia Pacific (\"CAP\") segment and Europe, Middle East, and Africa (\"EMEA\") segment have been combined into one International segment."
-            },
-            {
-                "score": 0.6147193908691406,
-                "rrf_score": 0.03252247488101534,
-                "company": "Starbucks",
-                "company_display": "Starbucks",
-                "year": 2025,
-                "section_path": "Item 8. Financial Statements and Supplementary Data > consolidated balance sheets. > Recent Accounting Pronouncements > Recently Adopted Accounting Pronouncements",
-                "page_numbers": [
-                    70
-                ],
-                "chunk_type": "text",
-                "text": "In the fourth quarter of fiscal 2025, we adopted the Financial Accounting Standards Board (\"FASB\") issued guidance expanding segment disclosure requirements. The amendments require enhanced disclosure for certain segment items and disclosure on how our Chief Operating Decision Maker (\"CODM\") uses reported measures to assess segment performance. The amendments do not change how segments are determined, aggregated, or how thresholds are applied to determine reportable segments. The adoption of this guidance did not have a significant impact on our consolidated financial statement disclosures. Refer to Note 17 , Segment Reporting, for our segment disclosures including enhancements as a result of the amendments."
-            },
-            {
-                "score": 0.6809766292572021,
-                "rrf_score": 0.030309988518943745,
                 "company": "Starbucks",
                 "company_display": "Starbucks",
                 "year": 2019,
@@ -7793,30 +7769,59 @@
                 "gold_snippet": "... reported within the Americas and International segments based on the geographical location of the operations. **We have three reportable operating segments**: 1) Americas, which is inclusive of the U.S., Canada, and Latin America; 2) International, which is inclusive ..."
             },
             {
-                "score": 0.6783824563026428,
-                "rrf_score": 0.029513888888888888,
+                "score": 0.6353424787521362,
+                "rrf_score": 0.030309988518943745,
                 "company": "Starbucks",
                 "company_display": "Starbucks",
-                "year": 2021,
-                "section_path": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > General",
+                "year": 2019,
+                "section_path": "Item 8. Financial Statements and Supplementary Data > Note 1: Summary of Significant Accounting Policies > Description of Business",
                 "page_numbers": [
-                    38
+                    56
                 ],
                 "chunk_type": "text",
-                "text": "Our fiscal year ends on the Sunday closest to September 30. All references to store counts, including data for new store openings, are reported net of related store closures, unless otherwise noted. Fiscal year 2021 included 53 weeks, with the 53rd week falling in the fourth fiscal quarter. Fiscal years 2020 and 2019 included 52 weeks. For fiscal 2021, comparable store sales percentages were calculated excluding the extra week in the fourth quarter of fiscal 2021. The discussion of our financial condition and results of operations for the year ended September 29, 2019, included in Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations (\"MD&A\") can be found in the Annual Report on Form 10-K for the year ended September 27, 2020. The fiscal 2021 Latin America and Caribbean licensed store market resegmentation did not have a material impact to prior year North America and International operating segment business trends and operating margins."
+                "text": "th quarter of fiscal 2019, we realigned our operating segment reporting structure to better reflect the cumulative effect of our streamlining efforts. Specifically, our previous China/Asia Pacific (\"CAP\") segment and Europe, Middle East, and Africa (\"EMEA\") segment have been combined into one International segment. Results of Siren Retail, a non-reportable operating segment consisting of Starbucks Reserve TM Roastery & Tasting Rooms, certain stores under the Starbucks Reserve brand and Princi operations, which were previously included within Corporate and Other, are now reported within the Americas and International segments based on the geographical location of the operations. Further, to better support the review of our results, we have changed the classification of certain costs. The most significant change was the reclassification of our company-owned store occupancy costs from cost of sales to store operating expenses of $2.2 billion and $2.0 billion for fiscal 2018 and 2017, respectively. Total store occupancy costs in fiscal 2019 were $2.4 billion. We also made certain other immaterial changes. There was no impact to consolidated net revenues, consolidated operating income, or net earnings per share as a result of these changes and prior period financial information has been revised to be consistent with the current period presentation. Additional details on the nature of our business and our reportable operating segments are included in Note 16 , Segment Reporting. We have three reportable operating segments: 1) Americas, which is inclusive of the U.S., Canada, and Latin America; 2) International, which is inclusive of China/Asia Pacific, Europe, Middle East, and Africa; and 3) Channel Development. Non- reportable operating segments such as Evolution Fresh and unallocated corporate expenses are reported within Corporate and Other.",
+                "gold_snippet": "... the nature of our business and our reportable operating segments are included in Note 16 , Segment Reporting. **We have three reportable operating segments**: 1) Americas, which is inclusive of the U.S., Canada, and Latin America; 2) International, which is inclusive ..."
             },
             {
-                "score": 0.6703505516052246,
-                "rrf_score": 0.02889344262295082,
+                "score": 0.6412509083747864,
+                "rrf_score": 0.029957522915269395,
                 "company": "Starbucks",
                 "company_display": "Starbucks",
-                "year": 2025,
-                "section_path": "Item 1. Business > Segment Financial Information",
+                "year": 2019,
+                "section_path": "Item 8. Financial Statements and Supplementary Data > Note 16: Segment Reporting",
                 "page_numbers": [
-                    10
+                    91
                 ],
                 "chunk_type": "text",
-                "text": "Segment information is prepared on the same basis that our ceo, who is our Chief Operating Decision Maker, manages the segments, evaluates financial results, and makes key operating decisions. We have three reportable operating segments: 1) North America, which is inclusive of the U.S. and Canada; 2) International, which is inclusive of China, Japan, Asia Pacific, Europe, Middle East, Africa, Latin America, and the Caribbean; and 3) Channel Development. Unallocated corporate expenses are reported within Corporate and Other. Revenues from our reportable operating segments as a percentage of total net revenues for fiscal 2025 were as follows: North America (74%), International (21%), and Channel Development (5%). Our North America and International segments include both company-operated and licensed stores. Our North America segment is our most mature business and has achieved significant scale. Certain markets within our International operations are in various stages of development and may require more extensive support, relative to their current levels of revenue and operating income, than our North America operations. Our Channel Development segment includes roasted whole bean and ground coffees, Starbucks-branded single-serve products, a variety of ready-to-drink beverages, such as Frappuccino and Starbucks Doubleshot , foodservice products, and other branded products sold worldwide outside of our company-operated and licensed stores. A large portion of our Channel Development business operates under a licensed model of the Global Coffee Alliance with Nestlé, while our global ready-to-drink businesses operate under collaborative relationships with PepsiCo, Inc., Nestlé, and others."
+                "text": "Segment information is prepared on the same basis that our ceo, who is our Chief Operating Decision Maker, manages the segments, evaluates financial results, and makes key operating decisions. We have three reportable operating segments: 1) Americas, which is inclusive of the U.S., Canada, and Latin America; 2) International, which is inclusive of China, Japan, Asia Pacific, Europe, Middle East, and Africa; and 3) Channel Development. Americas and International operations sell coffee and other beverages, complementary food, packaged coffees, single-serve coffee products and a focused selection of merchandise through company-operated stores and licensed stores. Our Americas segment is our most mature business and has achieved significant scale. Channel Development revenues include packaged coffee sales, tea and ready-to-drink beverages to customers outside of our company-operated and licensed stores. Historically revenues have included domestic and international sales of our packaged coffee, tea and ready-to-drink products to grocery, warehouse club and specialty retail stores and through institutional foodservice companies which serviced businesses. Since the fourth quarter of fiscal 2018, most of our Channel Development revenues are from product sales to and royalty revenues from Nestlé. The collaborative business relationships for ready-to-drink products and the associated revenues remain unchanged due to the Global Coffee Alliance. beverages, among other items.",
+                "gold_snippet": "... erating Decision Maker, manages the segments, evaluates financial results, and makes key operating decisions. **We have three reportable operating segments**: 1) Americas, which is inclusive of the U.S., Canada, and Latin America; 2) International, which is inclusive ..."
+            },
+            {
+                "score": 0.6080179214477539,
+                "rrf_score": 0.029910714285714284,
+                "company": "Starbucks",
+                "company_display": "Starbucks",
+                "year": 2019,
+                "section_path": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > General | Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Overview",
+                "page_numbers": [
+                    26
+                ],
+                "chunk_type": "text",
+                "text": "Our fiscal year ends on the Sunday closest to September 30. All references to store counts, including data for new store openings, are reported net of related store closures, unless otherwise noted. Starbucks results for fiscal 2019 reflect the impacts of continued streamlining efforts, initiated during the fourth quarter of fiscal 2017, to focus on accelerating growth in high-returning businesses and converting several market operations, including Thailand, France, and the Netherlands, to fully licensed models in fiscal 2019. Additionally, in fiscal 2019, we saw the full impact from the licensing of the majority of our CPG and Foodservice businesses to Nestlé in the fourth quarter of fiscal 2018. In the fourth quarter of fiscal 2019, we realigned our operating segment reporting structure to better reflect the cumulative effect of our streamlining efforts. Specifically, our previous China/Asia Pacific (\"CAP\") segment and Europe, Middle East, and Africa (\"EMEA\") segment have been combined into one International segment."
+            },
+            {
+                "score": 0.6368776559829712,
+                "rrf_score": 0.028782894736842105,
+                "company": "Starbucks",
+                "company_display": "Starbucks",
+                "year": 2019,
+                "section_path": "Item 7. Management's Discussion and Analysis of Financial Condition and Results of Operations > Overview",
+                "page_numbers": [
+                    26
+                ],
+                "chunk_type": "text",
+                "text": "ur previous China/Asia Pacific (\"CAP\") segment and Europe, Middle East, and Africa (\"EMEA\") segment have been combined into one International segment. Results of Siren Retail, a non-reportable operating segment consisting of Starbucks Reserve TM Roastery & Tasting Rooms, certain stores under the Starbucks Reserve brand and Princi operations, which were previously included within Corporate and Other, are now reported within the Americas and International segments based on the geographical location of the operations. As a result, we have three reportable operating segments: Americas, International and Channel Development. Non-reportable operating segments and unallocated corporate expenses are reported within Corporate and Other. Further, to better support the review of our results, we have changed the classification of certain costs. The most significant change was the reclassification of company-owned store occupancy costs from cost of sales to store operating expenses. We also made certain other immaterial changes. Concurrent with the change in reportable segments and realignment of certain operating expenses noted above, we revised our prior period financial information to be consistent with the current period presentation. There was no impact on consolidated net revenues, total operating expenses, operating income, or net earnings per share as a result of these changes. In December 2017, the U.S. government enacted comprehensive tax legislation into law H.R. 1, commonly referred to as the Tax Cuts and Jobs Act (the \"Tax Act\"), which significantly changed existing U.S. tax law and included numerous provisions that affect our business. Our U.S. corporate income tax rate for fiscal 2019 and future years is 21%, while a blended rate of 24.5% was applied in fiscal 2018.",
+                "gold_snippet": "... in the Americas and International segments based on the geographical location of the operations. As a result, **we have three reportable operating segments**: Americas, International and Channel Development. Non-reportable operating segments and unallocated corporate ..."
             }
         ],
         "heading": null

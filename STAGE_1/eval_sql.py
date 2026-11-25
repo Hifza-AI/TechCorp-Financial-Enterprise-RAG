@@ -180,7 +180,10 @@ def typo(rng, comp):
     return " ".join(words)
 
 
-def make(db, outdir, seed=7):
+def make(db, outdir, seed=7, fresh=None):
+    """fresh=None: dev + test (pehli dafa).  fresh="test2": ek NAYA held-out set (test ke saanche), un
+    (company, metric, saal) cells se jo dev / test mein kabhi nahi aaye -- jab purana test set dekh kar code
+    badalna para ho, imaandar number ke liye naya set."""
     con = sqlite3.connect(db)
     gold = Gold(con)
     tick = dict(con.execute("SELECT company, ticker FROM xbrl_companies"))
@@ -193,11 +196,23 @@ def make(db, outdir, seed=7):
     # (company, metric, saal) ko dev / test mein baanto -- dono mein kabhi ek hi cell nahi
     cells = [(c, m, y) for c in comps for m in PHRASES for y in years[c]]
     rng.shuffle(cells)
-    split = {cell: ("dev" if i % 2 == 0 else "test") for i, cell in enumerate(cells)}
+    if fresh:
+        used = set()
+        for old in outdir.glob("sql_*.csv"):
+            with old.open(encoding="utf-8") as f:
+                for r in csv.DictReader(f):
+                    for k in json.loads(r["gold"] or "{}"):
+                        c, m, y = k.split("|")
+                        used.add((c, m, int(y)))
+        split = {cell: fresh for cell in cells if cell not in used}
+        sets = [fresh]
+    else:
+        split = {cell: ("dev" if i % 2 == 0 else "test") for i, cell in enumerate(cells)}
+        sets = ["dev", "test"]
 
     def tmpl(kind, which, table):
         ts = table[kind]
-        own = [t for i, t in enumerate(ts) if (i % 2 == 0) == (which == "dev")] or ts
+        own = [t for i, t in enumerate(ts) if (i % 2 == 0) == (which == "dev")] or ts   # naya set = test ke saanche
         return rng.choice(own)
 
     def gold_cells(c, m, ys):
@@ -209,9 +224,9 @@ def make(db, outdir, seed=7):
             out[f"{c}|{m}|{y}"] = v
         return out
 
-    for which in ("dev", "test"):
+    for which in sets:
         rows = []
-        mine = [x for x in cells if split[x] == which]
+        mine = [x for x in cells if split.get(x) == which]
 
         def pick_cell(need_years=1):
             for _ in range(500):
@@ -297,7 +312,7 @@ def make(db, outdir, seed=7):
                 seen.add(r["question"].lower())
                 uniq.append(r)
         for i, r in enumerate(uniq, 1):
-            r["id"] = f"{'D' if which == 'dev' else 'X'}{i:03d}"
+            r["id"] = f"{'D' if which == 'dev' else 'X' if which == 'test' else 'N'}{i:03d}"
         path = outdir / f"sql_{which}.csv"
         if path.exists():
             raise SystemExit(f"{path} pehle se hai (freeze). Naya banana ho to pehle khud delete karo.")
@@ -450,17 +465,19 @@ def main():
     ap.add_argument("--store", default="STAGE_1/vector_store")
     ap.add_argument("--dir", default="STAGE_1/eval")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("make")
+    mk = sub.add_parser("make")
+    mk.add_argument("--fresh", help="naya held-out set ka naam, jaise test2 (dev/test se alag cells)")
+    mk.add_argument("--seed", type=int, default=7)
     for name in ("run", "show"):
         s = sub.add_parser(name)
-        s.add_argument("--set", choices=["dev", "test"], default="dev")
+        s.add_argument("--set", default="dev", help="dev, test, ya naya set (test2 ...)")
     a = ap.parse_args()
     outdir = Path(a.dir)
     outdir.mkdir(parents=True, exist_ok=True)
     if a.cmd == "make":
-        make(a.db, outdir)
+        make(a.db, outdir, a.seed, a.fresh)
     elif a.cmd == "run":
-        if a.set == "test":
+        if a.set != "dev":
             print("TEST set: ye aakhri, ek dafa ka imtihan hai. Is ki ghaltiyan dekh kar code mat badlo.\n")
         run(a.db, a.store, outdir, a.set)
     else:
