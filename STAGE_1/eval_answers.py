@@ -300,7 +300,7 @@ def main():
             if entry.get("error") == "network":
                 print("\nInternet nahi chal raha. Connection theek karke yahi command dobara chalao -- yahin se shuru hoga.")
             else:
-                print("\nGemini ki saari free limits abhi khatam. Baad mein yahi command dobara chalao -- yahin se shuru hoga.")
+                print("\nSab models (LLM_MODELS) ki free limits abhi khatam. Baad mein yahi command dobara chalao -- yahin se shuru hoga.")
             break
         if not entry.get("cached"):
             time.sleep(a.pause)
