@@ -38,7 +38,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from validate_xbrl import accession_map, pick_accn, xbrl_values, matches   # noqa: E402
+from validate_xbrl import accession_map, load_offsets, pick_accn, xbrl_values, matches   # noqa: E402
 from financials_db import sec_fallback, METRIC_LABELS                       # noqa: E402
 
 # Hamari company (folder naam, norm) -> log jo naam likhte hain
@@ -139,19 +139,21 @@ class Gold:
     def __init__(self, con):
         self.con = con
         self.acc = accession_map(con)
+        self.offs = load_offsets(con)
         self.memo = {}
 
     def value(self, comp, fy, metric):
         k = (comp, fy, metric)
         if k not in self.memo:
             v = None
-            a = pick_accn(self.acc.get(comp, []), fy)
+            off = self.offs.get(comp, 0)
+            a = pick_accn(self.acc.get(comp, []), fy, off)
             if a:
                 vals = xbrl_values(self.con, comp, a[0], a[3], metric)
                 if vals:
                     v = vals[0][1]
             if v is None:
-                fb = sec_fallback(self.con, comp, fy, metric)
+                fb = sec_fallback(self.con, comp, fy, metric, off)
                 v = fb[1] if fb else None
             self.memo[k] = v
         return self.memo[k]
@@ -446,6 +448,39 @@ def report(results, which):
     print()
 
 
+def regold(db, outdir, which):
+    """Gold ko dobara SEC se nikalo (sawal wahi, sirf sahi jawab). Sirf tab jab gold banane ki logic mein bug
+    saabit ho -- jaise insaani spot-check ne Dell FY2019 mein agle saal ka number pakra. Purani file .v1 ban kar
+    rehti hai aur har badla hua number print hota hai (changelog)."""
+    path = outdir / f"sql_{which}.csv"
+    rows = load_set(outdir, which)
+    con = sqlite3.connect(db)
+    gold = Gold(con)
+    changed = []
+    for r in rows:
+        g = json.loads(r["gold"] or "{}")
+        for k, old in g.items():
+            c, m, y = k.split("|")
+            new = gold.value(c, int(y), m)
+            if new is None:
+                changed.append((r["id"], k, old, None))
+                continue
+            if not matches(old, new, m):
+                changed.append((r["id"], k, old, new))
+                g[k] = new
+        r["gold"] = json.dumps(g)
+    backup = outdir / f"sql_{which}.v1.csv"
+    if not backup.exists():
+        backup.write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
+    with path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=FIELDS)
+        w.writeheader()
+        w.writerows(rows)
+    print(f"{path}: {len(changed)} gold numbers badle (purani file: {backup.name})")
+    for i, k, old, new in changed:
+        print(f"  {i}  {k}: {old:,.2f} -> " + (f"{new:,.2f}" if new is not None else "SEC mein ab nahi (purana rakha)"))
+
+
 def show(outdir, which):
     path = outdir / f"sql_{which}_results.json"
     if not path.exists():
@@ -468,6 +503,8 @@ def main():
     mk = sub.add_parser("make")
     mk.add_argument("--fresh", help="naya held-out set ka naam, jaise test2 (dev/test se alag cells)")
     mk.add_argument("--seed", type=int, default=7)
+    rg = sub.add_parser("regold")
+    rg.add_argument("--set", required=True)
     for name in ("run", "show"):
         s = sub.add_parser(name)
         s.add_argument("--set", default="dev", help="dev, test, ya naya set (test2 ...)")
@@ -476,6 +513,8 @@ def main():
     outdir.mkdir(parents=True, exist_ok=True)
     if a.cmd == "make":
         make(a.db, outdir, a.seed, a.fresh)
+    elif a.cmd == "regold":
+        regold(a.db, outdir, a.set)
     elif a.cmd == "run":
         if a.set != "dev":
             print("TEST set: ye aakhri, ek dafa ka imtihan hai. Is ki ghaltiyan dekh kar code mat badlo.\n")
