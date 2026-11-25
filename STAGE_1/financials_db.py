@@ -31,7 +31,7 @@ import sqlite3
 import time
 from pathlib import Path
 
-from validate_xbrl import CONCEPTS, INSTANT, accession_map, d, load_offsets, matches, pick_accn, xbrl_values
+from validate_xbrl import CONCEPTS, INSTANT, accession_map, d, fy_of, load_offsets, matches, pick_accn, xbrl_values
 
 METRIC_LABELS = {
     "revenue": "Revenue", "gross_profit": "Gross profit", "operating_income": "Operating income",
@@ -87,11 +87,11 @@ def sec_fallback(con, comp, fy, metric, off=0):
     rows = con.execute(
         f"SELECT concept, value, start, end, filed, accn FROM xbrl_facts WHERE company=? AND unit=? "
         f"AND form LIKE '10-K%' AND concept IN ({','.join('?' * len(cs))}) "
-        f"AND substr(end, 1, 4) = ?", (comp, unit, *cs, str(fy + off))).fetchall()
+        f"AND substr(end, 1, 4) IN (?, ?)", (comp, unit, *cs, str(fy + off), str(fy + off + 1))).fetchall()
     good = []
     for concept, value, start, e, filed, accn in rows:
         e = d(e)
-        if not e:
+        if not e or fy_of(e) != fy + off:
             continue
         if metric in INSTANT:
             if start:
