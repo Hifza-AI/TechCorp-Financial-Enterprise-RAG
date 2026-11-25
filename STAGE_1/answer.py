@@ -35,9 +35,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 try:
-    from financials_db import FinancialData     # SQL serving layer (number wale sawal); na ho to RAG akela chalta hai
-except Exception:                               # noqa: BLE001
-    FinancialData = None
+    from financials_db import FinancialData, detect_metrics   # SQL serving layer (number wale sawal)
+except Exception:                               # noqa: BLE001  -- na ho to RAG akela chalta hai
+    FinancialData = detect_metrics = None
 sys.path.insert(0, str(HERE))
 
 DEFAULT_MODEL = "gemini-2.5-flash"
@@ -537,10 +537,24 @@ def structured_source(retriever, question):
         return None
     try:
         comps = retriever._detect_companies(question)
-    except Exception:
+        if not comps and detect_metrics(question):
+            # Number wale sawal mein "apple revenue" / "nike cash" (chhote huroof) bhi company hi hai; phir
+            # spelling ki ghalti ("Microsft"). Ticker (NOW, COST) sirf bare huroof mein -- wo retriever khud dekhta hai.
+            comps = _loose_companies(retriever, question) or retriever._fuzzy_companies(question)[0]
+    except Exception:                               # noqa: BLE001
         return None
     years = {int(y) for y in retriever.YEAR_PATTERN.findall(question)}
     return fin.source(question, comps, years)
+
+
+def _loose_companies(retriever, question):
+    q = " " + re.sub(r"[^a-z0-9&]+", " ", question.lower()) + " "
+    skip = getattr(retriever, "_upper_only", set())
+    found = set()
+    for a, ns in retriever.aliases.items():
+        if a and a not in skip and re.search(r"\b" + re.escape(a) + r"\b", q):
+            found |= ns
+    return found
 
 
 def prepare(retriever, cache, question, k=5, only_model=None):
