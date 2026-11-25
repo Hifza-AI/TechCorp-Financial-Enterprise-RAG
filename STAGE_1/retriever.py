@@ -591,7 +591,8 @@ class Retriever:
     RECENCY_V2 = re.compile(                                                    # v2.2 "recency"
         r"\b(most recent|latest|current(?:ly)?|this year|last fiscal year|newest|up[- ]to[- ]date|now|today|"
         r"nowadays|these days|at present|presently|recent(?:ly)?)\b", re.IGNORECASE)
-    YEAR_PATTERN = re.compile(r"(?<![\d,.$])(?:19|20)\d{2}(?![\d,])")       # "2024", "FY2024"
+    # "2024", "FY2024", "in 2020, Kennametal" (saal ke baad comma) -- magar "2,020,000" / "$2,019" nahi
+    YEAR_PATTERN = re.compile(r"(?<![\d,.$])(?:19|20)\d{2}(?!\d|,\d)")
     FRESH_POOL = 3          # "fresh": sab se naye 10-K ke sirf itne behtareen chunks ko extra vote
     EXPAND_MAX = 3200       # "expand": pichla + asal + agla chunk, zyada se zyada itne huroof
     FUZZY_CUTOFF = 0.85     # "names": spelling ki ghalti kitni milti julti ho (1.0 = bilkul wahi)
