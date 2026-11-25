@@ -18,6 +18,10 @@ LLM_MODELS=groq:openai/gpt-oss-120b,gemini-2.5-flash,...    Pehla model:  --mode
 
 Cache: wahi sawal + wahi chunks + wahi model -> Gemini ko dobara nahi bhejte (answer_cache.json).
 Retriever "nahi mila" kahe (company index mein nahi, jaise Tesla) -> Gemini ko bheja hi nahi jata.
+
+Number wale sawal (revenue, net income, EPS ... + company): SQL serving layer (facts.db -> financials, banao:
+financials_db.py build) se SEC-verified numbers ek extra source [D1] ban kar model ko jaate hain, % badlao
+Python mein hisaab ho kar. facts.db na ho, ya STRUCTURED_DATA=0 -> sirf PDF chunks (pehle jaisa).
 """
 import argparse
 import hashlib
@@ -29,6 +33,11 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+try:
+    from financials_db import FinancialData     # SQL serving layer (number wale sawal); na ho to RAG akela chalta hai
+except Exception:                               # noqa: BLE001
+    FinancialData = None
 sys.path.insert(0, str(HERE))
 
 DEFAULT_MODEL = "gemini-2.5-flash"
@@ -183,6 +192,9 @@ def build_sources(results):
 def build_prompt(question, sources, compare=False):
     blocks = []
     for s in sources:
+        if s["type"] == "structured":
+            blocks.append(f"[{s['tag']}] {s['company']} | {s['section']}\n{s['text']}")
+            continue
         blocks.append(f"[{s['tag']}] {s['company']} | fiscal year {s['year']} | {s['type']} | "
                       f"PDF page {page_str(s['pages'])} | section: {s['section']}\n{s['text']}")
     head = COMPARE_PROMPT + "\n" if compare else ""
@@ -482,16 +494,44 @@ _UNI = str.maketrans({"\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-"
 def clean_answer(text):
     """Models ke alag citation / unicode andaaz ek jaise: 【S3】 -> [S3], [S1, S2] -> [S1][S2], khaas dash/space."""
     text = text.translate(_UNI)
-    text = re.sub(r"[【〔［]\s*(S\d+)\s*[】〕］]", r"[\1]", text)
-    text = re.sub(r"\(\s*(S\d+)\s*\)", r"[\1]", text)                    # (S3) -> [S3]
-    text = re.sub(r"\[(S\d+(?:\s*[,;]\s*S\d+)+)\]",
-                  lambda m: "".join(f"[{t}]" for t in re.findall(r"S\d+", m.group(1))), text)
+    text = re.sub(r"[【〔［]\s*([SD]\d+)\s*[】〕］]", r"[\1]", text)
+    text = re.sub(r"\(\s*([SD]\d+)\s*\)", r"[\1]", text)                 # (S3) -> [S3]
+    text = re.sub(r"\[([SD]\d+(?:\s*[,;]\s*[SD]\d+)+)\]",
+                  lambda m: "".join(f"[{t}]" for t in re.findall(r"[SD]\d+", m.group(1))), text)
     return text
 
 
 def cited_sources(answer, sources):
-    tags = set(re.findall(r"\[(S\d+)\]", answer))
+    tags = set(re.findall(r"\[([SD]\d+)\]", answer))
     return [s for s in sources if s["tag"] in tags]
+
+
+_FIN = None
+
+
+def financial_data():
+    """Serving layer (facts.db -> financials) ek dafa kholo. STRUCTURED_DATA=0 -> band (ablation / test ke liye)."""
+    global _FIN
+    if _FIN is None:
+        if os.environ.get("STRUCTURED_DATA", "1") == "0" or FinancialData is None:
+            _FIN = False
+        else:
+            fin = FinancialData(os.environ.get("FIN_DB") or HERE / "facts.db")
+            _FIN = fin if fin.available else False
+    return _FIN or None
+
+
+def structured_source(retriever, question):
+    """Number wale sawal -> [D1] source (SEC se tasdeeq-shuda numbers), warna None."""
+    fin = financial_data()
+    if not fin:
+        return None
+    try:
+        comps = retriever._detect_companies(question)
+    except Exception:
+        return None
+    years = {int(y) for y in retriever.YEAR_PATTERN.findall(question)}
+    return fin.source(question, comps, years)
 
 
 def prepare(retriever, cache, question, k=5, only_model=None):
@@ -502,12 +542,16 @@ def prepare(retriever, cache, question, k=5, only_model=None):
     resp = retriever.search(question, top_k=max(k, COMPARE_K) if compare else k)
     entry = {"question": question, "model": None, "retrieval_matched": resp["matched"],
              "heading": resp.get("heading"), "comparison": compare, "_t0": t0}
-    if not resp["matched"]:
+    data = structured_source(retriever, question)
+    entry["structured"] = bool(data)
+    if not resp["matched"] and not data:
         entry.update(answer=f"{NOT_STATED} ({resp['reason']})", not_stated=True, cached=False,
                      sources=[], citations=[], seconds=round(time.time() - t0, 2))
         entry.pop("_t0")
         return {"entry": entry, "prompt": None, "key": None, "cached_text": None, "cached_model": None}
-    sources = build_sources(resp["results"])
+    sources = build_sources(resp["results"]) if resp["matched"] else []
+    if data:
+        sources.append(data)
     entry["sources"] = sources
     prompt = build_prompt(question, sources, compare)
     # Cache: "kisi bhi model" ka jawab (app / fallback ke liye) aur "is model" ka jawab (model comparison ke liye).
@@ -576,6 +620,11 @@ def show(entry, n):
         print("Sources:")
         for c in entry["citations"]:
             print(f"  [{c['tag']}] {c['company']} FY{c['year']} | PDF page {c['page']} | {c['section'][-80:]}")
+        for s in entry["sources"]:
+            if s["type"] == "structured" and s["tag"] in {c["tag"] for c in entry["citations"]}:
+                urls = sorted({r["sec_url"] for r in s.get("rows", []) if r.get("sec_url")})
+                if urls:
+                    print("  SEC filings: " + "  ".join(urls[:4]))
     elif entry["sources"] and not entry["not_stated"]:
         print("  (Jawab mein koi [S#] citation nahi -- is jawab par bharosa kam karo)")
     if entry["sources"]:
