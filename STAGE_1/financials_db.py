@@ -18,8 +18,10 @@ Reconcile ka qaida (industry mein "source of truth" chunna):
     PDF = SEC (match)      -> SEC ka number, PDF ka page citation ke saath        status sec_verified
     PDF != SEC (mismatch)  -> SEC ka number (PDF parser ne ghalat row chuni)       status sec_only
     sirf SEC (PDF ne miss) -> SEC ka number                                        status sec_only
-    sirf PDF (SEC mein nahi)-> PDF ka number, curated status ke saath               status pdf_verified /
+    us filing ke XBRL mein nahi -> SEC ki doosri 10-K (agle saal ka comparative column) se, upar wala qaida
+    sirf PDF (SEC mein kahin nahi)-> PDF ka number, curated status ke saath         status pdf_verified /
                                                                                     pdf_unchecked / pdf_conflict
+    sirf PDF, magar company ke SEC numbers se 5x door -> pdf_suspect (answer mein use nahi hota)
 Har number "as originally reported" hai -- us saal ke 10-K mein jo chhapa tha (restated nahi).
 value: USD mein (EPS: USD per share).
 """
@@ -28,6 +30,8 @@ import re
 import sqlite3
 import time
 from pathlib import Path
+
+from validate_xbrl import CONCEPTS, INSTANT, d, matches
 
 METRIC_LABELS = {
     "revenue": "Revenue", "gross_profit": "Gross profit", "operating_income": "Operating income",
@@ -54,7 +58,7 @@ DROP TABLE IF EXISTS financials;
 CREATE TABLE financials(
     company TEXT, fiscal_year INTEGER, metric TEXT,
     value REAL,              -- USD (EPS: USD per share)
-    status TEXT,             -- sec_verified | sec_only | pdf_verified | pdf_unchecked | pdf_conflict
+    status TEXT,             -- sec_verified | sec_only | pdf_verified | pdf_unchecked | pdf_conflict | pdf_suspect
     source TEXT,             -- pdf+sec | sec | pdf
     file_name TEXT, page TEXT, row_label TEXT,       -- PDF citation (jab PDF ka number sahi hai)
     pdf_value_text TEXT, pdf_unit TEXT,
@@ -72,42 +76,88 @@ def sec_url(cik, accn):
     return SEC_FILING.format(cik=cik, accn=accn.replace("-", "")) if cik and accn else None
 
 
+def sec_fallback(con, comp, fy, metric):
+    """Jab validation ko is saal ki filing ka number na mile: SEC ke KISI bhi 10-K mein is fiscal year ka number
+    (aksar agle saal ki filing ka "pichla saal" column). -> (concept, value, accn) ya None.
+    Saal ka qaida validate_xbrl.pick_accn jaisa: pehle period ka saal = fy, phir fy+1 (Jan/Feb mein khatam)."""
+    cs = CONCEPTS[metric]
+    unit = "USD/shares" if metric == "eps_diluted" else "USD"
+    rows = con.execute(
+        f"SELECT concept, value, start, end, filed, accn FROM xbrl_facts WHERE company=? AND unit=? "
+        f"AND form LIKE '10-K%' AND concept IN ({','.join('?' * len(cs))}) "
+        f"AND substr(end, 1, 4) IN (?, ?)", (comp, unit, *cs, str(fy), str(fy + 1))).fetchall()
+    good = []
+    for concept, value, start, e, filed, accn in rows:
+        e = d(e)
+        if not e:
+            continue
+        if metric in INSTANT:
+            if start:
+                continue
+        else:
+            st = d(start)
+            if not st or not (300 <= (e - st).days <= 380):
+                continue
+        good.append((concept, value, e, filed or "", accn))
+    for want in ((lambda e: e.year == fy), (lambda e: e.year == fy + 1 and e.month <= 2)):
+        c = [g for g in good if want(g[2])]
+        if c:
+            # concept-preference, phir saal ka aakhri din (period end), phir sab se pehle file hua (as reported)
+            c.sort(key=lambda g: (cs.index(g[0]), -g[2].toordinal(), g[3]))
+            return c[0][0], c[0][1], c[0][4]
+    return None
+
+
 def build(db):
     t0 = time.time()
     con = sqlite3.connect(db)
-    need = [t for t in ("metrics", "validation", "validation_missed", "xbrl_companies") if not con.execute(
-        "SELECT name FROM sqlite_master WHERE name=?", (t,)).fetchone()]
+    need = [t for t in ("metrics", "validation", "validation_missed", "xbrl_companies", "xbrl_facts")
+            if not con.execute("SELECT name FROM sqlite_master WHERE name=?", (t,)).fetchone()]
     if need:
         raise SystemExit(f"Table nahi mili: {need}. Pehle metrics_db.py build, xbrl_db.py load, validate_xbrl.py run.")
     con.executescript(SCHEMA)
     cik = dict(con.execute("SELECT company, cik FROM xbrl_companies"))
-    # sec_only rows ke liye: us saal ki PDF file (document citation)
+    # sec rows ke liye: us saal ki PDF file (document citation)
     files = {(c, fy): f for c, fy, f in con.execute(
         "SELECT company, fiscal_year, MIN(file_name) FROM metrics GROUP BY company, fiscal_year")}
 
-    rows = []
+    rows = {}
+    fallback_n = 0
     for (comp, fy, metric, our_text, our_unit, result, xv, xc, accn, status,
          fname, page, label, our_val) in con.execute(
             "SELECT v.company, v.fiscal_year, v.metric, v.our_text, v.our_unit, v.result, v.xbrl_value, "
             "v.xbrl_concept, v.xbrl_accn, v.curated_status, m.file_name, m.page, m.row_label, m.value "
             "FROM validation v JOIN metrics m USING(company, fiscal_year, metric)"):
+        key = (comp, fy, metric)
         url = sec_url(cik.get(comp), accn)
         if result == "match":
-            rows.append((comp, fy, metric, xv, "sec_verified", "pdf+sec", fname, page, label, our_text, our_unit,
-                         xc, url, None))
-        elif result == "mismatch":
-            rows.append((comp, fy, metric, xv, "sec_only", "sec", fname, None, None, our_text, our_unit, xc, url,
-                         "PDF parser ka number SEC se nahi mila -- SEC ka number liya"))
-        else:  # no_xbrl -> sirf PDF
-            if metric == "eps_diluted":
-                v = our_val
-            elif our_unit in SCALE and our_val is not None:
-                v = our_val * SCALE[our_unit]
+            rows[key] = (xv, "sec_verified", "pdf+sec", fname, page, label, our_text, our_unit, xc, url, None)
+            continue
+        if result == "mismatch":
+            rows[key] = (xv, "sec_only", "sec", fname, None, None, our_text, our_unit, xc, url,
+                         "PDF parser ka number SEC se nahi mila -- SEC ka number liya")
+            continue
+        # no_xbrl: pehle SEC ki doosri filings mein dhoondo
+        fb = sec_fallback(con, comp, fy, metric)
+        if fb:
+            fallback_n += 1
+            c, v, a = fb
+            if matches(our_val, v, metric):
+                rows[key] = (v, "sec_verified", "pdf+sec", fname, page, label, our_text, our_unit, c,
+                             sec_url(cik.get(comp), a), "SEC number agli filing se")
             else:
-                v = None
-            st = {"verified": "pdf_verified", "conflict": "pdf_conflict"}.get(status, "pdf_unchecked")
-            rows.append((comp, fy, metric, v, st, "pdf", fname, page, label, our_text, our_unit, None, None,
-                         None if v is not None else "unit maloom nahi -- number dollars mein nahi badla"))
+                rows[key] = (v, "sec_only", "sec", fname, None, None, our_text, our_unit, c, sec_url(cik.get(comp), a),
+                             "SEC number agli filing se; PDF parser ka number nahi mila")
+            continue
+        if metric == "eps_diluted":
+            v = our_val
+        elif our_unit in SCALE and our_val is not None:
+            v = our_val * SCALE[our_unit]
+        else:
+            v = None
+        st = {"verified": "pdf_verified", "conflict": "pdf_conflict"}.get(status, "pdf_unchecked")
+        rows[key] = (v, st, "pdf", fname, page, label, our_text, our_unit, None, None,
+                     None if v is not None else "unit maloom nahi -- number dollars mein nahi badla")
 
     # SEC mein hai, PDF curated ne miss kiya
     accn_of = {(c, fy): a for c, fy, a in con.execute(
@@ -115,13 +165,45 @@ def build(db):
         "GROUP BY company, fiscal_year")}
     for comp, fy, metric, xv, xc in con.execute(
             "SELECT company, fiscal_year, metric, xbrl_value, xbrl_concept FROM validation_missed"):
-        rows.append((comp, fy, metric, xv, "sec_only", "sec", files.get((comp, fy)), None, None, None, None, xc,
-                     sec_url(cik.get(comp), accn_of.get((comp, fy))), "PDF curated layer mein row nahi thi"))
+        rows.setdefault((comp, fy, metric), (xv, "sec_only", "sec", files.get((comp, fy)), None, None, None, None,
+                                             xc, sec_url(cik.get(comp), accn_of.get((comp, fy))),
+                                             "PDF curated layer mein row nahi thi"))
+    # hamare har filing-saal ke liye: jo metric abhi bhi khaali hai, SEC ki doosri filings se
+    for comp, fy in files:
+        for metric in METRIC_LABELS:
+            if (comp, fy, metric) in rows:
+                continue
+            fb = sec_fallback(con, comp, fy, metric)
+            if fb:
+                fallback_n += 1
+                c, v, a = fb
+                rows[(comp, fy, metric)] = (v, "sec_only", "sec", files[(comp, fy)], None, None, None, None, c,
+                                            sec_url(cik.get(comp), a), "PDF mein row nahi thi; SEC number agli filing se")
 
-    con.executemany("INSERT OR REPLACE INTO financials VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows)
+    # sanity guard: sirf-PDF number agar company ke SEC numbers (isi metric) se 5x se zyada door ho -> pdf_suspect
+    # (misaal: Boeing ka "total assets" kisi segment ki chhoti balance sheet se -- apni check pass kar leta hai)
+    suspect = 0
+    sec_vals = {}
+    for (comp, fy, metric), r in rows.items():
+        if r[2] != "pdf" and r[0]:
+            sec_vals.setdefault((comp, metric), []).append(abs(r[0]))
+    for key, r in list(rows.items()):
+        comp, fy, metric = key
+        ref = sorted(sec_vals.get((comp, metric), []))
+        if r[2] != "pdf" or not r[0] or not ref or metric == "eps_diluted":
+            continue
+        med = ref[len(ref) // 2]
+        if not (med / 5 <= abs(r[0]) <= med * 5):
+            suspect += 1
+            rows[key] = (r[0], "pdf_suspect") + r[2:10] + (
+                f"SEC ke baqi saalon ({fmt(med, metric)} ke aas paas) se bohat door -- answer mein use nahi",)
+
+    con.executemany("INSERT INTO financials VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    [k + v for k, v in rows.items()])
     con.commit()
     con.close()
-    print(f"Serving layer ban gayi ({time.time() - t0:.0f} sec): {len(rows):,} rows")
+    print(f"Serving layer ban gayi ({time.time() - t0:.0f} sec): {len(rows):,} rows "
+          f"(SEC fallback {fallback_n}, pdf_suspect {suspect})")
     report(db)
 
 
@@ -187,7 +269,7 @@ def show(db, company, metric, year=None):
         return
     print(f"{comp} -- {METRIC_LABELS[m]}")
     for r in rows:
-        mark = {"sec_verified": "✓✓", "sec_only": "S ", "pdf_verified": "✓ "}.get(r["status"], "? ")
+        mark = {"sec_verified": "✓✓", "sec_only": "S ", "pdf_verified": "✓ ", "pdf_suspect": "✗ "}.get(r["status"], "? ")
         cite = f"p{r['page']}" if r["page"] else "-"
         print(f"  FY{r['fiscal_year']}  {r['display']:>22}  {mark} {r['status']:<13} {cite:<6} "
               f"{(r['file_name'] or '')[:40]}" + (f"  [{r['note']}]" if r["note"] else ""))
@@ -200,7 +282,7 @@ def report(db):
     print(f"  {'metric':<22}{'rows':>6}{'sec_verified':>14}{'sec_only':>10}{'pdf_verified':>14}{'pdf_other':>11}")
     for m in METRIC_LABELS:
         r = con.execute("SELECT COUNT(*), SUM(status='sec_verified'), SUM(status='sec_only'), "
-                        "SUM(status='pdf_verified'), SUM(status IN ('pdf_unchecked','pdf_conflict')) "
+                        "SUM(status='pdf_verified'), SUM(status IN ('pdf_unchecked','pdf_conflict','pdf_suspect')) "
                         "FROM financials WHERE metric=?", (m,)).fetchone()
         print(f"  {m:<22}{r[0]:>6}{r[1] or 0:>14}{r[2] or 0:>10}{r[3] or 0:>14}{r[4] or 0:>11}")
     st = dict(con.execute("SELECT status, COUNT(*) FROM financials GROUP BY status"))
@@ -208,7 +290,8 @@ def report(db):
     print(f"\n  SEC se tasdeeq-shuda (sec_verified + sec_only): {sec:,}/{total:,} = {100 * sec / total:.1f}%")
     print(f"  PDF page citation ke saath:                   {st.get('sec_verified', 0) + st.get('pdf_verified', 0):,}")
     print(f"  Kamzor (pdf_unchecked / pdf_conflict):        "
-          f"{st.get('pdf_unchecked', 0)} / {st.get('pdf_conflict', 0)}  (answer mein ehtiyat ka note)\n")
+          f"{st.get('pdf_unchecked', 0)} / {st.get('pdf_conflict', 0)}  (answer mein ehtiyat ka note)")
+    print(f"  pdf_suspect (answer mein use nahi):           {st.get('pdf_suspect', 0)}\n")
 
 
 def main():
