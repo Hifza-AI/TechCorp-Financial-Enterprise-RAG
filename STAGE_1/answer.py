@@ -536,11 +536,13 @@ def structured_source(retriever, question):
     if not fin:
         return None
     try:
-        comps = retriever._detect_companies(question)
-        if not comps and detect_metrics(question):
-            # Number wale sawal mein "apple revenue" / "nike cash" (chhote huroof) bhi company hi hai; phir
-            # spelling ki ghalti ("Microsft"). Ticker (NOW, COST) sirf bare huroof mein -- wo retriever khud dekhta hai.
-            comps = _loose_companies(retriever, question) or retriever._fuzzy_companies(question)[0]
+        comps = set(retriever._detect_companies(question))
+        if detect_metrics(question):
+            # Number wale sawal mein "apple revenue" / "intel vs Amazon" (chhote huroof) bhi company hi hai; koi na
+            # mile to spelling ki ghalti ("Microsft"). Ticker (NOW, COST) sirf bare huroof mein -- retriever khud dekhta hai.
+            comps |= _loose_companies(retriever, question)
+            if not comps:
+                comps = retriever._fuzzy_companies(question)[0]
     except Exception:                               # noqa: BLE001
         return None
     years = {int(y) for y in retriever.YEAR_PATTERN.findall(question)}
