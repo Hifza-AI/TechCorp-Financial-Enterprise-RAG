@@ -31,7 +31,7 @@ import sqlite3
 import time
 from pathlib import Path
 
-from validate_xbrl import CONCEPTS, INSTANT, accession_map, d, matches, pick_accn, xbrl_values
+from validate_xbrl import CONCEPTS, INSTANT, accession_map, d, load_offsets, matches, pick_accn, xbrl_values
 
 METRIC_LABELS = {
     "revenue": "Revenue", "gross_profit": "Gross profit", "operating_income": "Operating income",
@@ -78,16 +78,16 @@ def sec_url(cik, accn):
     return SEC_FILING.format(cik=cik, accn=accn.replace("-", "")) if cik and accn else None
 
 
-def sec_fallback(con, comp, fy, metric):
+def sec_fallback(con, comp, fy, metric, off=0):
     """Jab validation ko is saal ki filing ka number na mile: SEC ke KISI bhi 10-K mein is fiscal year ka number
     (aksar agle saal ki filing ka "pichla saal" column). -> (concept, value, accn) ya None.
-    Saal ka qaida validate_xbrl.pick_accn jaisa: pehle period ka saal = fy, phir fy+1 (Jan/Feb mein khatam)."""
+    Saal ka qaida validate_xbrl.pick_accn jaisa: period ka saal = fy + off (company ka apna qaida)."""
     cs = CONCEPTS[metric]
     unit = "USD/shares" if metric == "eps_diluted" else "USD"
     rows = con.execute(
         f"SELECT concept, value, start, end, filed, accn FROM xbrl_facts WHERE company=? AND unit=? "
         f"AND form LIKE '10-K%' AND concept IN ({','.join('?' * len(cs))}) "
-        f"AND substr(end, 1, 4) IN (?, ?)", (comp, unit, *cs, str(fy), str(fy + 1))).fetchall()
+        f"AND substr(end, 1, 4) = ?", (comp, unit, *cs, str(fy + off))).fetchall()
     good = []
     for concept, value, start, e, filed, accn in rows:
         e = d(e)
@@ -101,12 +101,10 @@ def sec_fallback(con, comp, fy, metric):
             if not st or not (300 <= (e - st).days <= 380):
                 continue
         good.append((concept, value, e, filed or "", accn))
-    for want in ((lambda e: e.year == fy), (lambda e: e.year == fy + 1 and e.month <= 2)):
-        c = [g for g in good if want(g[2])]
-        if c:
-            # concept-preference, phir saal ka aakhri din (period end), phir sab se pehle file hua (as reported)
-            c.sort(key=lambda g: (cs.index(g[0]), -g[2].toordinal(), g[3]))
-            return c[0][0], c[0][1], c[0][4], c[0][2]
+    if good:
+        # concept-preference, phir saal ka aakhri din (period end), phir sab se pehle file hua (as reported)
+        good.sort(key=lambda g: (cs.index(g[0]), -g[2].toordinal(), g[3]))
+        return good[0][0], good[0][1], good[0][4], good[0][2]
     return None
 
 
@@ -156,6 +154,7 @@ def build(db):
     fallback_n = 0
     standard_differs = 0
     acc = accession_map(con)
+    offs = load_offsets(con)
     for (comp, fy, metric, our_text, our_unit, result, xv, xc, accn, status,
          fname, page, label, our_val) in con.execute(
             "SELECT v.company, v.fiscal_year, v.metric, v.our_text, v.our_unit, v.result, v.xbrl_value, "
@@ -168,7 +167,7 @@ def build(db):
             # Ek metric = ek tareef: hamesha pehla (standard) concept -- jaise net income = NetIncomeLoss (company
             # ke shareholders ka), revenue = Revenues (total). PDF ne doosri line pakri ho (net sales, ya
             # noncontrolling ke saath net income) to bhi number standard wala; PDF page tabhi jab woh isi se mile.
-            a = pick_accn(acc.get(comp, []), fy)
+            a = pick_accn(acc.get(comp, []), fy, offs.get(comp, 0))
             vals = xbrl_values(con, comp, a[0], a[3], metric) if a and a[0] == accn else []
             pc, pv = vals[0] if vals else (xc, xv)
             if matches(our_val, pv, metric):
@@ -182,7 +181,7 @@ def build(db):
                              "PDF parser ka number SEC se nahi mila -- SEC ka number liya")
             continue
         # no_xbrl: pehle SEC ki doosri filings mein dhoondo
-        fb = sec_fallback(con, comp, fy, metric)
+        fb = sec_fallback(con, comp, fy, metric, offs.get(comp, 0))
         if fb:
             fallback_n += 1
             c, v, a, e = fb
@@ -221,7 +220,7 @@ def build(db):
         for metric in METRIC_LABELS:
             if (comp, fy, metric) in rows:
                 continue
-            fb = sec_fallback(con, comp, fy, metric)
+            fb = sec_fallback(con, comp, fy, metric, offs.get(comp, 0))
             if fb:
                 fallback_n += 1
                 c, v, a, e = fb
