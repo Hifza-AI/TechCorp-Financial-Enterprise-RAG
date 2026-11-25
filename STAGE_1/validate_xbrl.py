@@ -44,8 +44,8 @@ CONCEPTS = {
     "total_assets": ["Assets"],
     "total_liabilities": ["Liabilities"],
     "equity": ["StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"],
-    "cash": ["CashAndCashEquivalentsAtCarryingValue", "CashAndDueFromBanks", "Cash",
-             "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"],
+    # "cash + restricted cash" alag cheez hai (hamara metric sirf cash & equivalents), is liye shamil nahi
+    "cash": ["CashAndCashEquivalentsAtCarryingValue", "CashAndDueFromBanks", "Cash"],
     "operating_cash_flow": ["NetCashProvidedByUsedInOperatingActivities",
                             "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"],
     "capex": ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets",
@@ -90,9 +90,12 @@ def matches(ours, xv, metric):
 def accession_map(con):
     """company -> list of (accn, form, filed, current_end) har 10-K ka; current_end = us ka sab se naya period."""
     out = defaultdict(list)
+    # Sirf us-gaap ke ~1 saal wale periods: cover page (dei) ki tareekhein -- jaise "shares outstanding as of
+    # Feb 2022" -- filing ka saal ghalat bata deti thin.
     for comp, accn, form, filed, end in con.execute(
             "SELECT company, accn, MIN(form), MIN(filed), MAX(end) FROM xbrl_facts "
-            "WHERE form LIKE '10-K%' AND fp = 'FY' GROUP BY company, accn"):
+            "WHERE form LIKE '10-K%' AND fp = 'FY' AND taxonomy = 'us-gaap' AND start IS NOT NULL "
+            "AND julianday(end) - julianday(start) BETWEEN 300 AND 380 GROUP BY company, accn"):
         e = d(end)
         if e:
             out[comp].append((accn, form, filed, e))
