@@ -104,12 +104,19 @@ def accession_map(con):
     return out
 
 
+def fy_of(end):
+    """Period end -> fiscal year. 52/53 hafton wale saal kabhi agle saal ke pehle dino mein khatam hote hain:
+    Franklin Electric ka fiscal 2015 "January 2, 2016" ko khatam hua -- wo 2015 hai, 2016 nahi. Is liye January
+    ke pehle 10 din pichle saal mein. (Jan 31 / Feb 1 par khatam saal -- Walmart, Dell -- apne end-year hi hain.)"""
+    return end.year - 1 if end.month == 1 and end.day <= 10 else end.year
+
+
 def pick_accn(accns, fy, off=0):
     """Fiscal year -> us ka 10-K: period ka saal = fy + off (off har company ka ek hi -- company_offsets).
     Asal 10-K behtar 10-K/A se, pehle file hua behtar. Is saal ki filing SEC data mein na ho -> None.
     (Pehle yahan "na mile to agle saal ki Jan/Feb wali" ka rule tha -- Dell FY2019 ki filing na milne par wo
     chupke se FY2020 ki filing utha leta tha. Insaani spot-check ne pakra.)"""
-    c = [a for a in accns if a[3].year == fy + off]
+    c = [a for a in accns if fy_of(a[3]) == fy + off]
     return sorted(c, key=lambda a: (a[1] != "10-K", a[2] or ""))[0] if c else None
 
 
