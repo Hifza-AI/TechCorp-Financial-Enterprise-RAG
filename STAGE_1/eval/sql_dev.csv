@@ -1,0 +1,200 @@
+id,kind,expect,question,companies,metrics,years_required,years_allowed,gold
+D001,single,1,How much R&D expenses did Netflix report for FY2017?,Netflix,rnd,2017,2016|2017,"{""Netflix|rnd|2017"": 981300000.0}"
+D002,single,1,How much total equity did Adobe report for FY2017?,Adobe,equity,2017,2016|2017,"{""Adobe|equity|2017"": 8459869000.0}"
+D003,single,1,How much capital spending did eBay report for FY2022?,Ebay,capex,2022,2021|2022,"{""Ebay|capex|2022"": 449000000.0}"
+D004,single,1,What was WMT's net cash provided by operating activities in 2026?,Walmart,operating_cash_flow,2026,2025|2026,"{""Walmart|operating_cash_flow|2026"": 41565000000.0}"
+D005,single,1,Tell me GGG's net profit for fiscal year 2023.,Graco,net_income,2023,2022|2023,"{""Graco|net_income|2023"": 506511000.0}"
+D006,single,1,How much total assets did AMD report for FY2024?,AMD,total_assets,2024,2023|2024,"{""AMD|total_assets|2024"": 69226000000.0}"
+D007,single,1,What was ROP's earnings per share in 2020?,Roper Technologies,eps_diluted,2020,2019|2020,"{""Roper Technologies|eps_diluted|2020"": 8.98}"
+D008,single,1,Tell me Starbucks's total assets for fiscal year 2021.,Starbucks,total_assets,2021,2020|2021,"{""Starbucks|total_assets|2021"": 31392600000.0}"
+D009,single,1,Tell me Chevron's R&D for fiscal year 2022.,CHEVRON,rnd,2022,2021|2022,"{""CHEVRON|rnd|2022"": 268000000.0}"
+D010,single,1,How much stockholders' equity did apple report for FY2025?,Apple,equity,2025,2024|2025,"{""Apple|equity|2025"": 73733000000.0}"
+D011,single,1,What was Chevron's revenues in 2022?,CHEVRON,revenue,2022,2021|2022,"{""CHEVRON|revenue|2022"": 246252000000.0}"
+D012,single,1,Tell me Donaldson's earnings per share for fiscal year 2023.,Donaldson,eps_diluted,2023,2022|2023,"{""Donaldson|eps_diluted|2023"": 2.9}"
+D013,single,1,How much total assets did Pentair report for FY2024?,Pentair plc,total_assets,2024,2023|2024,"{""Pentair plc|total_assets|2024"": 6446500000.0}"
+D014,single,1,How much operating cash flow did Netflix report for FY2019?,Netflix,operating_cash_flow,2019,2018|2019,"{""Netflix|operating_cash_flow|2019"": -2887322000.0}"
+D015,single,1,Tell me PayPal's net profit for fiscal year 2018.,Paypal,net_income,2018,2017|2018,"{""Paypal|net_income|2018"": 2057000000.0}"
+D016,single,1,What was Intel's diluted earnings per share in 2017?,Intel,eps_diluted,2017,2016|2017,"{""Intel|eps_diluted|2017"": 1.99}"
+D017,single,1,How much total assets did PYPL report for FY2024?,Paypal,total_assets,2024,2023|2024,"{""Paypal|total_assets|2024"": 81611000000.0}"
+D018,single,1,"Give me the sales figure for Emerson Electric, 2023.",Emerson Electric,revenue,2023,2022|2023,"{""Emerson Electric|revenue|2023"": 15165000000.0}"
+D019,single,1,What was Block's revenues in 2020?,Block,revenue,2020,2019|2020,"{""Block|revenue|2020"": 9497578000.0}"
+D020,single,1,How much assets did NDSN report for FY2020?,NORDSON,total_assets,2020,2019|2020,"{""NORDSON|total_assets|2020"": 3674656000.0}"
+D021,single,1,What was Pentair's gross profit in 2025?,Pentair plc,gross_profit,2025,2024|2025,"{""Pentair plc|gross_profit|2025"": 1690300000.0}"
+D022,single,1,Tell me Google's shareholders' equity for fiscal year 2023.,Google,equity,2023,2022|2023,"{""Google|equity|2023"": 283379000000.0}"
+D023,single,1,What was SBUX's diluted earnings per share in 2023?,Starbucks,eps_diluted,2023,2022|2023,"{""Starbucks|eps_diluted|2023"": 3.58}"
+D024,single,1,Tell me intuit's net earnings for fiscal year 2021.,Intuit,net_income,2021,2020|2021,"{""Intuit|net_income|2021"": 2062000000.0}"
+D025,single,1,How much gross margin did Roper Technologies report for FY2017?,Roper Technologies,gross_profit,2017,2016|2017,"{""Roper Technologies|gross_profit|2017"": 2864796000.0}"
+D026,single,1,Tell me EBAY's R&D expenses for fiscal year 2020.,Ebay,rnd,2020,2019|2020,"{""Ebay|rnd|2020"": 1087000000.0}"
+D027,single,1,"Give me the total revenue figure for Nike, 2025.",Nike,revenue,2025,2024|2025,"{""Nike|revenue|2025"": 46309000000.0}"
+D028,single,1,"Give me the net sales figure for Kennametal, 2017.",KENNAMETAL,revenue,2017,2016|2017,"{""KENNAMETAL|revenue|2017"": 2058368000.0}"
+D029,single,1,Tell me UNP's capital expenditures for fiscal year 2016.,Union Pacific,capex,2016,2015|2016,"{""Union Pacific|capex|2016"": 3505000000.0}"
+D030,single,1,How much cash on hand did PYPL report for FY2019?,Paypal,cash,2019,2018|2019,"{""Paypal|cash|2019"": 7349000000.0}"
+D031,single,1,"Give me the operating income figure for AMD, 2019.",AMD,operating_income,2019,2018|2019,"{""AMD|operating_income|2019"": 631000000.0}"
+D032,single,1,Tell me Workday's R&D spending for fiscal year 2026.,Workday,rnd,2026,2025|2026,"{""Workday|rnd|2026"": 2679000000.0}"
+D033,single,1,Tell me Apple's revenues for fiscal year 2018.,Apple,revenue,2018,2017|2018,"{""Apple|revenue|2018"": 265595000000.0}"
+D034,single,1,What was caterpillar's net cash provided by operating activities in 2021?,Caterpillar,operating_cash_flow,2021,2020|2021,"{""Caterpillar|operating_cash_flow|2021"": 7198000000.0}"
+D035,single,1,"Give me the capex figure for Northrop Grumman, 2022.",NORTHROP,capex,2022,2021|2022,"{""NORTHROP|capex|2022"": 1435000000.0}"
+D036,single,1,What was Salesforce's net income in 2017?,SalesForce,net_income,2017,2016|2017,"{""SalesForce|net_income|2017"": 179632000.0}"
+D037,single,1,Tell me CAT's total equity for fiscal year 2018.,Caterpillar,equity,2018,2017|2018,"{""Caterpillar|equity|2018"": 14080000000.0}"
+D038,single,1,What was Amazon's shareholders' equity in 2020?,Amazon,equity,2020,2019|2020,"{""Amazon|equity|2020"": 93404000000.0}"
+D039,single,1,Tell me Google's total liabilities for fiscal year 2022.,Google,total_liabilities,2022,2021|2022,"{""Google|total_liabilities|2022"": 109120000000.0}"
+D040,single,1,"Give me the income from operations figure for AMD, 2024.",AMD,operating_income,2024,2023|2024,"{""AMD|operating_income|2024"": 1900000000.0}"
+D041,single,1,What was Southwest Airlines's income from operations in 2025?,Southwest,operating_income,2025,2024|2025,"{""Southwest|operating_income|2025"": 428000000.0}"
+D042,single,1,Tell me Dell's diluted EPS for fiscal year 2021.,Dell,eps_diluted,2021,2020|2021,"{""Dell|eps_diluted|2021"": 4.22}"
+D043,single,1,What was Woodward's total revenue in 2018?,Woodward Inc,revenue,2018,2017|2018,"{""Woodward Inc|revenue|2018"": 2325873000.0}"
+D044,single,1,"Give me the research and development expense figure for XYZ, 2021.",Block,rnd,2021,2020|2021,"{""Block|rnd|2021"": 1399079000.0}"
+D045,single,1,"Give me the net cash provided by operating activities figure for Intel, 2023.",Intel,operating_cash_flow,2023,2022|2023,"{""Intel|operating_cash_flow|2023"": 11471000000.0}"
+D046,single,1,What was boeing's gross profit in 2022?,Boeing,gross_profit,2022,2021|2022,"{""Boeing|gross_profit|2022"": 3502000000.0}"
+D047,single,1,How much net profit did Emerson Electric report for FY2025?,Emerson Electric,net_income,2025,2024|2025,"{""Emerson Electric|net_income|2025"": 2293000000.0}"
+D048,single,1,"Give me the stockholders' equity figure for Home Depot, 2020.",Home Depot,equity,2020,2019|2020,"{""Home Depot|equity|2020"": -3116000000.0}"
+D049,single,1,How much total equity did Roper Technologies report for FY2023?,Roper Technologies,equity,2023,2022|2023,"{""Roper Technologies|equity|2023"": 17444800000.0}"
+D050,single,1,Tell me Microsoft's cash and cash equivalents for fiscal year 2022.,Microsoft,cash,2022,2021|2022,"{""Microsoft|cash|2022"": 13931000000.0}"
+D051,single,1,"Give me the stockholders' equity figure for Graco, 2023.",Graco,equity,2023,2022|2023,"{""Graco|equity|2023"": 2224225000.0}"
+D052,single,1,Tell me Kimberly-Clark's net earnings for fiscal year 2022.,KImberly_Clark,net_income,2022,2021|2022,"{""KImberly_Clark|net_income|2022"": 1934000000.0}"
+D053,single,1,"Give me the cash from operations figure for PH, 2021.",Parker Hannifin,operating_cash_flow,2021,2020|2021,"{""Parker Hannifin|operating_cash_flow|2021"": 2575001000.0}"
+D054,single,1,Tell me PNR's total liabilities for fiscal year 2024.,Pentair plc,total_liabilities,2024,2023|2024,"{""Pentair plc|total_liabilities|2024"": 2883600000.0}"
+D055,single,1,What was Apple's gross profit in 2022?,Apple,gross_profit,2022,2021|2022,"{""Apple|gross_profit|2022"": 170782000000.0}"
+D056,single_ru,1,Northrop Grumman ka 2022 ka shareholders' equity batao,NORTHROP,equity,2022,2021|2022,"{""NORTHROP|equity|2022"": 15312000000.0}"
+D057,single_ru,1,Chipotle ka 2022 ka stockholders' equity batao,Chipotle Mexican Grill,equity,2022,2021|2022,"{""Chipotle Mexican Grill|equity|2022"": 2368023000.0}"
+D058,single_ru,1,google ka 2022 ka assets batao,Google,total_assets,2022,2021|2022,"{""Google|total_assets|2022"": 365264000000.0}"
+D059,single_ru,1,Parker Hannifin ki 2024 mein capex kitni thi?,Parker Hannifin,capex,2024,2023|2024,"{""Parker Hannifin|capex|2024"": 400112000.0}"
+D060,single_ru,1,ebay ka 2023 ka total assets batao,Ebay,total_assets,2023,2022|2023,"{""Ebay|total_assets|2023"": 21620000000.0}"
+D061,single_ru,1,Apple ka 2022 ka stockholders' equity batao,Apple,equity,2022,2021|2022,"{""Apple|equity|2022"": 50672000000.0}"
+D062,single_ru,1,eBay ki 2016 mein shareholders' equity kitni thi?,Ebay,equity,2016,2015|2016,"{""Ebay|equity|2016"": 10539000000.0}"
+D063,single_ru,1,Graco ki 2016 mein assets kitni thi?,Graco,total_assets,2016,2015|2016,"{""Graco|total_assets|2016"": 1243109000.0}"
+D064,single_ru,1,WDAY ki 2023 mein total revenue kitni thi?,Workday,revenue,2023,2022|2023,"{""Workday|revenue|2023"": 6215818000.0}"
+D065,single_ru,1,northrop grumman ki 2022 mein shareholders' equity kitni thi?,NORTHROP,equity,2022,2021|2022,"{""NORTHROP|equity|2022"": 15312000000.0}"
+D066,single_ru,1,eBay ki 2025 mein total equity kitni thi?,Ebay,equity,2025,2024|2025,"{""Ebay|equity|2025"": 4615000000.0}"
+D067,single_ru,1,Google ka 2025 ka shareholders' equity batao,Google,equity,2025,2024|2025,"{""Google|equity|2025"": 415265000000.0}"
+D068,single_ru,1,Kennametal ka 2023 ka R&D batao,KENNAMETAL,rnd,2023,2022|2023,"{""KENNAMETAL|rnd|2023"": 43100000.0}"
+D069,single_ru,1,Roper Technologies ka 2025 ka gross margin batao,Roper Technologies,gross_profit,2025,2024|2025,"{""Roper Technologies|gross_profit|2025"": 5472000000.0}"
+D070,single_ru,1,Union Pacific ki 2025 mein diluted earnings per share kitni thi?,Union Pacific,eps_diluted,2025,2024|2025,"{""Union Pacific|eps_diluted|2025"": 11.98}"
+D071,no_year,1,What is southwest airlines's capex?,Southwest,capex,2025,2023|2024|2025,"{""Southwest|capex|2025"": 2673000000.0}"
+D072,no_year,1,What is PayPal's stockholders' equity?,Paypal,equity,2025,2023|2024|2025,"{""Paypal|equity|2025"": 20256000000.0}"
+D073,no_year,1,Amazon latest total assets,Amazon,total_assets,2025,2023|2024|2025,"{""Amazon|total_assets|2025"": 818042000000.0}"
+D074,no_year,1,What is Kennametal's operating income?,KENNAMETAL,operating_income,2026,2024|2025|2026,"{""KENNAMETAL|operating_income|2026"": 472532000.0}"
+D075,no_year,1,Salesforce latest capex,SalesForce,capex,2026,2024|2025|2026,"{""SalesForce|capex|2026"": 594000000.0}"
+D076,no_year,1,What is Colgate-Palmolive's R&D spending?,Colgate_Palmolive,rnd,2025,2023|2024|2025,"{""Colgate_Palmolive|rnd|2025"": 366000000.0}"
+D077,no_year,1,What is Nike's total assets?,Nike,total_assets,2026,2024|2025|2026,"{""Nike|total_assets|2026"": 38410000000.0}"
+D078,no_year,1,Chipotle latest total liabilities,Chipotle Mexican Grill,total_liabilities,2025,2023|2024|2025,"{""Chipotle Mexican Grill|total_liabilities|2025"": 6163924000.0}"
+D079,no_year,1,What is Workday's assets?,Workday,total_assets,2026,2024|2025|2026,"{""Workday|total_assets|2026"": 18074000000.0}"
+D080,no_year,1,Adobe latest capex,Adobe,capex,2025,2023|2024|2025,"{""Adobe|capex|2025"": 179000000.0}"
+D081,two_years,1,How did Pentair's total assets change from 2019 to 2022?,Pentair plc,total_assets,2019|2022,2019|2022,"{""Pentair plc|total_assets|2019"": 4139500000.0, ""Pentair plc|total_assets|2022"": 6447500000.0}"
+D082,two_years,1,How did PANW's shareholders' equity change from 2016 to 2019?,Palo Alto Networks,equity,2016|2019,2016|2019,"{""Palo Alto Networks|equity|2016"": 789900000.0, ""Palo Alto Networks|equity|2019"": 1586300000.0}"
+D083,two_years,1,How did walmart's revenue change from 2018 to 2021?,Walmart,revenue,2018|2021,2018|2021,"{""Walmart|revenue|2018"": 500343000000.0, ""Walmart|revenue|2021"": 559151000000.0}"
+D084,two_years,1,How did Nordson's total equity change from 2017 to 2020?,NORDSON,equity,2017|2020,2017|2020,"{""NORDSON|equity|2017"": 1155493000.0, ""NORDSON|equity|2020"": 1758991000.0}"
+D085,two_years,1,Xylem net earnings 2019 vs 2020,Xylem Inc,net_income,2019|2020,2019|2020,"{""Xylem Inc|net_income|2019"": 401000000.0, ""Xylem Inc|net_income|2020"": 254000000.0}"
+D086,two_years,1,nike cash on hand 2018 vs 2021,Nike,cash,2018|2021,2018|2021,"{""Nike|cash|2018"": 4249000000.0, ""Nike|cash|2021"": 9889000000.0}"
+D087,two_years,1,How did Adobe's net income change from 2022 to 2023?,Adobe,net_income,2022|2023,2022|2023,"{""Adobe|net_income|2022"": 4756000000.0, ""Adobe|net_income|2023"": 5428000000.0}"
+D088,two_years,1,chipotle cash from operations 2022 vs 2023,Chipotle Mexican Grill,operating_cash_flow,2022|2023,2022|2023,"{""Chipotle Mexican Grill|operating_cash_flow|2022"": 1323179000.0, ""Chipotle Mexican Grill|operating_cash_flow|2023"": 1783477000.0}"
+D089,two_years,1,How did Watts Water's gross profit change from 2021 to 2024?,WATTS WATER TECHNOLOGIES,gross_profit,2021|2024,2021|2024,"{""WATTS WATER TECHNOLOGIES|gross_profit|2021"": 767100000.0, ""WATTS WATER TECHNOLOGIES|gross_profit|2024"": 1062000000.0}"
+D090,two_years,1,Starbucks net earnings 2019 vs 2022,Starbucks,net_income,2019|2022,2019|2022,"{""Starbucks|net_income|2019"": 3599200000.0, ""Starbucks|net_income|2022"": 3281600000.0}"
+D091,two_years,1,How did Google's stockholders' equity change from 2016 to 2019?,Google,equity,2016|2019,2016|2019,"{""Google|equity|2016"": 139036000000.0, ""Google|equity|2019"": 201442000000.0}"
+D092,two_years,1,How did Kennametal's assets change from 2018 to 2021?,KENNAMETAL,total_assets,2018|2021,2018|2021,"{""KENNAMETAL|total_assets|2018"": 2925737000.0, ""KENNAMETAL|total_assets|2021"": 2665761000.0}"
+D093,range,1,Amazon net sales 2017-2020,Amazon,revenue,2017|2018|2019|2020,2016|2017|2018|2019|2020,"{""Amazon|revenue|2017"": 177866000000.0, ""Amazon|revenue|2018"": 232887000000.0, ""Amazon|revenue|2019"": 280522000000.0, ""Amazon|revenue|2020"": 386064000000.0}"
+D094,range,1,Show Adobe's operating income for each year from 2018 to 2021.,Adobe,operating_income,2018|2019|2020|2021,2017|2018|2019|2020|2021,"{""Adobe|operating_income|2018"": 2840369000.0, ""Adobe|operating_income|2019"": 3268121000.0, ""Adobe|operating_income|2020"": 4237000000.0, ""Adobe|operating_income|2021"": 5802000000.0}"
+D095,range,1,Intuit assets 2022-2025,Intuit,total_assets,2022|2023|2024|2025,2021|2022|2023|2024|2025,"{""Intuit|total_assets|2022"": 27734000000.0, ""Intuit|total_assets|2023"": 27780000000.0, ""Intuit|total_assets|2024"": 32132000000.0, ""Intuit|total_assets|2025"": 36958000000.0}"
+D096,range,1,Show KMB's purchases of property and equipment for each year from 2020 to 2023.,KImberly_Clark,capex,2020|2021|2022|2023,2019|2020|2021|2022|2023,"{""KImberly_Clark|capex|2020"": 1217000000.0, ""KImberly_Clark|capex|2021"": 1007000000.0, ""KImberly_Clark|capex|2022"": 876000000.0, ""KImberly_Clark|capex|2023"": 766000000.0}"
+D097,range,1,SBUX shareholders' equity 2019-2022,Starbucks,equity,2019|2020|2021|2022,2018|2019|2020|2021|2022,"{""Starbucks|equity|2019"": -6232200000.0, ""Starbucks|equity|2020"": -7805100000.0, ""Starbucks|equity|2021"": -5321200000.0, ""Starbucks|equity|2022"": -8706600000.0}"
+D098,range,1,Google cash 2019-2022,Google,cash,2019|2020|2021|2022,2018|2019|2020|2021|2022,"{""Google|cash|2019"": 18498000000.0, ""Google|cash|2020"": 26465000000.0, ""Google|cash|2021"": 20945000000.0, ""Google|cash|2022"": 21879000000.0}"
+D099,range,1,Show COST's net earnings for each year from 2021 to 2024.,Costco,net_income,2021|2022|2023|2024,2020|2021|2022|2023|2024,"{""Costco|net_income|2021"": 5007000000.0, ""Costco|net_income|2022"": 5844000000.0, ""Costco|net_income|2023"": 6292000000.0, ""Costco|net_income|2024"": 7367000000.0}"
+D100,range,1,NOW diluted EPS 2021-2024,ServiceNow,eps_diluted,2021|2022|2023|2024,2020|2021|2022|2023|2024,"{""ServiceNow|eps_diluted|2021"": 1.13, ""ServiceNow|eps_diluted|2022"": 1.6, ""ServiceNow|eps_diluted|2023"": 8.42, ""ServiceNow|eps_diluted|2024"": 6.84}"
+D101,range,1,Donaldson gross margin 2023-2026,Donaldson,gross_profit,2023|2024|2025|2026,2022|2023|2024|2025|2026,"{""Donaldson|gross_profit|2023"": 1160600000.0, ""Donaldson|gross_profit|2024"": 1274400000.0, ""Donaldson|gross_profit|2025"": 1286200000.0, ""Donaldson|gross_profit|2026"": 1345900000.0}"
+D102,range,1,Show Caterpillar's total liabilities for each year from 2021 to 2024.,Caterpillar,total_liabilities,2021|2022|2023|2024,2020|2021|2022|2023|2024,"{""Caterpillar|total_liabilities|2021"": 66277000000.0, ""Caterpillar|total_liabilities|2022"": 66052000000.0, ""Caterpillar|total_liabilities|2023"": 67973000000.0, ""Caterpillar|total_liabilities|2024"": 68270000000.0}"
+D103,trend,1,Colgate-Palmolive ki capital spending saalon mein kaise badli?,Colgate_Palmolive,capex,2016|2017|2018|2019|2020|2021|2022|2023|2024|2025,2016|2017|2018|2019|2020|2021|2022|2023|2024|2025,"{""Colgate_Palmolive|capex|2016"": 593000000.0, ""Colgate_Palmolive|capex|2017"": 553000000.0, ""Colgate_Palmolive|capex|2018"": 436000000.0, ""Colgate_Palmolive|capex|2019"": 335000000.0, ""Colgate_Palmolive|capex|2020"": 409000000.0, ""Colgate_Palmolive|capex|2021"": 567000000.0, ""Colgate_Palmolive|capex|2022"": 696000000.0, ""Colgate_Palmolive|capex|2023"": 705000000.0, ""Colgate_Palmolive|capex|2024"": 561000000.0, ""Colgate_Palmolive|capex|2025"": 564000000.0}"
+D104,trend,1,How has Microsoft's gross margin changed over the years?,Microsoft,gross_profit,2017|2018|2019|2020|2021|2022|2023|2024|2025|2026,2017|2018|2019|2020|2021|2022|2023|2024|2025|2026,"{""Microsoft|gross_profit|2017"": 55689000000.0, ""Microsoft|gross_profit|2018"": 72007000000.0, ""Microsoft|gross_profit|2019"": 82933000000.0, ""Microsoft|gross_profit|2020"": 96937000000.0, ""Microsoft|gross_profit|2021"": 115856000000.0, ""Microsoft|gross_profit|2022"": 135620000000.0, ""Microsoft|gross_profit|2023"": 146052000000.0, ""Microsoft|gross_profit|2024"": 171008000000.0, ""Microsoft|gross_profit|2025"": 193893000000.0, ""Microsoft|gross_profit|2026"": 225465000000.0}"
+D105,trend,1,How has Chipotle's operating profit changed over the years?,Chipotle Mexican Grill,operating_income,2016|2017|2018|2019|2020|2021|2022|2023|2024|2025,2016|2017|2018|2019|2020|2021|2022|2023|2024|2025,"{""Chipotle Mexican Grill|operating_income|2016"": 34567000.0, ""Chipotle Mexican Grill|operating_income|2017"": 270794000.0, ""Chipotle Mexican Grill|operating_income|2018"": 258368000.0, ""Chipotle Mexican Grill|operating_income|2019"": 443958000.0, ""Chipotle Mexican Grill|operating_income|2020"": 290164000.0, ""Chipotle Mexican Grill|operating_income|2021"": 804943000.0, ""Chipotle Mexican Grill|operating_income|2022"": 1160403000.0, ""Chipotle Mexican Grill|operating_income|2023"": 1557813000.0, ""Chipotle Mexican Grill|operating_income|2024"": 1916333000.0, ""Chipotle Mexican Grill|operating_income|2025"": 1935798000.0}"
+D106,trend,1,Nike ki cash flow from operating activities saalon mein kaise badli?,Nike,operating_cash_flow,2017|2018|2019|2020|2021|2022|2023|2024|2025|2026,2017|2018|2019|2020|2021|2022|2023|2024|2025|2026,"{""Nike|operating_cash_flow|2017"": 3640000000.0, ""Nike|operating_cash_flow|2018"": 4955000000.0, ""Nike|operating_cash_flow|2019"": 5903000000.0, ""Nike|operating_cash_flow|2020"": 2485000000.0, ""Nike|operating_cash_flow|2021"": 6657000000.0, ""Nike|operating_cash_flow|2022"": 5188000000.0, ""Nike|operating_cash_flow|2023"": 5841000000.0, ""Nike|operating_cash_flow|2024"": 7429000000.0, ""Nike|operating_cash_flow|2025"": 3698000000.0, ""Nike|operating_cash_flow|2026"": 2868000000.0}"
+D107,trend,1,Xylem ki total assets saalon mein kaise badli?,Xylem Inc,total_assets,2016|2017|2018|2019|2020|2021|2022|2023|2024|2025,2016|2017|2018|2019|2020|2021|2022|2023|2024|2025,"{""Xylem Inc|total_assets|2016"": 6474000000.0, ""Xylem Inc|total_assets|2017"": 6860000000.0, ""Xylem Inc|total_assets|2018"": 7222000000.0, ""Xylem Inc|total_assets|2019"": 7710000000.0, ""Xylem Inc|total_assets|2020"": 8750000000.0, ""Xylem Inc|total_assets|2021"": 8276000000.0, ""Xylem Inc|total_assets|2022"": 7952000000.0, ""Xylem Inc|total_assets|2023"": 16112000000.0, ""Xylem Inc|total_assets|2024"": 16493000000.0, ""Xylem Inc|total_assets|2025"": 17634000000.0}"
+D108,trend,1,How has nordson's assets changed over the years?,NORDSON,total_assets,2016|2017|2018|2019|2020|2021|2022|2023|2024|2025,2016|2017|2018|2019|2020|2021|2022|2023|2024|2025,"{""NORDSON|total_assets|2016"": 2422365000.0, ""NORDSON|total_assets|2017"": 3414539000.0, ""NORDSON|total_assets|2018"": 3421012000.0, ""NORDSON|total_assets|2019"": 3516447000.0, ""NORDSON|total_assets|2020"": 3674656000.0, ""NORDSON|total_assets|2021"": 3790961000.0, ""NORDSON|total_assets|2022"": 3820375000.0, ""NORDSON|total_assets|2023"": 5251770000.0, ""NORDSON|total_assets|2024"": 6000966000.0, ""NORDSON|total_assets|2025"": 5917681000.0}"
+D109,trend,1,Lockheed Martin ki cash and cash equivalents saalon mein kaise badli?,Lockheed Martin,cash,2016|2017|2018|2019|2020|2021|2022|2023|2024|2025,2016|2017|2018|2019|2020|2021|2022|2023|2024|2025,"{""Lockheed Martin|cash|2016"": 1837000000.0, ""Lockheed Martin|cash|2017"": 2861000000.0, ""Lockheed Martin|cash|2018"": 772000000.0, ""Lockheed Martin|cash|2019"": 1514000000.0, ""Lockheed Martin|cash|2020"": 3160000000.0, ""Lockheed Martin|cash|2021"": 3604000000.0, ""Lockheed Martin|cash|2022"": 2547000000.0, ""Lockheed Martin|cash|2023"": 1442000000.0, ""Lockheed Martin|cash|2024"": 2483000000.0, ""Lockheed Martin|cash|2025"": 4121000000.0}"
+D110,trend,1,Parker Hannifin ki income from operations saalon mein kaise badli?,Parker Hannifin,operating_income,2017|2018|2019|2020|2021|2022|2023|2024|2025|2026,2017|2018|2019|2020|2021|2022|2023|2024|2025|2026,"{""Parker Hannifin|operating_income|2017"": 1790255000.0, ""Parker Hannifin|operating_income|2018"": 2239179000.0, ""Parker Hannifin|operating_income|2019"": 2431233000.0, ""Parker Hannifin|operating_income|2020"": 1966704000.0, ""Parker Hannifin|operating_income|2021"": 2459941000.0, ""Parker Hannifin|operating_income|2022"": 2975035000.0, ""Parker Hannifin|operating_income|2023"": 3404177000.0, ""Parker Hannifin|operating_income|2024"": 4068818000.0, ""Parker Hannifin|operating_income|2025"": 4347000000.0, ""Parker Hannifin|operating_income|2026"": 5068000000.0}"
+D111,compare,1,AMD vs Roper Technologies diluted earnings per share 2025,AMD|Roper Technologies,eps_diluted,2025,2024|2025,"{""AMD|eps_diluted|2025"": 2.65, ""Roper Technologies|eps_diluted|2025"": 14.2}"
+D112,compare,1,Starbucks vs Ametek capital expenditures 2017,Starbucks|Ametek,capex,2017,2016|2017,"{""Starbucks|capex|2017"": 1519400000.0, ""Ametek|capex|2017"": 75074000.0}"
+D113,compare,1,KMB vs colgate-palmolive research and development expense 2016,KImberly_Clark|Colgate_Palmolive,rnd,2016,2015|2016,"{""KImberly_Clark|rnd|2016"": 328000000.0, ""Colgate_Palmolive|rnd|2016"": 289000000.0}"
+D114,compare,1,intel vs Amazon net earnings 2019,Intel|Amazon,net_income,2019,2018|2019,"{""Intel|net_income|2019"": 21048000000.0, ""Amazon|net_income|2019"": 11588000000.0}"
+D115,compare,1,Compare PayPal and Apple total assets in 2020.,Paypal|Apple,total_assets,2020,2019|2020,"{""Paypal|total_assets|2020"": 70379000000.0, ""Apple|total_assets|2020"": 323888000000.0}"
+D116,compare,1,Compare DCI and Nike purchases of property and equipment in 2025.,Donaldson|Nike,capex,2025,2024|2025,"{""Donaldson|capex|2025"": 78900000.0, ""Nike|capex|2025"": 430000000.0}"
+D117,compare,1,HD vs AMZN capex 2025,Home Depot|Amazon,capex,2025,2024|2025,"{""Home Depot|capex|2025"": 3485000000.0, ""Amazon|capex|2025"": 131819000000.0}"
+D118,compare,1,Starbucks vs CRM operating cash flow 2017,Starbucks|SalesForce,operating_cash_flow,2017,2016|2017,"{""Starbucks|operating_cash_flow|2017"": 4174300000.0, ""SalesForce|operating_cash_flow|2017"": 2162198000.0}"
+D119,compare,1,Compare XYZ and Roper Technologies earnings per share in 2023.,Block|Roper Technologies,eps_diluted,2023,2022|2023,"{""Block|eps_diluted|2023"": 0.02, ""Roper Technologies|eps_diluted|2023"": 12.89}"
+D120,compare,1,colgate-palmolive vs Donaldson gross margin 2017,Colgate_Palmolive|Donaldson,gross_profit,2017,2016|2017,"{""Colgate_Palmolive|gross_profit|2017"": 9280000000.0, ""Donaldson|gross_profit|2017"": 823100000.0}"
+D121,compare,1,Compare Meta and Salesforce total equity in 2017.,META|SalesForce,equity,2017,2016|2017,"{""META|equity|2017"": 74347000000.0, ""SalesForce|equity|2017"": 7500127000.0}"
+D122,compare,1,Compare Lockheed Martin and AMD net profit in 2019.,Lockheed Martin|AMD,net_income,2019,2018|2019,"{""Lockheed Martin|net_income|2019"": 6230000000.0, ""AMD|net_income|2019"": 341000000.0}"
+D123,compare,1,Compare Chevron and PayPal EPS in 2024.,CHEVRON|Paypal,eps_diluted,2024,2023|2024,"{""CHEVRON|eps_diluted|2024"": 9.72, ""Paypal|eps_diluted|2024"": 3.99}"
+D124,compare,1,Compare Netflix and Intuit revenues in 2021.,Netflix|Intuit,revenue,2021,2020|2021,"{""Netflix|revenue|2021"": 29697844000.0, ""Intuit|revenue|2021"": 9633000000.0}"
+D125,compare,1,Xylem vs Lockheed Martin earnings per share 2024,Xylem Inc|Lockheed Martin,eps_diluted,2024,2023|2024,"{""Xylem Inc|eps_diluted|2024"": 3.65, ""Lockheed Martin|eps_diluted|2024"": 22.31}"
+D126,compare_ru,1,2019 mein Meta aur Watts Water mein se kis ka net earnings zyada tha?,META|WATTS WATER TECHNOLOGIES,net_income,2019,2018|2019,"{""META|net_income|2019"": 18485000000.0, ""WATTS WATER TECHNOLOGIES|net_income|2019"": 131500000.0}"
+D127,compare_ru,1,2017 mein Parker Hannifin aur XYL mein se kis ka capital spending zyada tha?,Parker Hannifin|Xylem Inc,capex,2017,2016|2017,"{""Parker Hannifin|capex|2017"": 203748000.0, ""Xylem Inc|capex|2017"": 170000000.0}"
+D128,compare_ru,1,2022 mein Franklin Electric aur Rockwell Automation mein se kis ka capital expenditures zyada tha?,Franklin Electric|Rockwell Auomation,capex,2022,2021|2022,"{""Franklin Electric|capex|2022"": 41903000.0, ""Rockwell Auomation|capex|2022"": 141100000.0}"
+D129,compare_ru,1,2017 mein Adobe aur CSL mein se kis ka shareholders' equity zyada tha?,Adobe|Carlisle,equity,2017,2016|2017,"{""Adobe|equity|2017"": 8459869000.0, ""Carlisle|equity|2017"": 2528300000.0}"
+D130,compare_ru,1,2021 mein Adobe aur Woodward mein se kis ka total assets zyada tha?,Adobe|Woodward Inc,total_assets,2021,2020|2021,"{""Adobe|total_assets|2021"": 27241000000.0, ""Woodward Inc|total_assets|2021"": 4091004000.0}"
+D131,multi_metric,1,Give MSFT's net cash provided by operating activities as well as its liabilities for fiscal 2025.,Microsoft,operating_cash_flow|total_liabilities,2025,2024|2025,"{""Microsoft|operating_cash_flow|2025"": 136162000000.0, ""Microsoft|total_liabilities|2025"": 275524000000.0}"
+D132,multi_metric,1,Give intuit's total assets as well as its research and development expense for fiscal 2020.,Intuit,total_assets|rnd,2020,2019|2020,"{""Intuit|total_assets|2020"": 10931000000.0, ""Intuit|rnd|2020"": 1392000000.0}"
+D133,multi_metric,1,Give Woodward's total equity as well as its capital spending for fiscal 2023.,Woodward Inc,equity|capex,2023,2022|2023,"{""Woodward Inc|equity|2023"": 2070989000.0, ""Woodward Inc|capex|2023"": 76500000.0}"
+D134,multi_metric,1,Give Intel's gross margin as well as its shareholders' equity for fiscal 2019.,Intel,gross_profit|equity,2019,2018|2019,"{""Intel|gross_profit|2019"": 42140000000.0, ""Intel|equity|2019"": 77504000000.0}"
+D135,multi_metric,1,Give KMB's earnings per share as well as its cash balance for fiscal 2022.,KImberly_Clark,eps_diluted|cash,2022,2021|2022,"{""KImberly_Clark|eps_diluted|2022"": 5.72, ""KImberly_Clark|cash|2022"": 427000000.0}"
+D136,multi_metric,1,What were paypal's sales and cash and cash equivalents in 2018?,Paypal,revenue|cash,2018,2017|2018,"{""Paypal|revenue|2018"": 15451000000.0, ""Paypal|cash|2018"": 7575000000.0}"
+D137,multi_metric,1,What were INTU's income from operations and total revenue in 2024?,Intuit,operating_income|revenue,2024,2023|2024,"{""Intuit|operating_income|2024"": 3630000000.0, ""Intuit|revenue|2024"": 16285000000.0}"
+D138,multi_metric,1,What were Ametek's EPS and total assets in 2024?,Ametek,eps_diluted|total_assets,2024,2023|2024,"{""Ametek|eps_diluted|2024"": 5.93, ""Ametek|total_assets|2024"": 14631169000.0}"
+D139,multi_metric,1,Give nordson's cash balance as well as its total revenue for fiscal 2018.,NORDSON,cash|revenue,2018,2017|2018,"{""NORDSON|cash|2018"": 95678000.0, ""NORDSON|revenue|2018"": 2254668000.0}"
+D140,multi_metric,1,What were AMD's profit and cash in 2022?,AMD,net_income|cash,2022,2021|2022,"{""AMD|net_income|2022"": 1320000000.0, ""AMD|cash|2022"": 4835000000.0}"
+D141,typo,1,How much capital expenditures did Intit have in 2018?,Intuit,capex,2018,2017|2018,"{""Intuit|capex|2018"": 38000000.0}"
+D142,typo,1,How much cash balance did Ameek have in 2019?,Ametek,cash,2019,2018|2019,"{""Ametek|cash|2019"": 393030000.0}"
+D143,typo,1,How much assets did Roper Techologies have in 2023?,Roper Technologies,total_assets,2023,2022|2023,"{""Roper Technologies|total_assets|2023"": 28167500000.0}"
+D144,typo,1,How much capital spending did Chiotle have in 2017?,Chipotle Mexican Grill,capex,2017,2016|2017,"{""Chipotle Mexican Grill|capex|2017"": 216777000.0}"
+D145,typo,1,How much cash did Donadson have in 2021?,Donaldson,cash,2021,2020|2021,"{""Donaldson|cash|2021"": 222800000.0}"
+D146,typo,1,What was Pentir's net earnings in 2021?,Pentair plc,net_income,2021,2020|2021,"{""Pentair plc|net_income|2021"": 553000000.0}"
+D147,typo,1,How much cash on hand did Roper Technlogies have in 2017?,Roper Technologies,cash,2017,2016|2017,"{""Roper Technologies|cash|2017"": 671327000.0}"
+D148,typo,1,How much capital expenditures did Rockwell Automaion have in 2017?,Rockwell Auomation,capex,2017,2016|2017,"{""Rockwell Auomation|capex|2017"": 141700000.0}"
+D149,typo,1,How much cash and cash equivalents did Wokday have in 2026?,Workday,cash,2026,2025|2026,"{""Workday|cash|2026"": 1501000000.0}"
+D150,typo,1,What was Chipole's total equity in 2020?,Chipotle Mexican Grill,equity,2020,2019|2020,"{""Chipotle Mexican Grill|equity|2020"": 2020135000.0}"
+D151,descriptive,0,What factors drive Union Pacific's revenue growth?,Union Pacific,,,,{}
+D152,descriptive,0,Explain AMZN's accounting policy for cash and cash equivalents.,Amazon,,,,{}
+D153,descriptive,0,What factors drive eBay's revenue growth?,Ebay,,,,{}
+D154,descriptive,0,Explain Intel's accounting policy for cash and cash equivalents.,Intel,,,,{}
+D155,descriptive,0,Explain boeing's accounting policy for cash and cash equivalents.,Boeing,,,,{}
+D156,descriptive,0,How does EMR recognize revenue?,Emerson Electric,,,,{}
+D157,descriptive,0,What factors drive Adobe's revenue growth?,Adobe,,,,{}
+D158,descriptive,0,What factors drive Lockheed Martin's revenue growth?,Lockheed Martin,,,,{}
+D159,descriptive,0,What factors drive AMD's revenue growth?,AMD,,,,{}
+D160,descriptive,0,How does Chipotle recognize revenue?,Chipotle Mexican Grill,,,,{}
+D161,descriptive,0,What factors drive DCI's revenue growth?,Donaldson,,,,{}
+D162,descriptive,0,Explain CSL's accounting policy for cash and cash equivalents.,Carlisle,,,,{}
+D163,descriptive,0,Explain PYPL's accounting policy for cash and cash equivalents.,Paypal,,,,{}
+D164,descriptive,0,How does Dell recognize revenue?,Dell,,,,{}
+D165,descriptive,0,Explain Lockheed Martin's accounting policy for cash and cash equivalents.,Lockheed Martin,,,,{}
+D166,no_metric,0,How many employees does AMD have?,AMD,,,,{}
+D167,no_metric,0,Who is the CEO of Kimberly-Clark?,KImberly_Clark,,,,{}
+D168,no_metric,0,How many employees does Carlisle have?,Carlisle,,,,{}
+D169,no_metric,0,Who is the CEO of WDAY?,Workday,,,,{}
+D170,no_metric,0,What does Graco do?,Graco,,,,{}
+D171,no_metric,0,Who is the CEO of Costco?,Costco,,,,{}
+D172,no_metric,0,What does PH do?,Parker Hannifin,,,,{}
+D173,no_metric,0,How many employees does Salesforce have?,SalesForce,,,,{}
+D174,no_metric,0,What does GGG do?,Graco,,,,{}
+D175,no_metric,0,Who is the CEO of paypal?,Paypal,,,,{}
+D176,no_metric,0,Who is the CEO of Apple?,Apple,,,,{}
+D177,no_metric,0,Who is the CEO of Salesforce?,SalesForce,,,,{}
+D178,no_metric,0,What does Adobe do?,Adobe,,,,{}
+D179,no_metric,0,How many employees does Nvidia have?,Nvidia,,,,{}
+D180,no_metric,0,What does Nike do?,Nike,,,,{}
+D181,unknown_company,0,What was Pfizer's R&D expense in 2021?,ServiceNow,,,,{}
+D182,unknown_company,0,What was Tesla's revenue in 2019?,NORDSON,,,,{}
+D183,unknown_company,0,What was Tesla's revenue in 2022?,Ebay,,,,{}
+D184,unknown_company,0,What was Pfizer's R&D expense in 2024?,Intel,,,,{}
+D185,unknown_company,0,How much revenue did Oracle report in 2019?,Parker Hannifin,,,,{}
+D186,unknown_company,0,What was Tesla's revenue in 2018?,Workday,,,,{}
+D187,unknown_company,0,What was Pfizer's R&D expense in 2023?,NORDSON,,,,{}
+D188,unsupported_metric,0,How many shares did Caterpillar have outstanding in 2019?,Caterpillar,,,,{}
+D189,unsupported_metric,0,How many shares did INTC have outstanding in 2021?,Intel,,,,{}
+D190,unsupported_metric,0,How many shares did Parker Hannifin have outstanding in 2020?,Parker Hannifin,,,,{}
+D191,unsupported_metric,0,How many shares did Kimberly-Clark have outstanding in 2024?,KImberly_Clark,,,,{}
+D192,unsupported_metric,0,How many shares did LMT have outstanding in 2021?,Lockheed Martin,,,,{}
+D193,unsupported_metric,0,What was Apple's dividend per share in 2024?,Apple,,,,{}
+D194,unsupported_metric,0,How many shares did Workday have outstanding in 2022?,Workday,,,,{}
+D195,unsupported_metric,0,How many shares did amazon have outstanding in 2018?,Amazon,,,,{}
+D196,no_data_year,0,What were FELE's total assets in 2008?,Franklin Electric,,,,{}
+D197,no_data_year,0,What was Dell's revenue in 2005?,Dell,,,,{}
+D198,no_data_year,0,What were COST's total assets in 2008?,Costco,,,,{}
+D199,no_data_year,0,What was Kimberly-Clark's revenue in 2005?,KImberly_Clark,,,,{}
