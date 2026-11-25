@@ -30,7 +30,7 @@ from pathlib import Path
 METRICS = {
     "revenue": ("income", [
         "total net sales", "net sales", "total revenues", "total revenue", "revenues", "revenue", "net revenues",
-        "total net revenues", "net revenue", "total sales and revenues", "sales and revenues", "net sales and revenues",
+        "total net revenues", "net revenue", "total net revenue", "total revenues net", "total sales and revenues", "sales and revenues", "net sales and revenues",
         "sales and other operating revenues", "total net sales and revenue", "net operating revenues",
         "operating revenues", "total operating revenues", "sales", "net sales revenue"]),
     "gross_profit": ("income", ["gross profit", "gross margin", "total gross profit", "total gross margin"]),
@@ -166,8 +166,8 @@ def candidates(con, metric):
         rank = match_rank(r[9], names, metric)
         if rank is None:
             continue
-        if metric == "eps_diluted" and not (abs(r[12]) < 500 and ("." in r[11])):
-            continue                                       # "Diluted" shares ki ginti, EPS nahi
+        if metric == "eps_diluted" and not (abs(r[12]) < 100 and ("." in r[11])):
+            continue                                       # "Diluted" shares ki ginti (jaise 489.4 million), EPS nahi
         if metric != "eps_diluted" and r[9] == "diluted":
             continue
         out.append({"company": r[0], "filing_year": r[1], "file_name": r[2], "page": r[3], "title": r[4],
