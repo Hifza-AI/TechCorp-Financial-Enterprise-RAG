@@ -106,11 +106,11 @@ def sec_fallback(con, comp, fy, metric):
         if c:
             # concept-preference, phir saal ka aakhri din (period end), phir sab se pehle file hua (as reported)
             c.sort(key=lambda g: (cs.index(g[0]), -g[2].toordinal(), g[3]))
-            return c[0][0], c[0][1], c[0][4]
+            return c[0][0], c[0][1], c[0][4], c[0][2]
     return None
 
 
-def prior_in_filing(con, comp, accn, concept, metric):
+def prior_in_filing(con, comp, accn, concept, metric, end=None):
     """Isi filing (accn) mein pichle saal ka number: wahi concept, period ~1 saal pehle khatam. Company ne
     accounting badli ho (jaise ASC 606) to ye restated number hota hai -- saal-ba-saal badlao isi se sahi hai."""
     unit = "USD/shares" if metric == "eps_diluted" else "USD"
@@ -129,8 +129,9 @@ def prior_in_filing(con, comp, accn, concept, metric):
                 continue
         by_end.setdefault(e, value)
     ends = sorted(by_end, reverse=True)
-    for e in ends[1:]:
-        if 330 <= (ends[0] - e).days <= 400:
+    ref = end or (ends[0] if ends else None)       # end: fallback number ka apna period (agli filing se aaya ho)
+    for e in ends:
+        if ref and 330 <= (ref - e).days <= 400:
             return by_end[e]
     return None
 
@@ -149,8 +150,9 @@ def build(db):
         "SELECT company, fiscal_year, MIN(file_name) FROM metrics GROUP BY company, fiscal_year")}
 
     rows = {}
-    own_accn = {}          # key -> accn, jab number apni hi filing ka ho (prior_value ke liye)
+    own_accn = {}          # key -> accn jis se number liya (prior_value isi filing se)
     any_accn = {}
+    fb_end = {}            # fallback rows: number ka period end (agli filing mein ye "current" period nahi hota)
     fallback_n = 0
     for (comp, fy, metric, our_text, our_unit, result, xv, xc, accn, status,
          fname, page, label, our_val) in con.execute(
@@ -172,8 +174,9 @@ def build(db):
         fb = sec_fallback(con, comp, fy, metric)
         if fb:
             fallback_n += 1
-            c, v, a = fb
+            c, v, a, e = fb
             any_accn[key] = a
+            own_accn[key], fb_end[key] = a, e
             if matches(our_val, v, metric):
                 rows[key] = (v, "sec_verified", "pdf+sec", fname, page, label, our_text, our_unit, c,
                              sec_url(cik.get(comp), a), "SEC number agli filing se")
@@ -210,8 +213,9 @@ def build(db):
             fb = sec_fallback(con, comp, fy, metric)
             if fb:
                 fallback_n += 1
-                c, v, a = fb
+                c, v, a, e = fb
                 any_accn[(comp, fy, metric)] = a
+                own_accn[(comp, fy, metric)], fb_end[(comp, fy, metric)] = a, e
                 rows[(comp, fy, metric)] = (v, "sec_only", "sec", files[(comp, fy)], None, None, None, None, c,
                                             sec_url(cik.get(comp), a), "PDF mein row nahi thi; SEC number agli filing se")
 
@@ -237,7 +241,8 @@ def build(db):
     priors = 0
     out = []
     for k, v in rows.items():
-        pv = prior_in_filing(con, k[0], own_accn[k], v[8], k[2]) if k in own_accn and v[8] and v[2] != "pdf" else None
+        pv = (prior_in_filing(con, k[0], own_accn[k], v[8], k[2], fb_end.get(k))
+              if k in own_accn and v[8] and v[2] != "pdf" else None)
         priors += pv is not None
         out.append(k + v + (any_accn.get(k), pv))
     con.executemany("INSERT INTO financials VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", out)
