@@ -66,6 +66,14 @@ COMPARE_PROMPT = """This is a COMPARISON question. In addition to the rules:
   e.g. (46,710 - 44,538) / 44,538 = 4.9%. Both numbers must be in the same unit before you subtract.
 - If one side is missing from the sources, say exactly which one and do not guess it.
 """
+# Jab [D#] database source ho: farq / badlao Python pehle hi hisaab kar chuka -- model khud hisaab na kare.
+COMPARE_PROMPT_DATA = """This is a COMPARISON question. In addition to the rules:
+- State each side separately: company, fiscal year, value or point, with its citation.
+- If numbers are compared, add a small markdown table (rows = items, columns = companies or years).
+- For differences and changes, use the values already computed in the [D#] source and cite it. Do not do your
+  own arithmetic and do not write formulas.
+- If one side is missing from the sources, say exactly which one and do not guess it.
+"""
 
 SYSTEM_PROMPT = f"""You are a financial analyst assistant answering questions about SEC 10-K annual reports.
 
@@ -197,7 +205,8 @@ def build_prompt(question, sources, compare=False):
             continue
         blocks.append(f"[{s['tag']}] {s['company']} | fiscal year {s['year']} | {s['type']} | "
                       f"PDF page {page_str(s['pages'])} | section: {s['section']}\n{s['text']}")
-    head = COMPARE_PROMPT + "\n" if compare else ""
+    has_data = any(s["type"] == "structured" for s in sources)
+    head = (COMPARE_PROMPT_DATA if has_data else COMPARE_PROMPT) + "\n" if compare else ""
     return head + "SOURCES:\n\n" + "\n\n---\n\n".join(blocks) + f"\n\nQUESTION: {question}\n\nANSWER:"
 
 
@@ -551,7 +560,7 @@ def prepare(retriever, cache, question, k=5, only_model=None):
         return {"entry": entry, "prompt": None, "key": None, "cached_text": None, "cached_model": None}
     sources = build_sources(resp["results"]) if resp["matched"] else []
     if data:
-        sources.append(data)
+        sources.insert(0, data)            # pehle: model is ko zyada wazan deta hai
     entry["sources"] = sources
     prompt = build_prompt(question, sources, compare)
     # Cache: "kisi bhi model" ka jawab (app / fallback ke liye) aur "is model" ka jawab (model comparison ke liye).
@@ -583,7 +592,7 @@ def finish(prep, cache, text, used, cached, error="no_model"):
         entry.update(
             answer=text, model=used, cached=cached,
             not_stated=text.startswith(NOT_STATED[:20]),
-            citations=[{"tag": s["tag"], "company": s["company"], "year": s["year"],
+            citations=[{"tag": s["tag"], "company": s["company"], "year": s["year"], "type": s["type"],
                         "page": page_str(s["pages"]), "section": s["section"]} for s in cites],
         )
     entry["seconds"] = round(time.time() - entry.pop("_t0"), 2)
@@ -619,6 +628,9 @@ def show(entry, n):
     if entry["citations"]:
         print("Sources:")
         for c in entry["citations"]:
+            if c.get("type") == "structured":
+                print(f"  [{c['tag']}] {c['company']} | {c['section']} (database)")
+                continue
             print(f"  [{c['tag']}] {c['company']} FY{c['year']} | PDF page {c['page']} | {c['section'][-80:]}")
         for s in entry["sources"]:
             if s["type"] == "structured" and s["tag"] in {c["tag"] for c in entry["citations"]}:
@@ -631,7 +643,8 @@ def show(entry, n):
         others = [s for s in entry["sources"] if s["tag"] not in {c["tag"] for c in entry["citations"]}]
         if others:
             print("Diye gaye magar use nahi hue: " + ", ".join(
-                f"[{s['tag']}] {s['company']} FY{s['year']} p{page_str(s['pages'])}" for s in others))
+                f"[{s['tag']}] {s['company']} " + ("(database)" if s["type"] == "structured" else
+                                                   f"FY{s['year']} p{page_str(s['pages'])}") for s in others))
     tail = f"  |  poora source: #1 ... #{len(entry['sources'])}" if entry["sources"] else "  |  Gemini ko bheja nahi gaya"
     if entry.get("model"):
         tail = f"  |  {entry['model']}" + tail
