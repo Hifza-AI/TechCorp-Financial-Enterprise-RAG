@@ -255,6 +255,119 @@ def fmt(v, metric):
     return f"{sign}${a:,.0f}"
 
 
+# ---------------------------------------------------------------- answer layer: sawal -> structured source
+
+# Sawal mein metric ke alfaaz (pehle khaas, phir aam).  Sirf "kitna / kya tha" jaise number sawalon ke liye.
+METRIC_PATTERNS = [
+    ("eps_diluted", r"\b(?:diluted )?(?:eps|earnings per (?:diluted )?share)\b"),
+    ("gross_profit", r"\bgross (?:profit|margin)\b"),
+    ("operating_income", r"\b(?:operating (?:income|profit|loss)|income from operations)\b"),
+    ("net_income", r"\bnet (?:income|earnings|profit|loss)\b"),
+    ("rnd", r"\b(?:r ?& ?d|r and d|research and development)\b"),
+    ("total_assets", r"\btotal assets\b"),
+    ("total_liabilities", r"\btotal liabilities\b"),
+    ("equity", r"\b(?:shareholders'?|stockholders'?|total) equity\b"),
+    ("cash", r"\b(?:cash and cash equivalents|cash on hand|cash balance)\b"),
+    ("operating_cash_flow", r"\b(?:operating cash flows?|cash flows? from operati\w*|cash (?:provided|generated) by "
+                            r"operati\w*|net cash from operati\w*)\b"),
+    ("capex", r"\b(?:capital expenditures?|capex|purchases? of property)\b"),
+    ("revenue", r"\b(?:revenues?|net sales|total sales|sales|turnover)\b"),
+]
+# Bayani sawal (policy / kyun / kaise) -> structured number ki zaroorat nahi
+DESCRIPTIVE = re.compile(r"\b(?:recogni[sz]\w*|polic\w*|why|strategy|risks?|describe|explain|segment\w*|"
+                         r"drivers?|factors?|guidance|outlook)\b", re.I)
+TREND = re.compile(r"\b(?:trend|over the (?:years|past|last)|history|historical|since|each year|every year|"
+                   r"saalon|har saal)\b", re.I)
+SERVE = ("sec_verified", "sec_only", "pdf_verified", "pdf_unchecked", "pdf_conflict")
+STATUS_TEXT = {
+    "sec_verified": "matches SEC XBRL and the filing's own table",
+    "sec_only": "from SEC XBRL",
+    "pdf_verified": "from the filing's table (internally consistent; SEC has no value)",
+    "pdf_unchecked": "from the filing's table (not cross-checked)",
+    "pdf_conflict": "from the filing's table (a later filing reports a different value)",
+}
+
+
+def detect_metrics(question):
+    q = " " + norm(question) + " "
+    return [m for m, rx in METRIC_PATTERNS if re.search(rx, q)][:3]
+
+
+class FinancialData:
+    """Answer layer ke liye: sawal -> serving layer ke numbers ek 'source' ki shakal mein ([D1]).
+    Database na ho to available=False aur sab kuch pehle jaisa chalta hai."""
+
+    def __init__(self, path):
+        self.path = Path(path)
+        self.available = False
+        try:
+            if self.path.exists():
+                self.con = sqlite3.connect(f"file:{self.path}?mode=ro", uri=True, check_same_thread=False)
+                self.available = bool(self.con.execute(
+                    "SELECT name FROM sqlite_master WHERE name='financials'").fetchone())
+        except sqlite3.Error:
+            self.available = False
+
+    def company(self, name):
+        return resolve_company(self.con, name) if self.available else None
+
+    def source(self, question, companies, years, tag="D1"):
+        """-> source dict (build_sources jaisa) ya None."""
+        if not self.available or not companies or DESCRIPTIVE.search(question):
+            return None
+        metrics = detect_metrics(question)
+        if not metrics:
+            return None
+        comps = [c for c in dict.fromkeys(self.company(x) for x in sorted(companies)) if c][:4]
+        if not comps:
+            return None
+        lines, rows_used, first = [], [], None
+        for comp in comps:
+            for m in metrics:
+                rows = [r for r in lookup(self.con, comp, m) if r["status"] in SERVE and r["value"] is not None]
+                if not rows:
+                    continue
+                by_year = {r["fiscal_year"]: r for r in rows}
+                if years:
+                    want = set(years) | {y - 1 for y in years if len(years) == 1}   # ek saal -> pichla bhi (badlao)
+                    pick = [r for r in rows if r["fiscal_year"] in want]
+                elif TREND.search(question):
+                    pick = rows
+                else:
+                    pick = rows[-3:]                                               # saal nahi diya -> aakhri 3
+                if not pick:
+                    continue
+                lines.append(f"{comp} -- {METRIC_LABELS[m]}" + (" (USD per share)" if m == "eps_diluted" else ""))
+                for r in pick:
+                    prev = by_year.get(r["fiscal_year"] - 1)
+                    chg = ""
+                    if prev and prev["value"] and m != "eps_diluted":
+                        pct = 100 * (r["value"] - prev["value"]) / abs(prev["value"])
+                        chg = f"; change vs FY{r['fiscal_year'] - 1}: {pct:+.1f}%"
+                    elif prev and m == "eps_diluted":
+                        chg = f"; FY{r['fiscal_year'] - 1}: {fmt(prev['value'], m)}"
+                    cite = f"; filing table on PDF page {r['page']}" if r["page"] else ""
+                    exact = "" if m == "eps_diluted" else f" (= {r['value']:,.0f} USD)"
+                    lines.append(f"  FY{r['fiscal_year']}: {r['display']}{exact} -- {STATUS_TEXT[r['status']]}"
+                                 f"{cite}{chg}")
+                    rows_used.append(r)
+                    first = first or r
+        if not rows_used:
+            return None
+        years_used = sorted({r["fiscal_year"] for r in rows_used})
+        pages = sorted({int(p) for r in rows_used for p in re.findall(r"\d+", str(r["page"] or ""))[:1]})
+        text = ("Structured financial data from the project database. Values are in US dollars as originally "
+                "reported in each year's 10-K, checked against the SEC's XBRL data. Percent changes are already "
+                "computed; do not calculate new ones.\n" + "\n".join(lines))
+        return {
+            "tag": tag, "company": ", ".join(comps), "company_key": first["company"],
+            "year": years_used[-1], "section": "Financial data (SEC XBRL verified)", "pages": pages,
+            "type": "structured", "text": text,
+            "rows": [{k: r[k] for k in ("company", "fiscal_year", "metric", "value", "status", "page", "file_name",
+                                        "sec_url")} for r in rows_used],
+        }
+
+
 # ---------------------------------------------------------------- CLI
 
 def show(db, company, metric, year=None):
