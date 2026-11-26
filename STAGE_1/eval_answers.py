@@ -285,6 +285,7 @@ def main():
             "number_match": number_in_answer(row, entry["answer"]) if entry.get("retrieval_matched") else None,
             "cached": entry.get("cached"), "seconds": entry.get("seconds"),
             "structured": entry.get("structured", False),
+            "prompt_version": A.PROMPT_VERSION,
             "sources": [{k: s[k] for k in ("tag", "company", "year", "pages", "section", "type", "text")}
                         for s in entry.get("sources", [])],
         }
