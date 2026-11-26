@@ -11,6 +11,8 @@ import math
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 RANK = {"correct": 2, "partial": 1, "wrong": 0}
 
 
@@ -28,6 +30,12 @@ def wilson(k, n, z=1.96):
     return max(0.0, c - h), min(1.0, c + h)
 
 
+def number_mark(d):
+    from eval_answers import number_in_answer          # wahi qaida jo eval_answers ki report mein
+    return number_in_answer({"type": d.get("type"), "answer": d.get("gold"), "question": d.get("question")},
+                            d.get("answer") or "")
+
+
 def verdict(d):
     return (d.get("judge") or {}).get("verdict")
 
@@ -36,8 +44,11 @@ def stats(rows):
     j = [d for d in rows if verdict(d) in RANK]
     ok = sum(verdict(d) == "correct" for d in j)
     faith = sum(not (d.get("judge") or {}).get("unsupported") for d in j)
-    num = [d for d in rows if d.get("number_match") is not None]
-    nok = sum(bool(d["number_match"]) for d in num)
+    # Number check dobara jawab se nikaalo (eval_answers ki report jaisa): purani files mein number_match field
+    # sirf kuch sawalon par likha hua hai, us par chalne se dono runs ka hisaab barabar nahi rehta.
+    marks = [(d, number_mark(d)) for d in rows]
+    num = [d for d, m in marks if m is not None]
+    nok = sum(bool(m) for _, m in marks if m is not None)
     return len(j), ok, faith, len(num), nok
 
 
