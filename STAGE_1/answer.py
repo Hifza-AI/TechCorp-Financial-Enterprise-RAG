@@ -269,6 +269,10 @@ class NetworkDown(Exception):
     """Internet / DNS nahi -- har model par yahi hoga, is liye agla model try karne ka faida nahi."""
 
 
+class TooLarge(DailyQuota):
+    """Prompt har model ki minute-had se bara -- ruk kar bhi kabhi nahi chalega (sirf is prompt ke liye)."""
+
+
 class Busy(Exception):
     """Is model ki is MINUTE ki limit / server busy. args[1] = kitne second baad dobara (andaza)."""
 
@@ -359,10 +363,32 @@ def stream_gemini(client, model, prompt, system=SYSTEM_PROMPT):
 
 
 # ---------------------------- Groq (OpenAI-jaisa API; sirf Python ki apni urllib, koi naya package nahi) ----
+# Groq free tier prompt + max_completion_tokens dono ko minute ki had (TPM) mein ginta hai. Lambe prompt (20 chunks)
+# par 2048 jor kar had se bara ho jata hai ("Request too large") aur ye kabhi nahi chalta, chahe kitna ruko.
+# Aise prompt ke liye jawab ki jagah utni kam karo jitna zaroori; (model, prompt) ke hisaab se yaad rakho.
+_GROQ_MAX = {}
+_GROQ_MIN_ANSWER = 500       # is se kam jagah bache to jawab adhoora hoga -- chhota karne ka faida nahi
+
+
+def _shrink_on_too_large(model, prompt, msg):
+    """'Limit 8000, Requested 8958' -> is prompt ke liye max_completion_tokens kam karo. True agar kam hua."""
+    m = re.search(r"Limit\s+(\d+),\s*Requested\s+(\d+)", msg)
+    if not m:
+        return False
+    limit, req = int(m.group(1)), int(m.group(2))
+    cur = _GROQ_MAX.get((model, hash(prompt)), 2048)
+    new = cur - (req - limit) - 150          # thori gunjaish: token ginti ka andaza
+    if new < _GROQ_MIN_ANSWER:
+        return False
+    _GROQ_MAX[(model, hash(prompt))] = new
+    return True
+
+
 def _groq_request(key, model, prompt, system, stream):
     import urllib.request
     msgs = ([{"role": "system", "content": system}] if system else []) + [{"role": "user", "content": prompt}]
-    body = {"model": model, "messages": msgs, "temperature": 0.1, "max_completion_tokens": 2048, "stream": stream}
+    body = {"model": model, "messages": msgs, "temperature": 0.1, "stream": stream,
+            "max_completion_tokens": _GROQ_MAX.get((model, hash(prompt)), 2048)}
     if model.startswith("openai/gpt-oss"):
         body["reasoning_effort"] = "low"     # sources se jawab nikaalne ke liye lamba sochna zaroori nahi
     elif "qwen" in model:
@@ -371,6 +397,15 @@ def _groq_request(key, model, prompt, system, stream):
         GROQ_URL + "/chat/completions", data=json.dumps(body).encode("utf-8"), method="POST",
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
                  "User-Agent": "techcorp-rag/1.0"})
+
+
+def _groq_msg(body):
+    """Groq ke error ka asal jumla (log ke liye): limit ki qisam aur kitni der rukna hai."""
+    try:
+        msg = json.loads(body)["error"]["message"]
+    except Exception:                               # noqa: BLE001
+        msg = body
+    return " ".join(str(msg).split())[:220]
 
 
 def _groq_open(key, model, prompt, system, stream):
@@ -389,9 +424,12 @@ def _groq_open(key, model, prompt, system, stream):
             if "per day" in low or "(tpd)" in low or "(rpd)" in low:
                 raise DailyQuota("groq:" + model)
             ra = e.headers.get("retry-after")
-            raise Busy("groq:" + model, int(float(ra)) + 1 if ra and ra.replace(".", "").isdigit() else 10)
-        if code == 413 or "request too large" in low:        # prompt is model ki minute-limit se bara
-            raise Busy("groq:" + model, 60)
+            raise Busy("groq:" + model, int(float(ra)) + 1 if ra and ra.replace(".", "").isdigit() else 10,
+                       _groq_msg(body))
+        if code == 413 or "request too large" in low:        # prompt + jawab ki jagah minute-limit se bara
+            if _shrink_on_too_large(model, prompt, _groq_msg(body)):
+                return _groq_open(key, model, prompt, system, stream)   # chhoti jagah ke saath foran dobara
+            raise Busy("groq:" + model, 60, _groq_msg(body))
         if code == 404 or "model_not_found" in low or "decommissioned" in low or "does not exist" in low:
             raise LookupError("groq:" + model)
         if code == 401:
@@ -477,7 +515,7 @@ class ModelChain:
                 return (stream_groq if stream else call_groq)(client.groq_key, m[5:], prompt, system)
             return (stream_gemini if stream else call_gemini)(client.gemini, m, prompt, system)
         for rnd in range(rounds):
-            waits = []
+            waits, too_large = [], []
             for m in self.models:
                 if m in self.dead:
                     continue
@@ -490,9 +528,16 @@ class ModelChain:
                     log(f"{m}: is key par ye model nahi -- agla")
                     self.dead.add(m)
                 except Busy as b:
-                    log(f"{m}: abhi busy / minute ki limit -- agla model")
+                    why = f" [{b.args[2]}]" if len(b.args) > 2 and b.args[2] else ""
+                    if "too large" in why.lower():       # rukne ka faida nahi
+                        log(f"{m}: prompt is model ki had se bara -- agla model{why}")
+                        too_large.append(m)
+                        continue
+                    log(f"{m}: abhi busy / minute ki limit -- agla model{why}")
                     waits.append(b.args[1])
             if not waits:
+                if too_large:
+                    raise TooLarge(", ".join(too_large))
                 break
             if rnd + 1 < rounds:
                 sec = min(min(waits), 60)
