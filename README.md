@@ -24,9 +24,9 @@ Financial filings are long (100–300 pages each), heavily tabular, and formatte
 | 6 | Document hierarchy (nested section tree) | ✅ Complete | `hierarchy_builder.py` |
 | 7 | Chunking with citation metadata | ✅ Complete | `chunk_builder.py` |
 | 8 | Embeddings + FAISS index | ✅ Complete | `build_embeddings.py` |
-| 9 | Hybrid retriever + evaluation suite | ✅ Complete (v2.3) | `retriever.py`, `eval_golden.py`, `ask.py` |
-| 10 | SQL facts layer (exact numeric lookup) | 🔄 In progress | `facts_db.py` |
-| 11 | Answer layer: Gemini + citations + "not stated" guard | ⬜ Planned | — |
+| 9 | Hybrid retriever + evaluation suite | ✅ Complete, frozen (v2.4.1) | `retriever.py`, `eval_golden.py`, `ask.py` |
+| 10 | SQL track: PDF facts, SEC XBRL, validation, serving layer, routing | ✅ Complete | `facts_db.py`, `metrics_db.py`, `xbrl_db.py`, `validate_xbrl.py`, `financials_db.py`, `eval_sql.py`, `spotcheck.py` |
+| 11 | Answer layer: Groq / Gemini model chain, citations, "not stated" guard, SQL source | 🔄 Final evaluation | `answer.py`, `eval_answers.py`, `judge_calibration.py`, `compare_runs.py` |
 | 12 | Streamlit app | ⬜ Planned | — |
 | 13 | Deployment (Docker) | ⬜ Optional | — |
 
@@ -77,9 +77,31 @@ A 100-question test set (`STAGE_1/test_questions.csv`) was written and **frozen 
 
 Per-feature gains from ablation (v2.3): intent +5, typo +3, tickers +2, words +1, roman 0.
 
-> The v2.3 fixes were designed from this set's misses, so 90/100 is an in-sample figure. The unbiased number is 80/100. A fresh held-out set is planned for the final evaluation.
+> The v2.3 fixes were designed from this set's misses, so 90/100 is an in-sample figure. The unbiased number is 80/100. The retriever is frozen at v2.4.1; its final figure comes from the held-out set below.
 
-Known issues are documented in [`STAGE_1/known_limitations.md`](STAGE_1/known_limitations.md) (R1–R20).
+### SQL track (number questions)
+
+| Check | Result |
+|-------|--------|
+| PDF-extracted metrics vs SEC XBRL | **97.9%** (4,250 / 4,339) |
+| Serving values checked by hand against the PDFs | **59/60** after fixes (55/60 at audit) |
+| Question → right company, metric, year and SEC value (fresh held-out set) | **99.3%** (149/150, 95% CI 96.3–99.9) |
+| Non-number questions given structured data by mistake | **0/50** |
+
+The manual audit found two fiscal-year mapping bugs that no automatic test could see, because the test gold used the same mapping; both were fixed and the gold corrected with a logged change.
+
+### Answer layer (LLM)
+
+| Measure (dev set, 95 of 100 questions) | Result |
+|-------|--------|
+| Correct, human labels | **92.6%** |
+| Correct, LLM judge (Qwen3) | 88.4% |
+| Judge–human agreement | 90.5% (Cohen's κ 0.46) |
+| Faithfulness (no unsupported claim), human labels | **91.6%** |
+
+The judge was checked blind against human labels. It is stricter on completeness but misses small unsupported additions, so human-labelled faithfulness is reported. Still to run: SQL on/off and prompt v3 vs v4 on the dev set, then one run on **60 held-out questions written by hand** from random 10-K pages (never used for tuning).
+
+Known issues are documented in [`STAGE_1/known_limitations.md`](STAGE_1/known_limitations.md) (retrieval R1–R23, SQL track F1–F6, answer layer A1–A5).
 
 ## How to run
 
@@ -119,7 +141,7 @@ STAGE_1/
 ├── chunks/<Company>/           final chunks (JSON)
 ├── eval/                       test results and ablation outputs
 ├── test_questions.csv          frozen 100-question fair test
-├── known_limitations.md        documented issues R1–R20
+├── known_limitations.md        documented issues (R, F, A series)
 ├── pdf_extractor.py … chunk_builder.py     pipeline scripts
 ├── build_embeddings.py         FAISS index
 ├── retriever.py                hybrid retriever (v2.3)
