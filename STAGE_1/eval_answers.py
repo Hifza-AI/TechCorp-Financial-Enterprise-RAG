@@ -5,11 +5,11 @@ eval_answers.py  -  RAG ke JAWAB ka imtihan (retrieval ka imtihan retriever.py -
 faisla khud karta hai:
 
   correct         jawab mein sahi number / naam aa gaya
-  generation      sahi jawab Gemini ko diye gaye sources mein THA, magar jawab mein nahi aaya (Gemini ki ghalti)
+  generation      sahi jawab model ko diye gaye sources mein THA, magar jawab mein nahi aaya (model ki ghalti)
   retrieval       sources (top-k) mein nahi tha, magar top-30 mein tha (ranking ki ghalti)
   not_found       top-30 mein bhi nahi: parsing mein kho gaya, ya retrieval bohat door -> haath se dekhna
   refused         retriever ne "nahi mila" kaha (company / saal pehchana nahi)
-  no_model        Gemini ki free limit -- baad mein dobara chalao, ye sawal khud dobara poocha jayega
+  no_model        model ki free limit -- baad mein dobara chalao, ye sawal khud dobara poocha jayega
 
 Free tier ke liye: jo sawal ho chuke wo dobara NAHI poochta (results file se resume), aur --limit se ek run
 mein sirf N naye sawal.
@@ -260,7 +260,7 @@ def main():
         for d in sorted(unjudged, key=lambda d: int(d["id"][1:]))[:budget]:
             res = judge_llm(judge_chain, client, cache, d)
             if res is None:
-                print("\nGemini limit / internet -- judge yahin ruka. Baad mein dobara chalao.")
+                print("\nModel limit / internet -- judge yahin ruka. Baad mein dobara chalao.")
                 save()
                 report(done, rows)
                 return
@@ -284,6 +284,7 @@ def main():
             "category": cat, "gold_ranks": ranks, "answer": entry["answer"], "model": entry.get("model"),
             "number_match": number_in_answer(row, entry["answer"]) if entry.get("retrieval_matched") else None,
             "cached": entry.get("cached"), "seconds": entry.get("seconds"),
+            "structured": entry.get("structured", False),
             "sources": [{k: s[k] for k in ("tag", "company", "year", "pages", "section", "type", "text")}
                         for s in entry.get("sources", [])],
         }
