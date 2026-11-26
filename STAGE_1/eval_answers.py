@@ -10,6 +10,8 @@ faisla khud karta hai:
   not_found       top-30 mein bhi nahi: parsing mein kho gaya, ya retrieval bohat door -> haath se dekhna
   refused         retriever ne "nahi mila" kaha (company / saal pehchana nahi)
   no_model        model ki free limit -- baad mein dobara chalao, ye sawal khud dobara poocha jayega
+  too_large       prompt model ki free-tier minute-had se bara -- ruk kar bhi nahi chalega; hisaab se bahar, alag
+                  report hota hai (dobara chalana ho to drop_answers.py se nikaalo)
 
 Free tier ke liye: jo sawal ho chuke wo dobara NAHI poochta (results file se resume), aur --limit se ek run
 mein sirf N naye sawal.
@@ -66,7 +68,8 @@ Grade two things:
 
 Reply with JSON only, no other text:
 {{"verdict": "correct|partial|wrong", "unsupported": ["..."], "reason": "one sentence"}}"""
-CATS = ["correct", "generation", "retrieval", "not_found", "refused", "no_model"]
+CATS = ["correct", "generation", "retrieval", "not_found", "refused", "no_model", "too_large"]
+SKIP = ("no_model", "too_large")        # jawab hi nahi bana -- percent mein nahi gine jate
 
 
 def gold_in_answer(row, text):
@@ -105,6 +108,8 @@ def as_results(sources):
 
 
 def judge(retriever, row, entry):
+    if entry.get("error") == "too_large":
+        return "too_large", None
     if entry.get("error") in ("no_model", "network"):
         return "no_model", None
     if not entry["retrieval_matched"]:
@@ -167,19 +172,19 @@ def judge_llm(chain, client, cache, d):
 def report(done, rows):
     n = len(done)
     counts = {c: sum(1 for d in done.values() if d["category"] == c) for c in CATS}
-    answered = n - counts["no_model"]
+    answered = n - counts["no_model"] - counts["too_large"]
     print("\n" + "=" * 70)
     print(f"JAWAB KA IMTIHAN: {n}/{len(rows)} sawal chal chuke ({answered} ka jawab aaya)")
     print("=" * 70)
     for c in CATS:
         if counts[c]:
-            pct = f"{100 * counts[c] / answered:5.1f}%" if answered and c != "no_model" else "      "
+            pct = f"{100 * counts[c] / answered:5.1f}%" if answered and c not in SKIP else "      "
             print(f"  {c:<11} {counts[c]:>4}   {pct}")
     if answered:
         print(f"\n  Exact phrase match: {counts['correct']}/{answered} = {100 * counts['correct'] / answered:.1f}%"
               "   (sakht: gold jumla hoobahoo; bayani jawabon ke liye kam andaza)")
     rowmap = {r["id"]: r for r in rows if isinstance(r, dict)}
-    numq = [d for d in done.values() if d["category"] not in ("no_model", "refused")
+    numq = [d for d in done.values() if d["category"] not in SKIP + ("refused",)
             and (number_in_answer(rowmap[d["id"]], d["answer"]) if d["id"] in rowmap else d.get("number_match")) is not None]
     if numq:
         ok = [d for d in numq if (number_in_answer(rowmap[d["id"]], d["answer"]) if d["id"] in rowmap
@@ -242,7 +247,7 @@ def main():
         return
 
     todo = [r for r in rows if r["id"] not in done or done[r["id"]]["category"] == "no_model"][:a.limit]
-    unjudged = [d for d in done.values() if d["category"] not in ("no_model", "refused")
+    unjudged = [d for d in done.values() if d["category"] not in SKIP + ("refused",)
                 and (d.get("judge") or {}).get("verdict") not in VERDICTS + ["too_large"]] if a.judge else []
     if not todo and not unjudged:
         report(done, rows)
@@ -287,7 +292,7 @@ def main():
             report(done, rows)
             return
 
-    print(f"\n{len(todo)} sawal chalenge (pehle se ho chuke: {sum(1 for d in done.values() if d['category'] != 'no_model')})\n")
+    print(f"\n{len(todo)} sawal chalenge (pehle se ho chuke: {sum(1 for d in done.values() if d['category'] not in SKIP)})\n")
     for i, row in enumerate(todo, 1):
         entry = A.answer_one(retriever, client, cache, chain, row["question"])
         cat, ranks = judge(retriever, row, entry)
@@ -303,13 +308,13 @@ def main():
                         for s in entry.get("sources", [])],
         }
         jtxt = ""
-        if a.judge and cat not in ("no_model", "refused"):
+        if a.judge and cat not in SKIP + ("refused",):
             res = judge_llm(judge_chain, client, cache, done[row["id"]])
             if res is not None:
                 done[row["id"]]["judge"] = res
                 jtxt = f"  judge: {res['verdict']}" + (f" (unsupported: {len(res['unsupported'])})" if res["unsupported"] else "")
         save()
-        mark = {"correct": "✓", "no_model": "…"}.get(cat, "✗")
+        mark = {"correct": "✓", "no_model": "…", "too_large": "–"}.get(cat, "✗")
         print(f"[{i:>3}/{len(todo)}] {row['id']:<5} {mark} {cat:<11} {row['question'][:55]}{jtxt}")
         if cat == "no_model":
             if entry.get("error") == "network":
