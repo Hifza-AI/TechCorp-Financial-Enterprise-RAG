@@ -94,6 +94,19 @@ Rules:
 10. Write in the Latin alphabet only. Answer in English; if the question is in Roman Urdu, you may answer in
     Roman Urdu (Urdu written with English letters). Never use Devanagari, Arabic or any other script.
 """
+# v4 (judge calibration ke baad): insaani jaanch mein 8/95 jawabon mein chhoti gharhi baatein mili -- "reputation",
+# "supply chain", "partners competitors ban sakte hain" -- aur ek segment ko poori company bana dena (Walmart
+# International). PROMPT_VERSION=4 se naya prompt; default abhi 3 (dev par naap kar badlenge).
+RULES_V4 = """11. Add nothing the cited source does not say: no extra effects, reasons, examples or conclusions, even
+    obvious ones (for example "this could hurt its reputation"). Each tag goes on the source that actually
+    contains that sentence. Use quotation marks only for wording copied exactly from a source.
+12. Keep each fact's scope as the source states it. If a source describes one segment, region, program or
+    year (for example "Walmart International"), say so; do not present it as the whole company. A risk
+    factor's "may" or "could" describes a risk, not the company's plan or strategy.
+"""
+PROMPT_VERSION = os.environ.get("PROMPT_VERSION", "3")   # v4 jaanch ke baad default banega
+if PROMPT_VERSION != "3":
+    SYSTEM_PROMPT = SYSTEM_PROMPT + RULES_V4
 
 
 # ----------------------------------------------------------------------
@@ -501,9 +514,9 @@ _UNI = str.maketrans({"\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-"
 
 
 def clean_answer(text):
-    """Models ke alag citation / unicode andaaz ek jaise: 【S3】 -> [S3], [S1, S2] -> [S1][S2], khaas dash/space."""
+    """Models ke alag citation / unicode andaaz ek jaise: 【S3】 / 【S1†L1-L9】 -> [S3], [S1, S2] -> [S1][S2], khaas dash/space."""
     text = text.translate(_UNI)
-    text = re.sub(r"[【〔［]\s*([SD]\d+)\s*[】〕］]", r"[\1]", text)
+    text = re.sub(r"[【〔［]\s*([SD]\d+)(?:\s*†[^】〕］]*)?\s*[】〕］]", r"[\1]", text)   # 【S1†L1-L9】 bhi
     text = re.sub(r"\(\s*([SD]\d+)\s*\)", r"[\1]", text)                 # (S3) -> [S3]
     text = re.sub(r"\[([SD]\d+(?:\s*[,;]\s*[SD]\d+)+)\]",
                   lambda m: "".join(f"[{t}]" for t in re.findall(r"[SD]\d+", m.group(1))), text)
