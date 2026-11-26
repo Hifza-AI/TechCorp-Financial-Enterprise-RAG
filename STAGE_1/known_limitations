@@ -1,7 +1,7 @@
 # Known Limitations
 
 **Project:** TechCorp Financial Enterprise RAG: 500 SEC 10-K filings (50 companies × 10 fiscal years)
-**Last updated:** 23 Oct 2026
+**Last updated:** 26 Nov 2026
 
 **How to read this file**
 - **Impact:** *Data* = a value or label is wrong or missing · *Structure* = text is intact but sits under a wrong or split heading · *Cosmetic* = display only, no effect on answers.
@@ -12,8 +12,12 @@
 1. H2: Apple FY2021 MD&A content sits under "Item 6. [Reserved]".
 2. R1: Wrong parent headings in several filings (Colgate-Palmolive, Watts Water, Parker Hannifin, Chevron, Block, Alphabet).
 3. T4: Blank row labels recur across five companies (Meta, Nvidia, Rockwell Automation, Nordson, Lockheed Martin).
-4. R4: Exact statement numbers and two-number comparisons still miss the primary statement in some questions (golden dev set: 6 of 24 table-based questions; planned: SQL track).
-5. R20: 1.7% of bullet items in the PDFs never reach a chunk (table detection takes short list lines).
+4. A1: The answer model sometimes adds small claims that its sources do not state (human review: 8 of 95 dev answers; prompt v4 under test).
+5. F1: Rockwell Automation's "operating income" in SEC XBRL is total segment operating earnings, not a GAAP line.
+6. R14 / R15: Strategy-overview sentences and cover-page fields are still missed by retrieval in a few questions (retriever frozen at v2.4.1).
+7. R20: 1.7% of bullet items in the PDFs never reach a chunk (table detection takes short list lines).
+
+R4 (exact statement numbers) is now **Mitigated** by the SQL track (section 8): number questions get SEC-checked values, with 99.3% routing accuracy on a held-out set.
 
 ---
 
@@ -219,7 +223,7 @@ The header row merged with the first data row ("Columns: 2021 733,117, 2020* 685
 **R3: Caterpillar FY2016 cash-flow statement under the wrong parent**
 The statement is nested under "Consolidated Financial Position > See accompanying notes ...", so the statement detector does not recognise it as a cash-flow statement.
 
-**R4: Exact statement numbers and comparisons still miss the primary statement**
+**R4: Exact statement numbers and comparisons still miss the primary statement** · Status: Mitigated (SQL track, section 8)
 On eval set v2, about 4 of 180 table questions (for example Walmart FY2026 cost of sales, Dell FY2020 total net revenue, Woodward FY2021 depreciation and amortization, Nike FY2017 long-term debt). On the golden dev set, 6 of 24 table-based questions: "AMD's bottom line" (income statement only at #10), Dell FY2026 total net revenue (not in the top 10), and two-number comparisons (Woodward net earnings FY2024 vs FY2025 at #9; AMD vs Microsoft R&D, where Microsoft's figure is only in the income statement at #9). The statement vote helps only when the statement table also ranks reasonably in the dense or BM25 list. Not tuned further, to avoid overfitting the evaluation sets; exact line items and calculations are planned to come from the structured SQL track.
 
 **R5: Rounded amounts in text vs exact amounts in tables** · Status: Mitigated in evaluation
@@ -295,6 +299,19 @@ Example: "ct offerings in nine key categories" (Nike FY2017), most likely where 
 **R20: Bullet items missing from chunks** · Impact: Data · Status: Open
 `check_data.py --bullets`: 697 of 40,027 bullet items (1.7%) in the PDFs appear in no chunk. Cause: rescue passes 3 and 4 in `table_analyzer.py` take short list lines as table candidates, and `paragraph_parser.py` skips table lines. Planned: a bullet guard plus returning unused candidate lines to paragraphs.
 
+### Retrieval stage: v2.4 and v2.4.1 (Nov 2026), then frozen
+
+**R21: Section-title questions returned cross-references instead of the section** · Status: Resolved (v2.4)
+Found by the supervisor in the 12 Nov demo: "Amazon 2022, page 26, Item 7" returned chunks that only mention Item 7 instead of the section's first page. v2.4 adds a `heading` feature (section title and Item number matched against a heading index). The 100-question test stayed at 90/100 with identical ranking.
+
+**R22: Some operating-expense tables lose their numbers** · Impact: Data · Status: Open
+The header "Amount | Amount" is kept but the values are dropped, for example Palo Alto Networks FY2025 R&D table (p. 52). The answer layer correctly reports the figure as not stated; for the 12 core metrics the SQL track supplies the value from SEC XBRL.
+
+**R23: A year followed by a comma was ignored** · Status: Resolved (v2.4.1)
+The year pattern rejected any year followed by a comma (to skip numbers such as 2,020,000), so "in 2020, Kennametal" and "in 2023, according to" lost their year filter. Found by the SQL test set (7 of 150 failures). It affected 2 of the 100 test questions (T57, T88) and 1 golden question; all three still rank the answer at #1. The 100-question test is unchanged at 90/100.
+
+**Retrieval freeze (26 Nov 2026).** With top-20 results on the 100 questions: answer at #1 for 58, #2-5 for 32, #6-20 for 3 (T17, T42, T45), not in the top 20 for 7 (T07, T18, T34, T44, T55, T59, T100). The 7 misses are cover-page fields (R15, R16) and broad strategy or overview questions (R14). After five tuned versions, further changes would be fitted to the same 100 questions, so the retriever is frozen at v2.4.1 and its unbiased figure comes from the held-out set (section 9).
+
 ---
 
 ## 7. QA tools
@@ -304,13 +321,76 @@ The check flags Kennametal Item 1A and Franklin Electric Item 3. These are known
 
 ---
 
+## 8. SQL track (structured financial data)
+
+**Layers.** Raw: every PDF table cell (1,004,264 facts). External: SEC XBRL company facts for all 50 companies (1,303,114 facts). Curated: 12 metrics per filing with cross-year and balance checks. Serving (`financials`): one final value per company, fiscal year and metric (5,389 values, 98.9% backed by SEC XBRL), the standard XBRL concept per metric, PDF page citation when the PDF value equals it, and the prior-year value from the same filing for restatement-aware changes.
+
+| Check | Result |
+|---|---|
+| PDF-extracted metrics vs SEC XBRL | 4,250 / 4,339 = 97.9% |
+| Serving values checked by hand against the PDFs (60, weighted to risky groups) | 55/60 at audit; 59/60 after two fixes |
+| Routing on a fresh held-out set (150 number questions) | 149/150 = 99.3% (95% CI 96.3-99.9) |
+| Non-number questions given structured data by mistake | 0/50 |
+
+Bugs found and fixed on the way: year followed by a comma (R23); one standard concept per metric (Kimberly-Clark net income incl. noncontrolling interest, Walmart net sales vs total revenue); next year's filing taken for a missing year (Dell FY2019); 52/53-week years ending in early January (Franklin Electric FY2015 read as 2016); changes computed across a restatement (Boeing 2017-2018 total assets, +27% vs +4.4%). The first test set (95.3%) was used to find the comma bug, so a fresh set (test2) gives the reported figure.
+
+**F1: Operating income tagged on segment earnings** · Impact: Data · Status: Open
+Rockwell Automation has no GAAP operating income line; its XBRL `OperatingIncomeLoss` is total segment operating earnings (FY2023: 1,929.8). The value is served as operating income. Company-specific; not fixed to avoid a one-off rule.
+
+**F2: Fiscal-year label differs from the company's own name** · Status: Known
+In the SQL track, fiscal year = the calendar year in which the period ends. Home Depot calls the year ending in January 2024 "fiscal 2023"; the SQL track labels it FY2024, while the PDF chunks follow the company's own label (S2), so the two tracks can differ by one year for Home Depot. A question using the company's own label can get a one-year-off structured value.
+
+**F3: Revenue includes other income for some companies** · Status: By design
+The standard concept `Revenues` is total revenues. For Chevron this includes income from equity affiliates and other income (FY2025: 189,031 vs sales and other operating revenues 184,432).
+
+**F4: Per-share values across a stock split are not adjusted** · Status: Known
+Each year's EPS is as originally reported. Chipotle's 50-for-1 split in 2024 makes FY2020 EPS (12.52) and FY2025 EPS (1.14) not comparable; the answer does not mention the split.
+
+**F5: "cash from <year>" read as cash from operations** · Status: Open
+"List WTS's cash from 2018 through 2021" got no structured data because "cash from" matches the operating-cash-flow phrase list (the one miss on test2).
+
+**F6: Gaps** · Status: Known
+Chevron FY2019 revenue has no value (absent from both the PDF curated layer and SEC data for that filing). 8 PDF-only values far from the company's SEC values are flagged `pdf_suspect` and never served.
+
+---
+
+## 9. Answer layer (LLM)
+
+**Setup.** Retriever top 5 (8 for comparisons) plus, for number questions, one structured source [D1]; GPT-OSS-120B on Groq (free tier) with Gemini and other Groq models as fallback; grounded prompt with citations; refusal when retrieval finds no matching company or year.
+
+**Dev evaluation (100 questions, used for tuning; 95 run so far).**
+
+| Measure | Result |
+|---|---|
+| LLM judge (Qwen3), correct | 84/95 = 88.4% |
+| Human labels, correct | 88/95 = 92.6% |
+| Judge-human agreement (correct / partial / wrong) | 86/95 = 90.5%, Cohen's kappa 0.46 (0.51 correct vs other) |
+| Faithfulness, judge | 91/95 = 95.8% |
+| Faithfulness, human | 87/95 = 91.6% |
+
+The judge was calibrated blind (its verdicts hidden from the reviewer). It is stricter than the human on completeness (5 answers it called partial were complete for the question asked) and misses small unsupported additions (it found 2 of the 8 the human flagged). Low kappa with high agreement is expected when about 90% of answers fall in one class. Human-labelled faithfulness is reported.
+
+**A1: Small unsupported additions** · Impact: Data · Status: Open (prompt v4 under test)
+Examples: "damage reputation" added to a security-risk answer (T81), "partners could become competitors" (T29), "supply chain disruption" (T25), "licensed stores contribute the remainder" (T87). Prompt v4 adds rules against unstated effects and scope changes; default stays v3 until measured.
+
+**A2: Scope widened** · Status: Open (prompt v4)
+A segment's facilities presented as the whole company's (T91: Walmart International's 221 distribution facilities); a risk factor's "may pursue acquisitions" presented as strategy (T07).
+
+**A3: Abbreviation expanded without a source** · Status: Open
+"CWT" expanded as "Carlisle WeatherTech" (T17), although the prompt forbids invented expansions.
+
+**A4: Citation on the wrong source** · Impact: Cosmetic · Status: Known
+Correct content tagged with a neighbouring source (T47, T89). The claim exists in the retrieved set, but the tag points to a different chunk.
+
+**A5: Charts are not read** · Status: By design
+Numbers shown only in images (for example Meta's daily active users chart) are not in the text index.
+
+**Pending:** SQL on/off comparison on the dev set; prompt v4 on the dev set; one run on 60 held-out questions written by hand from random 10-K pages (29 text, 21 number, 10 two-company comparisons; easy 17, medium 31, hard 12), with human labels.
+
+---
+
 ## Audit coverage (verified against the PDF)
 
 - **Ametek, Rockwell Automation, Roper Technologies, Nordson (FY2016 and FY2025):** all Items cross-checked against the PDF table of contents; core financial statements verified line by line; cross-statement totals consistent (for example net income ties across the income, comprehensive income and cash-flow statements).
 - **Alphabet FY2025 (Tier-2 audit):** core statements, segment and executive overview, cost lines, tax provision, share repurchases and most lease tables match the PDF (exception: T5).
 - **Meta FY2025:** core statements match 100% (revenue, cost of revenue, R&D, net income, cash flow); no boilerplate or date-header leaks; charts correctly skipped rather than turned into fake tables (exceptions: H4, T4, T9).
-
-
-R21 — Section-title questions returned cross-reference chunks instead of the section’s first page (Amazon 2022 p26, found by supervisor). Fixed in v2.4 ‘heading’ feature.
-
-- **R22 —** Some operating-expense tables lose their numbers during parsing (header "Amount | Amount" kept, values dropped), e.g. Palo Alto Networks FY2025 R&D table, p52. The answer layer correctly reports the figure as not stated.
