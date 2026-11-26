@@ -23,6 +23,7 @@ kaun si baat sources mein NAHI hai (hallucination). Jin jawabon ka judge nahi hu
     python STAGE_1/eval_answers.py --judge --limit 25
 """
 import argparse
+import os
 import json
 import re
 import sys
@@ -144,6 +145,9 @@ def judge_llm(chain, client, cache, d):
         return hit
     try:
         model, text = chain.generate(client, prompt, log=lambda m: print(f"    ({m})"), system="")
+    except A.TooLarge as e:          # judge prompt judge model ki had se bara: dobara koshish bekaar, haath se dekho
+        return {"verdict": "too_large", "unsupported": [], "model": str(e), "version": JUDGE_VERSION,
+                "reason": "judge prompt judge model ki free-tier had se bara -- is jawab ko haath se label karo"}
     except (A.DailyQuota, A.NetworkDown):
         return None
     m = re.search(r"\{.*\}", text, re.S)
@@ -192,6 +196,9 @@ def report(done, rows):
         v = {x: [d["id"] for d in judged if d["judge"]["verdict"] == x] for x in VERDICTS}
         hall = [d["id"] for d in judged if d["judge"]["unsupported"]]
         print(f"\n  LLM JUDGE ({J} jawab):")
+        big = [d["id"] for d in done.values() if (d.get("judge") or {}).get("verdict") == "too_large"]
+        if big:
+            print(f"    (judge nahi ho saka -- prompt judge model ki had se bara, haath se label karo: {', '.join(big)})")
         print(f"    correct {len(v['correct']):>4}   {100 * len(v['correct']) / J:5.1f}%")
         print(f"    partial {len(v['partial']):>4}   {100 * len(v['partial']) / J:5.1f}%")
         print(f"    wrong   {len(v['wrong']):>4}   {100 * len(v['wrong']) / J:5.1f}%")
@@ -236,13 +243,19 @@ def main():
 
     todo = [r for r in rows if r["id"] not in done or done[r["id"]]["category"] == "no_model"][:a.limit]
     unjudged = [d for d in done.values() if d["category"] not in ("no_model", "refused")
-                and (d.get("judge") or {}).get("verdict") not in VERDICTS] if a.judge else []
+                and (d.get("judge") or {}).get("verdict") not in VERDICTS + ["too_large"]] if a.judge else []
     if not todo and not unjudged:
         report(done, rows)
         print("Sab sawal ho chuke." + (" Sab ka judge bhi ho chuka." if a.judge else ""))
         return
 
     A.load_env()
+    # Imtihan mein model chupke se nahi badalna chahiye: model line khud chuno, warna ruk jao.
+    missing = [v for v in ("LLM_MODELS",) + (("JUDGE_MODELS",) if a.judge else ()) if not os.environ.get(v)]
+    if missing:
+        raise SystemExit(f"{' aur '.join(missing)} set nahi -- default models (Gemini waghera) mil jate aur "
+                         f"comparison ghalat hota. Pehle set karo, maslan:\n"
+                         f'  $env:LLM_MODELS="groq:openai/gpt-oss-120b"\n  $env:JUDGE_MODELS="groq:qwen/qwen3.8-27b"')
     client = A.make_client()
     chain = A.build_chain(client)
     judge_chain = make_judge_chain(client) if a.judge else None
