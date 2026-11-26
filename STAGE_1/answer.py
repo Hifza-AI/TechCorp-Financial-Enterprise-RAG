@@ -1,5 +1,5 @@
 """
-answer.py  -  RAG ka "G": retriever ke chunks se Gemini jawab likhta hai, citation ke saath.
+answer.py  -  RAG ka "G": retriever ke chunks se LLM (Gemini / Groq) jawab likhta hai, citation ke saath.
 
 Ek ek karke (interactive):   python STAGE_1/answer.py
     Model ek dafa load hota hai, phir "Sawal>" par sawal likho.
@@ -8,16 +8,16 @@ Ek ek karke (interactive):   python STAGE_1/answer.py
 
 Ek sawal:                    python STAGE_1/answer.py "What was Nike's net income in fiscal 2021?"
 
-Har jawab ke saath wo 5 chunks bhi save hote hain jo Gemini ko diye gaye (answers_<tareekh>_<waqt>.json).
+Har jawab ke saath wo 5 chunks bhi save hote hain jo model ko diye gaye (answers_<tareekh>_<waqt>.json).
 Is se ghalat jawab ka faisla ho sakta hai: sahi baat chunks mein thi hi nahi -> retrieval ki ghalti;
-chunks mein thi magar jawab ghalat -> Gemini ki ghalti.
+chunks mein thi magar jawab ghalat -> model ki ghalti.
 
 API keys: repo ke root mein .env file ->  GEMINI_API_KEY=...   aur/ya  GROQ_API_KEY=...
 Models: pehle Gemini (GEMINI_MODEL, GEMINI_FALLBACK_MODELS), phir Groq (GROQ_MODELS). Poori tarteeb khud:
 LLM_MODELS=groq:openai/gpt-oss-120b,gemini-2.5-flash,...    Pehla model:  --model ...   List:  --list-models
 
-Cache: wahi sawal + wahi chunks + wahi model -> Gemini ko dobara nahi bhejte (answer_cache.json).
-Retriever "nahi mila" kahe (company index mein nahi, jaise Tesla) -> Gemini ko bheja hi nahi jata.
+Cache: wahi sawal + wahi chunks + wahi model -> model ko dobara nahi bhejte (answer_cache.json).
+Retriever "nahi mila" kahe (company index mein nahi, jaise Tesla) -> model ko bheja hi nahi jata.
 
 Number wale sawal (revenue, net income, EPS ... + company): SQL serving layer (facts.db -> financials, banao:
 financials_db.py build) se SEC-verified numbers ek extra source [D1] ban kar model ko jaate hain, % badlao
@@ -489,10 +489,10 @@ class ModelChain:
 
 
 # ----------------------------------------------------------------------
-# ek sawal:  prepare() -> (Gemini) -> finish()      terminal aur app dono yahi use karte hain
+# ek sawal:  prepare() -> (LLM) -> finish()      terminal aur app dono yahi use karte hain
 # ----------------------------------------------------------------------
-NO_MODEL = "[Abhi koi Gemini model dastiyab nahi (limits) -- thori der baad dobara poochho]"
-NO_NET = "[Internet se rabta nahi (Gemini tak nahi pohanch saka) -- connection check karke dobara poochho]"
+NO_MODEL = "[Abhi koi model dastiyab nahi (limits) -- thori der baad dobara poochho]"
+NO_NET = "[Internet se rabta nahi (model tak nahi pohanch saka) -- connection check karke dobara poochho]"
 
 
 _UNI = str.maketrans({"\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-", "\u2014": "-",
@@ -561,7 +561,7 @@ def _loose_companies(retriever, question):
 
 def prepare(retriever, cache, question, k=5, only_model=None):
     """Retrieval + prompt + cache. Wapas: dict(entry, prompt, key, cached_text, cached_model).
-    entry["answer"] pehle se bhara ho (retriever ne 'nahi mila' kaha) to Gemini ki zaroorat nahi."""
+    entry["answer"] pehle se bhara ho (retriever ne 'nahi mila' kaha) to model ki zaroorat nahi."""
     t0 = time.time()
     compare = is_comparison(retriever, question)
     resp = retriever.search(question, top_k=max(k, COMPARE_K) if compare else k)
@@ -593,7 +593,7 @@ def prepare(retriever, cache, question, k=5, only_model=None):
 
 
 def finish(prep, cache, text, used, cached, error="no_model"):
-    """Gemini ka jawab (ya cache) -> entry mukammal; naya aur poora jawab cache mein."""
+    """Model ka jawab (ya cache) -> entry mukammal; naya aur poora jawab cache mein."""
     entry = prep["entry"]
     if text is None:
         entry.update(answer=NO_NET if error == "network" else NO_MODEL, not_stated=False, cached=False,
@@ -661,7 +661,7 @@ def show(entry, n):
             print("Diye gaye magar use nahi hue: " + ", ".join(
                 f"[{s['tag']}] {s['company']} " + ("(database)" if s["type"] == "structured" else
                                                    f"FY{s['year']} p{page_str(s['pages'])}") for s in others))
-    tail = f"  |  poora source: #1 ... #{len(entry['sources'])}" if entry["sources"] else "  |  Gemini ko bheja nahi gaya"
+    tail = f"  |  poora source: #1 ... #{len(entry['sources'])}" if entry["sources"] else "  |  model ko bheja nahi gaya"
     if entry.get("model"):
         tail = f"  |  {entry['model']}" + tail
     print(f"\n({entry['seconds']} sec{', cache se' if entry['cached'] else ''}{tail})")
@@ -685,7 +685,7 @@ def show_source(entry, i):
 
 def list_models(client):
     if client.gemini is not None:
-        print("Gemini:")
+        print("Model:")
         for m in client.gemini.models.list():
             acts = getattr(m, "supported_actions", None) or []
             if not acts or "generateContent" in acts:
@@ -707,9 +707,9 @@ def main():
         sys.stdout.reconfigure(errors="replace")
     except (AttributeError, ValueError):
         pass
-    ap = argparse.ArgumentParser(description="RAG: retriever + Gemini jawab, citations ke saath")
+    ap = argparse.ArgumentParser(description="RAG: retriever + LLM jawab, citations ke saath")
     ap.add_argument("question", nargs="?", help="ek sawal; na do to ek ek karke poochho")
-    ap.add_argument("-k", type=int, default=5, help="Gemini ko kitne chunks (default 5)")
+    ap.add_argument("-k", type=int, default=5, help="model ko kitne chunks (default 5)")
     ap.add_argument("--model", default=None, help="pehla model (jaise gemini-2.5-flash ya groq:openai/gpt-oss-120b)")
     ap.add_argument("--store", default="STAGE_1/vector_store")
     ap.add_argument("--cache", default="STAGE_1/answer_cache.json")
