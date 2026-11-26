@@ -681,6 +681,8 @@ def answer_one(retriever, client, cache, chain, question, k=5):
         return finish(prep, cache, prep["cached_text"], prep["cached_model"], True)
     try:
         used, text = chain.generate(client, prep["prompt"], log=lambda m: print(f"    ({m})"))
+    except TooLarge:
+        return finish(prep, cache, None, None, False, error="too_large")
     except DailyQuota:
         return finish(prep, cache, None, None, False)
     except NetworkDown:
