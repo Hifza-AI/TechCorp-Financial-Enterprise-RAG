@@ -80,3 +80,11 @@ def test_minute_limit_waits_and_retries(monkeypatch):
     _, calls, gen = run_chain(monkeypatch, {"a": [busy, "ok"]}, models=("groq:a",))
     assert gen() == ("groq:a", "ok")
     assert calls == ["a", "a"]
+
+
+def test_output_limit_shrinks_answer_budget_below_the_limit():
+    # Qwen judge: "Request too large ... output tokens per minute (OTPM): Limit 1000, Requested 1012"
+    A._GROQ_MAX.clear()
+    msg = "Request too large for model `qwen` ... on output tokens per minute (OTPM): Limit 1000, Requested 1012."
+    assert A._shrink_on_too_large("q", "p", msg)
+    assert A._GROQ_MAX[("q", hash("p"))] == 900
