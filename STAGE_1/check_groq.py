@@ -1,8 +1,11 @@
 """Groq ki limit check karo: ek chhota sa request bhej kar Groq ka apna jawab dikhata hai.
 
-Chalao:  python STAGE_1/check_groq.py
+Chalao:  python STAGE_1/check_groq.py                 (koi bhi jagah hai?)
+         python STAGE_1/check_groq.py --need 5000     (ek poore jawab ki jagah hai? nahi to kab hogi)
+         python STAGE_1/check_groq.py qwen/qwen3.8-27b --need 5000   (judge model)
 Key repo-root .env se GROQ_API_KEY uthata hai (chat mein key kabhi mat dalo).
 """
+import argparse
 import json
 import os
 import sys
@@ -10,7 +13,13 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-MODEL = sys.argv[1] if len(sys.argv) > 1 else "openai/gpt-oss-120b"
+ap = argparse.ArgumentParser(description="Groq ki limit check")
+ap.add_argument("model", nargs="?", default="openai/gpt-oss-120b")
+ap.add_argument("--need", type=int, default=1,
+                help="itne tokens ki jagah maango (jaise 5000 = ek jawab). Model sirf 'OK' likhta hai, is liye "
+                     "asal kharcha bohat kam; jagah na ho to Groq exact waqt batata hai")
+ARGS = ap.parse_args()
+MODEL = ARGS.model
 
 
 def load_key():
@@ -27,8 +36,8 @@ def load_key():
 
 req = urllib.request.Request(
     "https://api.groq.com/openai/v1/chat/completions",
-    data=json.dumps({"model": MODEL, "max_tokens": 1,
-                     "messages": [{"role": "user", "content": "hi"}]}).encode(),
+    data=json.dumps({"model": MODEL, "max_tokens": ARGS.need,
+                     "messages": [{"role": "user", "content": "Reply with the single word OK."}]}).encode(),
     headers={"Authorization": f"Bearer {load_key()}",
              "Content-Type": "application/json",
              # Cloudflare default "Python-urllib" agent ko 403/1010 deta hai
@@ -36,7 +45,7 @@ req = urllib.request.Request(
 )
 try:
     with urllib.request.urlopen(req, timeout=30) as r:
-        print(f"{MODEL}: OK -- limit khuli hai, eval chala sakti ho")
+        print(f"{MODEL}: OK -- {ARGS.need} tokens ki jagah hai, eval chala sakti ho")
         for h in ("x-ratelimit-remaining-tokens", "x-ratelimit-remaining-requests"):
             print(f"  {h}: {r.headers.get(h)}")
 except urllib.error.HTTPError as e:
