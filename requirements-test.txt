@@ -1,7 +1,8 @@
-# Offline tests ke liye kaafi (koi API key, vector store ya facts.db nahi chahiye)
-pytest>=8
-numpy
-scipy
-faiss-cpu
-fastapi
-httpx
+# Offline tests: no API keys, vector store or facts.db needed.
+pytest==9.2.0
+numpy==2.4.6
+scipy==1.17.1
+faiss-cpu==1.14.3
+fastapi==0.136.3
+pydantic==2.13.4
+httpx==0.28.1
