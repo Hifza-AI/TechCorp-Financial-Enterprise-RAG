@@ -378,6 +378,8 @@ def _shrink_on_too_large(model, prompt, msg):
     limit, req = int(m.group(1)), int(m.group(2))
     cur = _GROQ_MAX.get((model, hash(prompt)), 2048)
     new = cur - (req - limit) - 150          # thori gunjaish: token ginti ka andaza
+    if "output tokens per minute" in msg.lower() or "(otpm)" in msg.lower():
+        new = min(new, limit - 100)          # OTPM: had sirf jawab ki jagah par -- jagah had se neeche rakho
     if new < _GROQ_MIN_ANSWER:
         return False
     _GROQ_MAX[(model, hash(prompt))] = new
