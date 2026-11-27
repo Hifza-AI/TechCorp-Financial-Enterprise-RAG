@@ -3,3 +3,5 @@ pytest>=8
 numpy
 scipy
 faiss-cpu
+fastapi
+httpx
