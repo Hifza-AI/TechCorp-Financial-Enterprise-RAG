@@ -1,5 +1,7 @@
 # TechCorp Financial Enterprise RAG
 
+[![tests](https://github.com/Hifza-AI/TechCorp-Financial-Enterprise-RAG/actions/workflows/tests.yml/badge.svg)](https://github.com/Hifza-AI/TechCorp-Financial-Enterprise-RAG/actions/workflows/tests.yml)
+
 A local, verifiable Retrieval-Augmented Generation (RAG) knowledge base over **500 SEC 10-K annual reports** (50 US public companies × 10 fiscal years). Every answer is traceable to a company, fiscal year, section and page number in the original filing.
 
 **Final Year Project** — BS INFORMATION TECHNOLOGY, Emerson University Multan
@@ -27,8 +29,10 @@ Financial filings are long (100–300 pages each), heavily tabular, and formatte
 | 9 | Hybrid retriever + evaluation suite | ✅ Complete, frozen (v2.4.1) | `retriever.py`, `eval_golden.py`, `ask.py` |
 | 10 | SQL track: PDF facts, SEC XBRL, validation, serving layer, routing | ✅ Complete | `facts_db.py`, `metrics_db.py`, `xbrl_db.py`, `validate_xbrl.py`, `financials_db.py`, `eval_sql.py`, `spotcheck.py` |
 | 11 | Answer layer: Groq / Gemini model chain, citations, "not stated" guard, SQL source | 🔄 Final evaluation | `answer.py`, `eval_answers.py`, `judge_calibration.py`, `compare_runs.py` |
-| 12 | Streamlit app | ⬜ Planned | — |
-| 13 | Deployment (Docker) | ⬜ Optional | — |
+| 12 | HTTP API: `/health`, `/ask`, one JSON log line per request | ✅ Complete | `api.py` |
+| 13 | Automated tests (78, offline) + GitHub Actions CI | ✅ Complete | `tests/`, `.github/workflows/tests.yml` |
+| 14 | Streamlit app | ⬜ Planned | — |
+| 15 | Deployment (Docker) | ⬜ Planned | — |
 
 ## Dataset
 
@@ -99,7 +103,20 @@ The manual audit found two fiscal-year mapping bugs that no automatic test could
 | Judge–human agreement | 90.5% (Cohen's κ 0.46) |
 | Faithfulness (no unsupported claim), human labels | **91.6%** |
 
-The judge was checked blind against human labels. It is stricter on completeness but misses small unsupported additions, so human-labelled faithfulness is reported. Still to run: SQL on/off and prompt v3 vs v4 on the dev set, then one run on **60 held-out questions written by hand** from random 10-K pages (never used for tuning).
+The judge was checked blind against human labels. It is stricter on completeness but misses small unsupported additions, so human-labelled faithfulness is reported.
+
+**Does the SQL source help?** Same model (GPT-OSS-120B), same judge, same 99 questions, only the [D1] source switched on:
+
+| Dev set, 99 questions | SQL off | SQL on |
+|---|---|---|
+| Correct (LLM judge) | 87 (87.9%) | **88 (88.9%)** |
+| Faithfulness (LLM judge) | 94 (94.9%) | **95 (96.0%)** |
+| The 12 questions that receive [D1] | 10 correct | **11 correct** |
+| Answers that got worse | | **0** |
+
+One answer was fixed (ServiceNow 2016 revenue) and none got worse. The gain is small because only 12 dev questions are number questions and 10 of them were already right; the held-out set has 21 number and 10 comparison questions. One question (T96) is excluded from both runs because its prompt is larger than the free tier's per-minute limit (A6).
+
+Still to run: prompt v3 vs v4 on the dev set, then one run on **60 held-out questions written by hand** from random 10-K pages (never used for tuning).
 
 Known issues are documented in [`STAGE_1/known_limitations.md`](STAGE_1/known_limitations.md) (retrieval R1–R23, SQL track F1–F6, answer layer A1–A5).
 
@@ -119,17 +136,48 @@ python STAGE_1/eval_golden.py --ablation
 
 # 4. Build the facts database from parsed tables
 python STAGE_1/facts_db.py
+
+# 5. Serve the answer layer over HTTP (API docs at http://localhost:8000/docs)
+python -m uvicorn api:app --app-dir STAGE_1 --port 8000
+
+# 6. Run the tests (offline: no API keys, vector store or database needed)
+python -m pip install -r requirements-test.txt
+python -m pytest
 ```
+
+API keys go in a `.env` file at the repo root (`GROQ_API_KEY`, `GEMINI_API_KEY`), which is git-ignored.
 
 To rebuild from PDFs, run the pipeline scripts in the order listed in the table above (`pdf_extractor.py` → … → `build_embeddings.py`). Each script reads the previous stage's folder under `STAGE_1/` and writes its own.
 
 ### Requirements
 
-Python 3.12 · `pymupdf` · `sentence-transformers` · `faiss-cpu` · `rank-bm25` · `numpy`
+Python 3.12. Versions are pinned to the ones the reported results were produced with.
 
 ```bash
-pip install pymupdf sentence-transformers faiss-cpu rank-bm25 numpy
+python -m pip install -r requirements.txt
 ```
+
+## Cost and rate limits
+
+Measured on the Groq usage dashboard, not estimated from a price list:
+
+| Item | Figure |
+|---|---|
+| One answer (GPT-OSS-120B, about 5,000 input tokens) | about **$0.001** |
+| Largest prompt seen (about 9,000 input tokens, full 2,048-token answer budget) | about $0.003 |
+| A full day of evaluation (about 200 model calls, answers plus judge) | **$0.18** at paid rates |
+
+Most tokens are input (sources), not output: on 26 Nov the answer model used 201.7K input and 5.1K output tokens. Fewer or shorter sources would cut cost the most.
+
+The free tier allows 8,000 tokens per minute and 200,000 per day on GPT-OSS-120B (about 45 answers a day), and the daily budget is a rolling 24-hour window, not a midnight reset. The code handles this instead of failing:
+
+- **Minute limit:** wait for the time Groq gives, then retry.
+- **Daily limit:** move to the next model in the chain (Gemini, other Groq models) and remember the exhausted one.
+- **Prompt over the limit:** shrink the answer budget once; if the prompt alone is too large, report `too_large` instead of waiting.
+- **Cache:** a repeated question costs nothing.
+- **Evaluation:** refuses to run without an explicit model and judge, so a run never mixes models silently.
+
+For a public deployment, the paid tier (no daily cap) with a spend limit in the Groq console bounds the monthly bill.
 
 ## Repository layout
 
@@ -140,14 +188,21 @@ STAGE_1/
 ├── parsed_tables/ paragraphs/ paragraphs_fixed/ hierarchy/
 ├── chunks/<Company>/           final chunks (JSON)
 ├── eval/                       test results and ablation outputs
+├── logs/                       API request log (git-ignored)
 ├── test_questions.csv          frozen 100-question fair test
 ├── known_limitations.md        documented issues (R, F, A series)
 ├── pdf_extractor.py … chunk_builder.py     pipeline scripts
 ├── build_embeddings.py         FAISS index
-├── retriever.py                hybrid retriever (v2.3)
+├── retriever.py                hybrid retriever (v2.4.1, frozen)
 ├── eval_golden.py              evaluation + ablation
-├── facts_db.py                 SQL facts layer
+├── facts_db.py … financials_db.py   SQL track (facts, SEC XBRL, validation, serving layer)
+├── answer.py                   answer layer (model chain, prompt, citations, cache)
+├── eval_answers.py             answer evaluation with LLM judge
+├── api.py                      FastAPI service
 └── ask.py                      interactive questions
+tests/                          offline unit and API tests (pytest)
+.github/workflows/tests.yml     CI: runs the tests on every push
+requirements.txt                pinned runtime dependencies
 ```
 
 ## Roadmap to 10 December 2026
@@ -156,8 +211,10 @@ STAGE_1/
 |-------|------|
 | 12–18 Nov | SQL facts layer: question → company/year/item → value; numeric-question test |
 | 19–26 Nov | Gemini answer layer with citations, "not stated in the filing" guard, response cache |
-| 27 Nov–3 Dec | Streamlit app: query → answer → source chunk + page |
-| 4–7 Dec | Final evaluation on a fresh held-out set; updated limitations |
+| 27 Nov | Automated tests, CI, HTTP API, pinned dependencies |
+| 28 Nov–1 Dec | Final evaluation: prompt v4 on the dev set, 60 held-out questions with human labels |
+| 2–5 Dec | Streamlit app: query → answer → source chunk + page |
+| 6–7 Dec | Docker and deployment; updated limitations |
 | 8–10 Dec | Report and presentation |
 
 ## Scope note
