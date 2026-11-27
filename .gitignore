@@ -27,3 +27,4 @@ answers_*.json
 STAGE_1/answer_cache_gemini.json
 STAGE_1/facts.db
 STAGE_1/xbrl/
+.pytest_cache/
