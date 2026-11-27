@@ -1,7 +1,7 @@
 # Known Limitations
 
 **Project:** TechCorp Financial Enterprise RAG: 500 SEC 10-K filings (50 companies × 10 fiscal years)
-**Last updated:** 26 Nov 2026
+**Last updated:** 27 Nov 2026
 
 **How to read this file**
 - **Impact:** *Data* = a value or label is wrong or missing · *Structure* = text is intact but sits under a wrong or split heading · *Cosmetic* = display only, no effect on answers.
@@ -370,6 +370,8 @@ Chevron FY2019 revenue has no value (absent from both the PDF curated layer and 
 
 The judge was calibrated blind (its verdicts hidden from the reviewer). It is stricter than the human on completeness (5 answers it called partial were complete for the question asked) and misses small unsupported additions (it found 2 of the 8 the human flagged). Low kappa with high agreement is expected when about 90% of answers fall in one class. Human-labelled faithfulness is reported.
 
+**SQL source on vs off (27 Nov).** Same model, judge and prompt (v3) on the 99 dev questions that ran in both: correct 87 → 88, faithfulness 94 → 95; of the 12 questions that receive [D1], 10 → 11 correct (T84 fixed); none got worse. The SQL source is on by default.
+
 **A1: Small unsupported additions** · Impact: Data · Status: Open (prompt v4 under test)
 Examples: "damage reputation" added to a security-risk answer (T81), "partners could become competitors" (T29), "supply chain disruption" (T25), "licensed stores contribute the remainder" (T87). Prompt v4 adds rules against unstated effects and scope changes; default stays v3 until measured.
 
@@ -385,7 +387,10 @@ Correct content tagged with a neighbouring source (T47, T89). The claim exists i
 **A5: Charts are not read** · Status: By design
 Numbers shown only in images (for example Meta's daily active users chart) are not in the text index.
 
-**Pending:** SQL on/off comparison on the dev set; prompt v4 on the dev set; one run on 60 held-out questions written by hand from random 10-K pages (29 text, 21 number, 10 two-company comparisons; easy 17, medium 31, hard 12), with human labels.
+**A6: Prompt larger than the free tier's per-minute limit** · Impact: Data · Status: Known (free tier only)
+T96 (Woodward share repurchases) builds a prompt of about 9,000 tokens; Groq's free tier allows 8,000 tokens per minute on GPT-OSS-120B and 7,000 input tokens per minute on the Qwen3 judge. It can never run there, however long the wait. The answer layer reports it as `too_large` and the evaluation leaves it out of the percentages for every run, so comparisons stay on the same questions. The paid tier (250K tokens per minute) removes the limit.
+
+**Pending:** prompt v4 on the dev set (65 of 100 answered so far); one run on 60 held-out questions written by hand from random 10-K pages (29 text, 21 number, 10 two-company comparisons; easy 17, medium 31, hard 12), with human labels.
 
 ---
 
