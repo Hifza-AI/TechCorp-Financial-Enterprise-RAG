@@ -1,61 +1,61 @@
 id,question,company,year,answer,type,page,notes
-H01,,3M,2022,,number,,
-H02,,AMD,2024,,text,,
-H03,,Adobe,2023,,text,,
-H04,,Amazon,2017,,text,,
-H05,,Ametek,2023,,text,,
-H06,,Apple,2025,,text,,
-H07,,Block,2024,,text,,
-H08,,Boeing,2017,,number,,
-H09,,Carlisle,2022,,text,,
-H10,,Caterpillar,2024,,text,,
-H11,,Chevron,2024,,text,,
-H12,,Chipotle,2023,,text,,
-H13,,Colgate-Palmolive,2025,,text,,
-H14,,Costco,2021,,number,,
-H15,,Dell,2023,,text,,
-H16,,Donaldson,2024,,text,,
-H17,,Emerson,2025,,number,,
-H18,,Franklin Electric,2025,,text,,
-H19,,Google,2016,,text,,
-H20,,Graco,2020,,text,,
-H21,,Home Depot,2019,,text,,
-H22,,Intel,2016,,number,,
-H23,,Intuit,2025,,text,,
-H24,,Kennametal,2017,,text,,
-H25,,Kimberly-Clark,2023,,text,,
-H26,,Lockheed Martin,2024,,text,,
-H27,,Meta,2018,,text,,
-H28,,Microsoft,2024,,number,,
-H29,,Netflix,2019,,text,,
-H30,,Nike,2018,,number,,
-H31,,Nordson,2024,,text,,
-H32,,Northrop Grumman,2024,,number,,
-H33,,Nvidia,2025,,text,,
-H34,,Palo Alto Networks,2021,,text,,
-H35,,Parker Hannifin,2025,,text,,
-H36,,PayPal,2023,,text,,
-H37,,Pentair,2020,,text,,
-H38,,Rockwell Automation,2025,,number,,
-H39,,Roper Technologies,2024,,number,,
-H40,,Salesforce,2024,,text,,
-H41,,ServiceNow,2023,,number,,
-H42,,Southwest,2023,,number,,
-H43,,Starbucks,2020,,number,,
-H44,,Union Pacific,2021,,text,,
-H45,,Walmart,2020,,text,,
-H46,,Watts Water Technologies,2016,,number,,
-H47,,Woodward,2016,,number,,
-H48,,Workday,2018,,text,,
-H49,,Xylem,2023,,text,,
-H50,,eBay,2025,,text,,
-H51,,Franklin Electric | Rockwell Automation,2024,,compare,,
-H52,,Lockheed Martin | Graco,2022,,compare,,
-H53,,Palo Alto Networks | Chevron,2020,,compare,,
-H54,,Intuit | Workday,2023,,compare,,
-H55,,Intel | Caterpillar,2024,,compare,,
-H56,,Nordson | Southwest,2023,,compare,,
-H57,,AMD | 3M,2020,,compare,,
-H58,,Boeing | Ametek,2019,,compare,,
-H59,,ServiceNow | Parker Hannifin,2018,,compare,,
-H60,,Amazon | Chipotle,2020,,compare,,
+H01,How much did 3M's Health Care business grow organically in 2022?,3M,2022,3.2 %,number,45,other; Health Care segment table; medium; H
+H02,AMD apni buildings ko kitne saal mein depreciate karti hai? (2024),AMD,2024,34 to 44 years for buildings,text,69,text; Roman Urdu; accounting policy; easy; H
+H03,Tell me about Adobe's Digital Experience revenue in 2023 and how much it grew from the previous year.,Adobe,2023,Digital Experience revenue was $4.89 billion in fiscal 2023|11% year-over-year growth,text,53,other; segment revenue; medium; H
+H04,"Did Amazon have any issue with Iran sanctions in its 2017 report, and what did it do about it?",Amazon,2017,processed and delivered orders of consumer products for certain individuals and entities located outside Iran|voluntarily reported these orders to the United States Treasury Department's Office of Foreign Assets Control,text,60,text; legal/sanctions; medium; H
+H05,Does AMETEK have any environmental cleanup liabilities in 2023?,Ametek,2023,"named a Potentially Responsible Party (""PRP"") at 12 non-AMETEK-owned former waste disposal or treatment sites|reserves have been established sufficient",text,83,text; environmental; medium; H
+H06,Apple 2025 mein kaun kaun si services deti hai?,Apple,2025,Advertising|AppleCare|Cloud Services|Digital Content|Payment Services,text,5,text; business overview; easy; H
+H07,who overseees cybersecurity and data privacy at Block in 2024?,Block,2024,the board of directors maintains ultimate responsibility for the oversight of our data privacy and cybersecurity program|delegated certain oversight responsibilities to our audit and risk committee,text,70,text; governance/cyber; typo; easy; H
+H08,"Boeing ki 2017 (reported) mein operating income kitni thi, other income aur interest expense kitne the, aur in ke baad tax se pehle kitni earnings bachi?",Boeing,2017|2018,"10,278|129|(360)|10,047",number,67,number; other; multi-part; reported vs restated; hard; H
+H09,"Tell me about the asset lives of buildings, machinery and equipment, and leasehold improvements for Carlisle in 2022",Carlisle,2022,20 to 40 years for buildings|five to 15 years for machinery and equipment|two to 20 years for leasehold improvements,text,57,text; accounting policy; easy; H
+H10,"What legal issues does Caterpillar face in Brazil, according to its 2024 report?",Caterpillar,2024,"tax and customs disputes with federal, state and municipal authorities in Brazil relating to export activities associated with Caterpillar Brasil Ltda.|will not have a material adverse effect",text,136,text; legal; medium; H
+H11,Chevron ka long-term debt 2024 ke aakhir mein kitna tha?,Chevron,2024,"$10,810",number,82,number; other; debt; notes; Roman Urdu; medium; H
+H12,Tell me about how Chipotle deals with changing ingredient prices in 2023.,Chipotle,2023,"forward pricing protocols|fixed pricing protocols|formula pricing protocols|range forward protocols|increase, where practical, the number of suppliers",text,32,text; market risk (Item 7A); medium; H
+H13,How does Colgate convert its foreign subsidiaries' results into U.S. dollars in 2025?,Colgate-Palmolive,2025,translated into U.S. dollars at year-end exchange rates|Income and expense items are translated into U.S. dollars at average rates of exchange prevailing during the year|highly inflationary environments… remeasured at their historical exchange rates,text,86,text; accounting policy; notes; medium; H
+H14,Costco ne 2021 mein merchandise par kitna kharch kiya?,Costco,2021,"170,684",number,36,number; other; income statement; in millions; medium; H
+H15,"Tell me about Dell's VMware spin-off, according to its 2023 report.",Dell,2023,"on November 1, 2021, the Company completed its spin-off of VMware by means of a special stock dividend|VMware paid a cash dividend… $11.5 billion, of which Dell Technologies received $9.3 billion|used the net proceeds… to repay a portion of its outstanding debt|qualified as tax-free",text,120,text; notes; corporate event; hard; H
+H16,How much did Donaldson spend on leases in fiscal 2024?,Donaldson,2024,32.5,number,58,number; other; notes/leases; in millions; medium; H
+H17,Emerson ne 2025 mein US pension plans se retirees ko kitne benefits diye?,Emerson,2025,227,number,77,number; other; notes/pension; U.S. plans 2025 column; hard; H
+H18,"What are Franklin Electric's business segments in 2025, and did any segment change its name?",Franklin Electric,2025,"Water Systems, Distribution, and Energy Systems reportable segments|changed the name of the Fueling Systems segment to Energy Systems",text,62,text; notes/segments; name change; medium; H
+H19,"How much did Google properties revenue grow in 2016, and what drove the growth?",Google,2016,"increased $11,428 million from 2015 to 2016|increases in mobile search|growth in YouTube revenue driven primarily by video advertising across TrueView",text,39,text+number; MD&A; why-question; medium; H
+H20,"What was Graco's working capital in 2020, and why did it increase?",Graco,2020,702.4|Higher cash and cash equivalent balances drove the increases in working capital,number,38,number+why; other; MD&A; in millions; medium; H
+H21,How much did Home Depot spend on share buybacks and dividends in fiscal 2018?,Home Depot,2019,$10.0 billion in share repurchases and $4.7 billion in cash dividends,number,10,number; other; fiscal-year naming trap (R25); hard; H
+H22,Who does Intel compete with in the data center market?,Intel,2016,face competition from companies using ARM architecture or other technologies,text,10,text; competition; easy; H
+H23,What kind of bookkeeping help does Intuit offer through QuickBooks Live?,Intuit,2025,Expert Assisted and Full-Service Bookkeeping|on-demand access to expert bookkeepers|certified QuickBooks ProAdvisors,text,7,text; products; easy; H
+H24,Why did Kennametal's operating cash flow drop in 2016?,Kennametal,2016|2017,"$219.3 million, compared to $351.4 million in 2015|decrease in inventory of $69.6 million|decrease in accounts receivable of $32.7 million|decrease in accrued income taxes of $25.2 million",text,27,number+why; operating cash flow (sql + PDF); medium; also in 2016 10-K; H
+H25,"Who is Kimberly-Clark's CFO in 2023, and where did he work before?",Kimberly-Clark,2023,Nelson Urdaneta|Senior Vice President and Chief Financial Officer in 2022|Mondelēz International,text,22,text; executives; easy; H
+H26,"How much did Lockheed Martin's Aeronautics sales grow in 2024, and which program drove it?",Lockheed Martin,2024,"increased $1.1 billion, or 4%|higher net sales of $1.0 billion on the F-35 program",text,55,number+why; other; segment; medium; H
+H27,How does Facebook define a daily active user?,Meta,2018,a registered Facebook user who logged in and visited Facebook through our website or a mobile device,text,46,text; definitions; easy; H
+H28,What was Microsoft's gross margin in fiscal 2024?,Microsoft,2024,"171,008",number,59,number; sql (gross_profit); in millions; easy; H
+H29,When does Netflix recognize a tax benefit from an uncertain tax position?,Netflix,2019,only if it is more likely than not the tax position will be sustained on examination|measured based on the largest benefit that has a greater than 50% likelihood of being realized upon settlement,text,53,text; accounting policy (tax); medium; H
+H30,How much were Nike's unrecognized tax benefits at the end of fiscal 2018?,Nike,2018,$698 million,number,66,number; other; notes/tax; table + text; medium; H
+H31,What is Nordson's Ascend strategy?,Nordson,2024,"launched the Ascend strategy, which is designed to deliver top tier revenue growth with leading margins and returns|three interconnected pillars: the NBS (""Nordson Business System"") Next growth framework; Owner Mindset… and Winning Teams",text,5,text; strategy; medium; H
+H32,"Northrop ka Mission Systems segment kya kaam karta hai, aur is ka kitna hissa restricted programs ka hai?",Northrop Grumman,2024,"leader in advanced mission solutions and multifunction systems, primarily for the U.S. defense and intelligence community|Approximately 30 percent of this business is performed through restricted programs",text,7,text; business/segment; easy; H
+H33,"Why could Nvidia's investments in new markets fail to pay off, according to its 2025 report?",Nvidia,2025,"invested in research and development in markets where we have a limited operating history, which may not produce meaningful revenue for several years, if at all|Obtaining design wins may involve a lengthy process",text,16,text; risk; medium; H
+H34,"What does Palo Alto Networks do, and which areas does its cybersecurity cover?",Palo Alto Networks,2021,global cybersecurity provider|Zero Trust Network Security|Cloud Security|Secure Access Service Edge,text,6,text; business; easy; H
+H35,How does Parker Hannifin sell its Aerospace Systems products?,Parker Hannifin,2025,"through our regional sales organizations, which sell directly to OEMs and end users throughout the world",text,6,text; business/sales channel; easy; H
+H36,PayPal 2023 mein apna business barhane ke liye kya strategy rakhti hai?,PayPal,2023,Growing our core business|Expanding our value proposition for merchants and consumers|Forming and expanding strategic partnerships|Seeking new areas of growth,text,12,text; strategy; medium; H
+H37,What did Pentair do to cut costs during COVID-19 in 2020?,Pentair,2020,"renegotiation with suppliers to reduce input costs|driving manufacturing direct labor reductions in line with volume drop|delaying, reducing or eliminating purchased services and travel|temporary furloughs and hiring freezes|deferring estimated tax payments",text,34,text; risk response (COVID); medium; H
+H38,Rockwell ne 2025 mein impairment charge kyun liya aur kitna?,Rockwell Automation,2025,Sensia joint venture not achieving expectations|decision to pursue an orderly dissolution|non-cash intangible asset impairment charge of $63 million,text,67,text+number; risk/impairment; hard; H
+H39,"Which companies did Roper leave out of its 2024 internal control audit, and why?",Roper Technologies,2024,excluded four entities|acquired by the Company in purchase business combinations during 2024|less than 1% and approximately 5% of consolidated total assets and consolidated total revenues,text,45,text; audit/governance; hard; H
+H40,Salesforce ne 2024 mein restructuring par kitna kharch kiya aur kis cheez par?,Salesforce,2024,"988|541|447|employee transition, severance payments, employee benefits and share-based compensation",number,89,number+text; restructuring; hard; in millions; H
+H41,Servicenow ki 2023 mein sales kitni thi?,ServiceNow,2023,"8,971",number,58,number; sql; revenue; in millions; easy; H
+H42,How much cash did Southwest Airlines have at the end of 2023?,Southwest,2023,"9,288",number,115,number; sql; cash; in millions; easy; H
+H43,What was Starbucks' net income in fiscal 2020?,Starbucks,2020,928.3,number,58,number; sql; net_income; in millions; COVID year; easy; H
+H44,How much did Union Pacific spend on capital expenditures in 2021?,Union Pacific,2021,"(2,936)",number,59,"number; sql; capex; labelled ""Capital investments""; in millions; medium; H"
+H45,What was Walmart's diluted earnings per share in fiscal 2020?,Walmart,2020,5.19,number,63,number; sql; eps_diluted; easy; H
+H46,"Watts Water ka 2016 mein operating profit kitna tha, aur 2015 se kaisa raha?",Watts Water Technologies,2016,145.0|(90.1),number,78,number; sql; operating_income; 2015 was a loss; medium; H
+H47,How much did Woodward spend on research and development in fiscal 2016?,Woodward,2016,"126,170",number,52,number; sql; rnd; in thousands; medium; H
+H48,"What were Workday's total assets as of January 31, 2019?",Workday,2018|2019,"5,520,746",number,31,number; sql; total_assets; in thousands; fiscal-year label trap; hard; H
+H49,What was Xylem's shareholders' equity at the end of 2023?,Xylem,2023,"10,166",number,86,"number; sql; equity; excl. NCI (total equity 10,176); medium; H"
+H50,How much cash did eBay generate from its operations in 2025?,eBay,2025,"1,959",number,88,"number; sql; operating_cash_flow; total (continuing only = 2,009); medium; H"
+H51,Compare Franklin Electric and Rockwell Automation's revenue in 2024,Franklin Electric | Rockwell Automation,2024,"2,021,341|8,264.2",compare,33|50,"compare; sql; revenue; units: Franklin thousands, Rockwell millions; medium; H"
+H52,2022 mein Lockheed Martin aur Graco mein se kis ka profit zyada tha?,Lockheed Martin | Graco,2022,"5,732|460,645",compare,89|50,"compare; sql; net_income; units: Lockheed millions, Graco thousands; medium; H"
+H53,Did Palo Alto Networks or Chevron spend more on research and development in 2020?,Palo Alto Networks | Chevron,2020,768.1|435,compare,82|104,compare; sql; rnd; both millions; Chevron R&D only in Note 25 (not on income statement); hard; H
+H54,Compare Intuit and Workday's operating income in fiscal 2023.,Intuit | Workday,2023,"3,141|(222)",compare,52|56,compare; sql; operating_income; both millions; Workday loss; Workday FY ends Jan 31 2023 (file Workday_2023 shows FY2024 first); hard; H
+H55,Intel aur Caterpillar ke 2024 mein total assets compare karo.,Intel | Caterpillar,2024,"196,485|87,764",compare,78|144,compare; sql; total_assets; both millions; Roman Urdu; easy; H
+H56,"Which had more cash and cash equivalents at the end of 2023, Nordson or Southwest?",Nordson | Southwest,2023,"115,679|9,288",compare,46|115,"compare; sql; cash; units: Nordson thousands, Southwest millions; Nordson FY ends Oct 31; medium; H"
+H57,Compare AMD and 3M's diluted EPS in 2020.,AMD | 3M,2020,2.06|9.25,compare,58|32,"compare; sql; eps_diluted; per share; AMD from Item 6, 3M from MD&A; medium; H"
+H58,Boeing aur Ametek ka 2019 mein operating cash flow kitna tha?,Boeing | Ametek,2019,"(2,446)|1,114.4",compare,56|23,compare; sql; operating_cash_flow; both millions; Boeing negative (737 MAX); Roman Urdu; hard; H
+H59,Compare ServiceNow and Parker Hannifin's capital expenditures in 2018,ServiceNow | Parker Hannifin,2018,"(224,462)|(247,667)",compare,68|40,"compare; sql; capex; both thousands; ServiceNow labels it ""Purchases of property and equipment""; medium; H"
+H60,Compare Amazon and Chipotle's shareholders' equity at the end of 2020.,Amazon | Chipotle,2020,"93,404|2,020,135",compare,49|33,"compare; sql; equity; units: Amazon millions, Chipotle thousands; Amazon puts 2019 column FIRST; hard; H"
