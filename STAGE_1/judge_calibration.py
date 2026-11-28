@@ -4,6 +4,12 @@ judge_calibration.py  -  LLM judge ki jaanch: insaan (Hifza) ke faisle vs Qwen j
     python STAGE_1/judge_calibration.py make     -> STAGE_1/eval/judge_review.html  (browser mein kholo)
     python STAGE_1/judge_calibration.py report   -> STAGE_1/eval/judge_labels.csv se agreement + kappa
 
+Held-out (final imtihan): har jawab ka insaani label, judge ho ya na ho; type aur difficulty ke hisaab se:
+    python STAGE_1/judge_calibration.py --run STAGE_1/eval/held_out_final.json --name held_out --all make
+    python STAGE_1/judge_calibration.py --run STAGE_1/eval/held_out_final.json --name held_out --all \
+        --gold STAGE_1/eval/held_out_questions.csv report
+    -> STAGE_1/eval/held_out_review.html aur STAGE_1/eval/held_out_labels.csv
+
 Kyun: hamara 88% "LLM judge" ka number hai. Judge khud kitna sahi hai, ye insaan ke faislon se naapte hain.
 Report mein likhte hain: "LLM judge agreed with human labels on X% (Cohen's kappa = Y)".
 
@@ -17,19 +23,23 @@ import csv
 import html
 import json
 import math
+import re
 from collections import Counter
 from pathlib import Path
 
 VERDICTS = ("correct", "partial", "wrong")
 
 
-def load_run(path):
+def load_run(path, all_answered=False):
+    """all_answered: har woh sawal jis ka jawab bana (judge ho ya na ho, jaise too_large); warna sirf judge wale."""
     rows = json.loads(Path(path).read_text(encoding="utf-8"))
+    if all_answered:
+        return [d for d in rows if d.get("category") not in ("no_model", "too_large")]
     return [d for d in rows if (d.get("judge") or {}).get("verdict") in VERDICTS]
 
 
-def make(run, out):
-    rows = load_run(run)
+def make(run, out, name="judge", all_answered=False):
+    rows = load_run(run, all_answered)
     cards = []
     for d in rows:
         cited = []
@@ -57,7 +67,7 @@ def make(run, out):
   </div>
 </section>""")
     page = f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
-<title>Judge calibration -- {len(rows)} jawab</title>
+<title>{html.escape(name)} -- {len(rows)} jawab</title>
 <style>
 body{{font-family:system-ui,Segoe UI,sans-serif;max-width:980px;margin:0 auto;padding:16px 16px 90px;background:#fafafa;color:#222}}
 .card{{background:#fff;border:1px solid #ddd;border-radius:8px;padding:14px 18px;margin:16px 0}}
@@ -73,7 +83,7 @@ details{{margin:4px 0;font-size:13px}} details pre{{background:#fbfbf6;padding:6
 .bar button{{margin-left:12px;padding:6px 14px;font-size:14px}}
 .help{{background:#fff8e1;border:1px solid #f0d58a;padding:10px 14px;border-radius:8px;font-size:14px}}
 </style></head><body>
-<h1>Judge calibration ({len(rows)} jawab)</h1>
+<h1>{html.escape(name)} ({len(rows)} jawab)</h1>
 <div class="help"><b>Kaise:</b> har jawab ko sahi jawab (gold) aur sources se milao.
 <b>correct</b> = sawal ka jawab sahi aur poora. <b>partial</b> = sahi magar adhoora, ya ek chhoti ghalti.
 <b>wrong</b> = ghalat ya "nahi mila" jab ke jawab sources mein tha.
@@ -82,7 +92,7 @@ Gold sirf ek misaal hai -- doosre alfaaz mein sahi jawab bhi <b>correct</b> hai.
 {''.join(cards)}
 <div class="bar"><span id="prog"></span><button onclick="dl()">Download labels CSV</button></div>
 <script>
-const KEY="judge_calib_v1";
+const KEY="{'judge_calib_v1' if name == 'judge' else name + '_labels_v1'}";
 let st={{}};try{{st=JSON.parse(localStorage.getItem(KEY)||"{{}}")}}catch(e){{st={{}}}}
 function save(){{try{{localStorage.setItem(KEY,JSON.stringify(st))}}catch(e){{}}prog()}}
 function prog(){{const cs=document.querySelectorAll(".card");let n=0;cs.forEach(c=>{{const d=st[c.dataset.id];
@@ -102,11 +112,11 @@ function dl(){{let rows=[["id","human_verdict","human_unsupported","note"]];
   rows.push([c.dataset.id,d.v||"",d.u?1:0,(d.n||"").replace(/"/g,"'")])}});
  const csv=rows.map(r=>r.map(x=>'"'+x+'"').join(",")).join("\\n");
  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{{type:"text/csv"}}));
- a.download="judge_labels.csv";a.click()}}
+ a.download="{name}_labels.csv";a.click()}}
 </script></body></html>"""
     out.write_text(page, encoding="utf-8")
     print(f"{out}: {len(rows)} jawab. Browser mein kholo (double-click), faisle lagao, aakhir mein "
-          f"'Download labels CSV' -> STAGE_1/eval/judge_labels.csv")
+          f"'Download labels CSV' -> STAGE_1/eval/{name}_labels.csv")
 
 
 def kappa(pairs, labels):
@@ -129,12 +139,53 @@ def wilson(k, n, z=1.96):
     return max(0.0, c - h), min(1.0, c + h)
 
 
-def report(run, labels_path):
+def difficulty(notes):
+    m = re.search(r"\b(easy|medium|hard)\b", notes or "", re.I)
+    return m.group(1).lower() if m else "?"
+
+
+def human_accuracy(answered, lab, gold_path):
+    """Asal number: insaani labels -- kul, type aur difficulty ke hisaab se (Wilson 95% CI ke saath)."""
+    gold = {}
+    if gold_path and Path(gold_path).exists():
+        with Path(gold_path).open(encoding="utf-8-sig") as f:
+            gold = {r["id"]: r for r in csv.DictReader(f)}
+    ids = [i for i in answered if i in lab]
+    missing = [i for i in answered if i not in lab]
+
+    def line(name, group):
+        n = len(group)
+        if not n:
+            return
+        c = sum(lab[i]["human_verdict"] == "correct" for i in group)
+        p = sum(lab[i]["human_verdict"] == "partial" for i in group)
+        lo, hi = wilson(c, n)
+        print(f"    {name:<14} {c:>3}/{n:<3} correct = {100 * c / n:5.1f}%  (95% CI {100*lo:.1f}-{100*hi:.1f})"
+              f"   partial {p}, wrong {n - c - p}")
+
+    print(f"\nINSAANI LABELS -- {len(ids)} jawab" + (f"  (label baqi: {', '.join(missing)})" if missing else ""))
+    line("kul", ids)
+    for key, fn in (("type", lambda i: (gold.get(i) or answered[i]).get("type") or "?"),
+                    ("difficulty", lambda i: difficulty((gold.get(i) or {}).get("notes")))):
+        groups = {}
+        for i in ids:
+            groups.setdefault(fn(i), []).append(i)
+        print(f"  {key}:")
+        for g in sorted(groups):
+            line(g, groups[g])
+    hu = [i for i in ids if lab[i].get("human_unsupported") in ("1", "true", "True")]
+    print(f"  Faithfulness (koi gharhi baat nahi): {len(ids) - len(hu)}/{len(ids)}" + (f"   gharhi baat: {', '.join(hu)}" if hu else ""))
+
+
+def report(run, labels_path, all_answered=False, gold_path=None):
     if not labels_path.exists():
         raise SystemExit(f"{labels_path} nahi mila. Review page se 'Download labels CSV' karke yahan rakho.")
-    runs = {d["id"]: d for d in load_run(run)}
+    answered = {d["id"]: d for d in load_run(run, all_answered)}
     with labels_path.open(encoding="utf-8-sig") as f:
         lab = {r["id"]: r for r in csv.DictReader(f) if r.get("human_verdict") in VERDICTS}
+    if all_answered:
+        human_accuracy(answered, lab, gold_path)
+    runs = {i: d for i, d in answered.items() if (d.get("judge") or {}).get("verdict") in VERDICTS}
     ids = [i for i in sorted(lab, key=lambda x: int(x[1:])) if i in runs]
     if not ids:
         raise SystemExit("Koi labelled jawab nahi mila.")
@@ -175,15 +226,18 @@ def main():
     ap = argparse.ArgumentParser(description="LLM judge vs insaani faisle")
     ap.add_argument("--run", default="STAGE_1/eval/cmp_gptoss120b_v3.json")
     ap.add_argument("--dir", default="STAGE_1/eval")
+    ap.add_argument("--name", default="judge", help="files ka naam: <name>_review.html, <name>_labels.csv")
+    ap.add_argument("--all", action="store_true", help="har jawab label karo, judge ho ya na ho (held-out)")
+    ap.add_argument("--gold", help="sawalon ki CSV: type aur difficulty (notes) ke hisaab se nateeja")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("make")
     sub.add_parser("report")
     a = ap.parse_args()
     d = Path(a.dir)
     if a.cmd == "make":
-        make(a.run, d / "judge_review.html")
+        make(a.run, d / f"{a.name}_review.html", a.name, a.all)
     else:
-        report(a.run, d / "judge_labels.csv")
+        report(a.run, d / f"{a.name}_labels.csv", a.all, a.gold)
 
 
 if __name__ == "__main__":
